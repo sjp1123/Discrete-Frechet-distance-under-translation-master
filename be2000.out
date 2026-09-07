@@ -1,0 +1,7 @@
+=== n=2000: candidate(CGAL+max) vs original(CGAL,no-max), internal arr+frechet ===
+  pair000: orig=    304.0 ms  cand=    205.3 ms  orig/cand=1.48x  PROFIT
+  pair001: orig=    250.3 ms  cand=   3348.2 ms  orig/cand=0.07x  loss
+  pair002: orig=    930.5 ms  cand=    663.2 ms  orig/cand=1.40x  PROFIT
+  pair003: orig=  41615.6 ms  cand=   5848.5 ms  orig/cand=7.12x  PROFIT
+  pair004: orig=   8201.7 ms  cand=   3923.9 ms  orig/cand=2.09x  PROFIT
+  TOTAL : orig=  51302.1 ms  cand=  13989.1 ms  orig/cand=3.67x  PROFIT

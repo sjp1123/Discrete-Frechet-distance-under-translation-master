@@ -1,0 +1,12 @@
+================ 3-way decomposition (geolife_small, 100 pairs) ================
+component(ms)                  original    candidate   candidate2
+                           (CGAL,no-max)   (CGAL,max)  (float,max)
+---------------------------------------------------------------------------------
+Arrangement (build)              5592.2      11798.0        350.5
+Frechet (decider)                1905.8        260.9        857.9
+TOTAL (arr+frechet)              7498.0      12058.9       1208.4
+
+Isolated effects:
+  MAXIMAL filter (orig -> candidate, CGAL held): total 7498.0 -> 12058.9 = 0.62x;  Frechet 1905.8 -> 260.9 = 7.30x
+  FLOAT arithmetic (candidate -> candidate2, maximal held): total 12058.9 -> 1208.4 = 9.98x;  Arrangement 11798.0 -> 350.5 = 33.66x
+  COMBINED (orig -> candidate2): 7498.0 -> 1208.4 = 6.20x

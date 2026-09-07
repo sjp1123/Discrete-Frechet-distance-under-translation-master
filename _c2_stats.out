@@ -1,0 +1,12 @@
+== fut_lmf  (MAIN path, N<=12)  40 geolife pairs ==
+  calls=3688  m(dedup)=362422  K(survivors)=95795  K/m=0.264
+  npts=362422  degen(hi!=lo)=325331  degen/npts=0.898
+  queries(getNext)=81083  Frechet_sum=316.586 ms  C_q=3904 ns/query
+  Arr(setup)_sum=116.033 ms  [gen=5.1 mask=74.5 filter=26.5]
+
+== n6  (GLOBAL path, N=mn)  nsweep n=8,12,16 ==
+  calls=76  m(dedup)=479394  K(survivors)=239672  K/m=0.500
+  npts=479394  degen(hi!=lo)=467650  degen/npts=0.976
+  queries(getNext)=148618  Frechet_sum=38.428 ms  C_q=259 ns/query
+  Arr(setup)_sum=2168.984 ms  [gen=3.1 mask=291.8 filter=1861.4]
+

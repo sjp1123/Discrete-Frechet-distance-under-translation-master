@@ -1,0 +1,21 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using header-only CGAL
+-- Targeting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- Found GMP: /usr/lib/x86_64-linux-gnu/libgmp.so  
+-- Found MPFR: /usr/lib/x86_64-linux-gnu/libmpfr.so  
+-- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found suitable version "1.83.0", minimum required is "1.66")  
+-- Boost include dirs: /usr/include
+-- Boost libraries:    
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Configuring done (1.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/sjp/b_original_epick

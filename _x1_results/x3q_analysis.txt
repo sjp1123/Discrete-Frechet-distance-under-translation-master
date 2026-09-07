@@ -1,0 +1,21 @@
+== C_q–ply analysis: /home/sjp/_x1/x3q.csv ==  queries=179816
+  maximal    : count= 61063  mean_ply=  6.50  mean_C_q=    7658 ns
+  non-maximal: count=118753  mean_ply=  4.67  mean_C_q=    2732 ns
+  C_q(maximal)/C_q(non-maximal) = 2.80   ply ratio = 1.39
+  C_q(ply) OLS: C_q ≈ 1482 + 552.2·ply ns   R²=0.003  (positive slope ⇒ deeper cells cost more)
+  ply : n     mean_C_q(ns)
+     1 :   286       128
+     2 : 19446      1656
+     3 : 23623      3028
+     4 : 25877      4013
+     5 : 28313      4741
+     6 : 28436      5478
+     7 : 24221      5200
+     8 : 16097      5431
+     9 :  8719      5857
+    10 :  3611      6269
+    11 :  1122      5799
+    12 :    57     11850
+    13 :     8     29730
+  ρ_count (all/maximal by count) = 2.94
+  ρ_work  (Σt_all / Σt_maximal)  = 1.69   (ρ_work<ρ_count ⇒ asymmetry)

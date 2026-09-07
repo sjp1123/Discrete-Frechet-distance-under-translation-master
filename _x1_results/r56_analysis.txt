@@ -1,0 +1,25 @@
+== R5/R6 (1008 builds) ==  columns: ['build_id', 'path', 'N', 'V_pairs', 'm', 'K_band', 'K_band_distinct', 'K_band_distinct_lo', 'K_exact', 'K_exact_distinct', 'n_degen_band', 'n_degen_geom', 'n_isolated', 't_exact_ms']
+
+ R5 — ε-degenerate (boundary-dependent) maximal families: (M_hi - M_lo)/M_hi
+     ds   n     N    ΣM_hi    ΣM_lo  eps_rate  ΣK_exact
+    geo   8    64    11431    18335    -0.604      2095
+    geo  12   144    39058    62509    -0.600      7122
+    geo  16   256    87827   144109    -0.641     16138
+    geo  20   400    55005    86943    -0.581     11291
+    syn   8    64    48840    74179    -0.519     10925
+    syn  12   144   204398   316024    -0.546     43224
+    syn  16   256   532662   822919    -0.545    112270
+    syn  20   400  1583680  2426050    -0.532    340990
+
+ R6 — isolated discs (Claim V |S|=1 exception): n_isolated
+     ds   n  builds  Σn_isolated max_per_build
+    geo   8     125            0             0
+    geo  12     125            0             0
+    geo  16     125            0             0
+    geo  20      25            0             0
+    syn   8     151            0             0
+    syn  12     151            0             0
+    syn  16     151            0             0
+    syn  20     155            0             0
+
+   TOTAL isolated discs across all builds = 0  ⇒ |S|>=2 hypothesis SUFFICES (no gap)

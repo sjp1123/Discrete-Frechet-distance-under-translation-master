@@ -1,0 +1,25 @@
+== X2 K_0 analysis: /home/sjp/_x1/x2_perpair.csv ==  pairs=100
+censored(timeout/err): A0=0 B0=0
+completed-both pairs=100  answer mismatches(>1e-6)=0
+
+-- K_0 by WALL (end-to-end) --
+  [K_0 wall]  pairs=100 (skip 0)
+     sum-ratio ΣA0/ΣB0 = 1.215
+     pair geomean      = 1.262  95%CI [1.234, 1.292]
+     median=1.249  IQR[1.157,1.340]  min=1.049 max=2.036
+
+-- K_0 by ARRANGEMENT build time (arr_ms), active>0.05ms --
+  [K_0 arr]  pairs=96 (skip 4)
+     sum-ratio ΣA0/ΣB0 = 2.614
+     pair geomean      = 2.704  95%CI [2.648, 2.761]
+     median=2.666  IQR[2.493,2.907]  min=2.265 max=3.749
+
+-- K_0 by INTERNAL (arr+fre) — need combined; computed below --
+  [K_0 internal]  pairs=96 (skip 4)
+     sum-ratio ΣA0/ΣB0 = 1.636
+     pair geomean      = 1.960  95%CI [1.870, 2.055]
+     median=1.930  IQR[1.644,2.363]  min=1.194 max=3.531
+
+-- aggregate internal time on completed-both pairs --
+   A0: Arr_sum=7650ms  Frechet_sum=5075ms  internal=12724ms  (over 100 pairs)
+   B0: Arr_sum=2926ms  Frechet_sum=4853ms  internal=7779ms  (over 100 pairs)

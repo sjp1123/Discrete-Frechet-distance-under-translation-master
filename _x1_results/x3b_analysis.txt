@@ -1,0 +1,6 @@
+== X3-b M_D vs cut_limit: /home/sjp/_x1/x3b.csv ==
+ cut pairs cens           M_D_wall       M_D_internal
+  12    10    0 0.855[0.70,1.00]n=10 0.977[0.69,1.33]n=9
+  24    10    0 0.857[0.66,1.04]n=10 1.116[0.81,1.44]n=9
+  48    10    0 0.801[0.56,1.02]n=10 0.933[0.66,1.25]n=9
+M_D>1 ⇒ maximal helps; rising with cut_limit ⇒ larger arrangements benefit more (break-even trend)

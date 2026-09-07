@@ -1,0 +1,12 @@
+== R4: C_q~ply^alpha  (n=179816 queries, 486 builds) ==
+  (a) pooled          alpha = 1.188
+  (b) within-build FE alpha = 1.170  95%CI[1.146,1.194]  (dof=179329)
+  (c) per-build slopes: n=486 median=1.238 IQR[0.736,1.791]
+
+  rho_count (X3q, all/maximal by count) = 2.945
+  rho_work  observed  (Σt_all/Σt_max)   = 1.742
+  rho_work  predicted (Σply^α/Σmax ply^α, α=1.170) = 2.337
+
+  NOTE reconcile: X1 reported rho_count=3.69 (fut_lmf survivor-point ratio m/K);
+  X3q rho_count=2.945 here is queries(all)/queries(maximal) — different denominator.
+  mean ply: maximal=6.50 non-maximal=4.67

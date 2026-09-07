@@ -1,0 +1,55 @@
+======================================================================
+R1 — AMDAHL CEILING (factor_perpair_geolife100.csv)
+======================================================================
+all-4-complete pairs = 100
+  A0: Wall=39378ms  I(arr+fre)=12751ms
+  B0: Wall=33052ms  I(arr+fre)=7828ms
+  D0: Wall=29459ms  I(arr+fre)=4765ms
+  D1: Wall=28657ms  I(arr+fre)=3282ms
+
+  C solved 3 ways (should agree if C is arm-invariant):
+    (A0,D1): C=22027ms
+    (A0,D0): C=18953ms
+    (B0,D0): C=20346ms
+
+  Using C from (A0,D1) = 22027ms
+  WSL/startup overhead in C (native ~geodata; ~1.4s/exec only on /mnt/c):
+     over 100 pairs, worst-case 1.4s/exec ⇒ 140s if on /mnt/c (we used ~/geodata)
+  A0: internal share=36.7%  end-to-end ceiling=1/(1-share)=1.579x
+  B0: internal share=26.2%  end-to-end ceiling=1/(1-share)=1.355x
+  D0: internal share=17.8%  end-to-end ceiling=1/(1-share)=1.216x
+  D1: internal share=13.0%  end-to-end ceiling=1/(1-share)=1.149x
+
+  >> CEILING (D1): even a zero-cost inner loop caps end-to-end speedup at 1.149x
+
+======================================================================
+R2 — PER-PAIR γ + LEVEL COMPARISON (x3a_sweep.csv)
+======================================================================
+
+ Method A — per-pair γ (slope of log K_exact_distinct vs log N), t-test vs 2.0:
+   geo: n=6 mean_γ=1.049 sd=0.940 CI=(0.297,1.801)  t_p(vs2)=0.056 wilcoxon_p=0.046
+   syn: n=6 mean_γ=1.828 sd=0.163 CI=(1.697,1.958)  t_p(vs2)=0.049 wilcoxon_p=0.046
+   paired γ(syn)-γ(geo): n=6 mean_diff=0.779 wilcoxon_p=0.12
+
+ Method B — K_exact_distinct/N² level, geo vs syn at matched N (paired by N):
+       N   geo_med   syn_med ratio(syn/geo)
+      64        18        70           3.89
+     144        51       301           5.90
+     256       113       730           6.46
+     400       267      2254           8.44
+   Wilcoxon(syn vs geo medians across N): n=4 p=0.068  median ratio=6.17
+
+======================================================================
+R3 — DENSITY CONFOUND (x3a_sweep.csv)
+======================================================================
+     ds   n     N density=2V/N     frac
+    geo   8    64        61.66   0.9787
+    geo  12   144       141.15   0.9871
+    geo  16   256       252.49   0.9902
+    geo  20   400       380.02   0.9524
+    syn   8    64        40.59   0.6443
+    syn  12   144        63.00   0.4406
+    syn  16   256       100.55   0.3943
+    syn  20   400       146.26   0.3666
+   geo: d log(density)/d log(N) = +0.997  (rising)
+   syn: d log(density)/d log(N) = +0.700  (rising)

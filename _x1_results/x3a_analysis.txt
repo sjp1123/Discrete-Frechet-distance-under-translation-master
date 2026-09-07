@@ -1,0 +1,18 @@
+
+================ dataset = geo ================
+  n     N pairs  V_pairs K_band_dist K_exact_dist overret    Ke/N^2 bound N^2/3 degen_ratio
+  8    64     6     1870       108.8         21.0    5.18    0.0051        1365       0.000
+ 12   144     6     9618       333.7         58.7    5.69    0.0028        6912       0.000
+ 16   256     6    30805       794.7        146.3    5.43    0.0022       21845       0.000
+ 20   400     6    68431      2201.7        467.3    4.71    0.0029       53333       0.000
+  γ (slope of log K_exact_distinct vs log N) = 1.647  95%CI[1.270,2.024]  R²=0.973
+  (γ<2 ⇒ input-sensitive: real data below worst-case Θ(N²) cell count)
+
+================ dataset = syn ================
+  n     N pairs  V_pairs K_band_dist K_exact_dist overret    Ke/N^2 bound N^2/3 degen_ratio
+  8    64     6     1025       324.5         73.2    4.44    0.0179        1365       0.000
+ 12   144     6     4616      1351.8        285.5    4.73    0.0138        6912       0.000
+ 16   256     6    13222      3549.5        748.2    4.74    0.0114       21845       0.000
+ 20   400     6    27022     10264.0       2213.7    4.64    0.0138       53333       0.000
+  γ (slope of log K_exact_distinct vs log N) = 1.825  95%CI[1.613,2.036]  R²=0.993
+  (γ<2 ⇒ input-sensitive: real data below worst-case Θ(N²) cell count)

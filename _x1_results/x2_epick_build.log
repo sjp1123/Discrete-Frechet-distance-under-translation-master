@@ -1,0 +1,25 @@
+[  0%] Building CXX object CMakeFiles/all_flags.dir/src/discrete_frechet_light.cpp.o
+[  5%] Building CXX object CMakeFiles/all_flags.dir/src/discrete_frechet_naive.cpp.o
+[ 11%] Building CXX object lib/cgal_disk_arrangements/CMakeFiles/disc_arrangement_traversal.dir/disc_arrangement_traversal.cpp.o
+[ 17%] Building CXX object CMakeFiles/all_flags.dir/src/frechet_light.cpp.o
+[ 17%] Building CXX object CMakeFiles/all_flags.dir/src/geometry_basics.cpp.o
+[ 23%] Building CXX object CMakeFiles/all_flags.dir/src/frechet_naive.cpp.o
+[ 29%] Building CXX object CMakeFiles/all_flags.dir/src/filter.cpp.o
+[ 35%] Building CXX object CMakeFiles/all_flags.dir/src/orth_range_search.cpp.o
+[ 41%] Building CXX object CMakeFiles/all_flags.dir/src/parser.cpp.o
+[ 41%] Building CXX object CMakeFiles/all_flags.dir/src/query.cpp.o
+[ 47%] Building CXX object CMakeFiles/all_flags.dir/src/times.cpp.o
+[ 52%] Building CXX object CMakeFiles/all_flags.dir/src/fut_query.cpp.o
+[ 58%] Building CXX object CMakeFiles/all_flags.dir/src/frechet_under_translation.cpp.o
+[ 64%] Building CXX object CMakeFiles/all_flags.dir/src/curve_fut.cpp.o
+[ 64%] Building CXX object CMakeFiles/all_flags.dir/src/curve_parameters.cpp.o
+[ 70%] Building CXX object CMakeFiles/all_flags.dir/src/fut_n6_algorithm.cpp.o
+[ 76%] Building CXX object CMakeFiles/all_flags.dir/src/divide_and_conquer_vis.cpp.o
+[ 76%] Built target all_flags
+[ 82%] Linking CXX shared library libdisc_arrangement_traversal.so
+[ 82%] Built target disc_arrangement_traversal
+[ 82%] Building CXX object CMakeFiles/calc_frechet_distance_under_translation.dir/src/calc_frechet_distance_under_translation.cpp.o
+[ 88%] Building CXX object CMakeFiles/calc_frechet_distance_under_translation.dir/src/freespace_light_vis.cpp.o
+[ 94%] Building CXX object CMakeFiles/calc_frechet_distance_under_translation.dir/src/certificate.cpp.o
+[100%] Linking CXX executable calc_frechet_distance_under_translation
+[100%] Built target calc_frechet_distance_under_translation

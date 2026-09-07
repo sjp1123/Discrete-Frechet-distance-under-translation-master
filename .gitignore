@@ -1,0 +1,19 @@
+build
+.*.swp
+tools/OV-tools/
+test_data/benchmark_queries/
+
+# --- large external datasets (obtain separately; see REPRODUCE.md) ---
+**/test_data/benchmark/
+**/Geolife Trajectories 1.3/
+*.plt
+
+# --- out-of-source build outputs live in ~/b_* (WSL home), never in repo ---
+b_*/
+CMakeCache.txt
+CMakeFiles/
+
+# --- transient run outputs ---
+*.o
+*.so
+core

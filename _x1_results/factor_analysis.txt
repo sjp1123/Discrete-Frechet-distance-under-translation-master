@@ -1,0 +1,30 @@
+== factor analysis: /home/sjp/_x1/factor_perpair.csv ==  pairs=100
+censored per arm: A0=0  B0=0  D0=0  D1=0
+answer mismatches vs A0 (>1e-6): 0
+
+################  metric = WALL  ################
+  K_0 =A0/B0: geomean=1.190 CI[1.152,1.226]  sum-ratio=1.191  median=1.199 (n=100)
+  S_0 =B0/D0: geomean=1.152 CI[1.125,1.181]  sum-ratio=1.122  median=1.133 (n=100)
+  M_D =D0/D1: geomean=0.984 CI[0.948,1.017]  sum-ratio=1.028  median=1.022 (n=100)
+  T   =A0/D1: geomean=1.350 CI[1.286,1.413]  sum-ratio=1.374  median=1.403 (n=100)
+  identity: geomean(K_0*S_0*M_D)=1.350  vs  geomean(T)=1.350  (n=100)
+
+################  metric = ARRANGEMENT  ################
+  K_0 =A0/B0: geomean=2.688 CI[2.631,2.749]  sum-ratio=2.598  median=2.655 (n=96)
+  S_0 =B0/D0: geomean=25.621 CI[24.630,26.540]  sum-ratio=25.666  median=26.130 (n=95)
+  M_D =D0/D1: geomean=0.190 CI[0.180,0.200]  sum-ratio=0.184  median=0.189 (n=95)
+  T   =A0/D1: geomean=13.080 CI[12.407,13.756]  sum-ratio=12.244  median=13.580 (n=96)
+  identity: geomean(K_0*S_0*M_D)=13.052  vs  geomean(T)=13.052  (n=95)
+
+################  metric = INTERNAL(arr+fre)  ################
+  K_0 =A0/B0: geomean=1.954 CI[1.862,2.052]  sum-ratio=1.629  median=1.932 (n=96)
+  S_0 =B0/D0: geomean=2.833 CI[2.447,3.319]  sum-ratio=1.643  median=2.212 (n=95)
+  M_D =D0/D1: geomean=1.036 CI[0.925,1.154]  sum-ratio=1.452  median=1.195 (n=95)
+  T   =A0/D1: geomean=5.766 CI[5.131,6.490]  sum-ratio=3.885  median=5.771 (n=96)
+  identity: geomean(K_0*S_0*M_D)=5.706  vs  geomean(T)=5.706  (n=95)
+
+-- aggregate internal time (pairs where all 4 arms completed) --
+   A0: Arr_sum=7654ms  Frechet_sum=5097ms  internal=12751ms  (n=100)
+   B0: Arr_sum=2946ms  Frechet_sum=4882ms  internal=7828ms  (n=100)
+   D0: Arr_sum=115ms  Frechet_sum=4650ms  internal=4765ms  (n=100)
+   D1: Arr_sum=625ms  Frechet_sum=2657ms  internal=3282ms  (n=100)

@@ -1,0 +1,15 @@
+-- Using header-only CGAL
+-- Targeting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- Boost include dirs: /usr/include
+-- Boost libraries:    
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Configuring done (0.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/sjp/b_candidate4
+[ 11%] Built target disc_arrangement_traversal
+[ 82%] Built target all_flags
+[100%] Built target calc_frechet_distance_under_translation
+[ 66%] Built target disc_arrangement_traversal
+[ 66%] Linking CXX executable test_maximal_regions
+[100%] Built target test_maximal_regions

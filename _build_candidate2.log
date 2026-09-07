@@ -1,0 +1,24 @@
+### [candidate2] configure Wed Sep  2 09:09:34 KST 2026
+-- Using header-only CGAL
+-- Targeting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- Boost include dirs: /usr/include
+-- Boost libraries:    
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Configuring done (1.0s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/sjp/b_candidate2
+### [candidate2] configure rc=0
+### [candidate2] build Wed Sep  2 09:09:36 KST 2026
+[  5%] Building CXX object lib/cgal_disk_arrangements/CMakeFiles/disc_arrangement_traversal.dir/disc_arrangement_traversal.cpp.o
+[ 11%] Building CXX object CMakeFiles/all_flags.dir/src/frechet_under_translation.cpp.o
+[ 17%] Building CXX object CMakeFiles/all_flags.dir/src/fut_n6_algorithm.cpp.o
+[ 76%] Built target all_flags
+[ 82%] Linking CXX shared library libdisc_arrangement_traversal.so
+[ 82%] Built target disc_arrangement_traversal
+[ 88%] Linking CXX executable calc_frechet_distance_under_translation
+[100%] Built target calc_frechet_distance_under_translation
+### [candidate2] build rc=0
+### [candidate2] artifact:
+-rwxr-xr-x 1 sjp sjp 7827776 Sep  2 09:09 /home/sjp/b_candidate2/calc_frechet_distance_under_translation
+### [candidate2] DONE Wed Sep  2 09:09:46 KST 2026

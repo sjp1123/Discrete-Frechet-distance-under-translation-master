@@ -1,0 +1,37 @@
+== X1 analysis: /home/sjp/_x1/perpair.csv ==
+total pairs=100
+answer mismatches (|off-on|>1e-6): 0
+pairs with builds==0 on 'on' (arrangement never engaged): 4
+
+-- M_D = D0/D1 (off/on), INTERNAL (arr+fre), active pairs --
+  [M_D internal]  pairs_used=96 (skipped 4)
+     sum-ratio      = 1.451   (Σoff / Σon, throughput view)
+     pair geomean   = 1.011   95%CI [0.899, 1.136]   (typical-pair view)
+     median=1.208  IQR[0.783,1.485]  min=0.204  max=4.077
+     Wilcoxon signed-rank on log-ratios: W=1979 n=96 z=-1.28 p~2.02e-01
+
+-- M_D = D0/D1 (off/on), PREDICATE only (fre_ms), active pairs --
+  [M_D predicate]  pairs_used=96 (skipped 4)
+     sum-ratio      = 1.750   (Σoff / Σon, throughput view)
+     pair geomean   = 1.744   95%CI [1.606, 1.903]   (typical-pair view)
+     median=1.670  IQR[1.440,2.026]  min=0.507  max=14.970
+     Wilcoxon signed-rank on log-ratios: W=120 n=96 z=-8.07 p~7.10e-16
+
+-- M_D = D0/D1 (off/on), WALL (end-to-end proxy), ALL pairs --
+  [M_D wall]  pairs_used=100 (skipped 0)
+     sum-ratio      = 1.013   (Σoff / Σon, throughput view)
+     pair geomean   = 0.982   95%CI [0.949, 1.009]   (typical-pair view)
+     median=1.010  IQR[0.963,1.050]  min=0.341  max=1.179
+     Wilcoxon signed-rank on log-ratios: W=2237 n=99 z=-0.83 p~4.06e-01
+
+-- mask cost isolation: mask-only/off INTERNAL (should show mask pass cost) --
+  [mask overhead]  pairs_used=96 (skipped 4)
+     sum-ratio      = 1.080   (Σmask-only / Σoff, throughput view)
+     pair geomean   = 1.288   95%CI [1.220, 1.367]   (typical-pair view)
+     median=1.145  IQR[1.080,1.370]  min=1.009  max=3.395
+     Wilcoxon signed-rank on log-ratios: W=0 n=96 z=-8.51 p~1.78e-17
+
+-- aggregate counts (active pairs, builds>0) --
+   on       : builds=26488 m=2757358 K=746055 K/m=0.271 queries=689354 fre_ms=2653 C_q=3849ns
+   off      : builds=25559 m=2658475 K=2658475 K/m=1.000 queries=2475007 fre_ms=4643 C_q=1876ns
+   mask-only: builds=25559 m=2658475 K=2658475 K/m=1.000 queries=2475007 fre_ms=4663 C_q=1884ns
