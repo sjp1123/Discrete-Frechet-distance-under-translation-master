@@ -68,16 +68,75 @@ Measured on `test_cases/bench_small`, with the fallback forced to fire
 `discs`, never out of the inflated copy.  The pipeline keeps the inflated set;
 the two are deliberately not the same object.
 
-## 4. Measured runtime
+## 4. Measured runtime — `geolife_100` (real data)
 
-`_c5_bench.sh` + `_c5_analyze.py`, `test_cases/bench_100` (100 synthetic pairs,
-n ∈ [100, 1000]), `fut_lmf`, **100 pairs × 4 arms × 3 reps**, arm order reshuffled
-every rep, min per (pair, arm), 120 s censoring (0 censored).  Per-pair
-log-ratios → geomean with a 10 000-resample bootstrap 95% CI, the same protocol
-as `_c4_bench.sh` / `_factor_perpair.sh`.
+`_c5_bench_geo.sh` + `_c5_analyze.py`, the **same `geolife_100` manifest and the
+same curve files candidate 4 was measured on**, `fut_lmf`, **100 pairs × 4 arms ×
+3 reps**, arm order reshuffled every rep, min per (pair, arm), 60 s censoring
+(0 censored).  Per-pair log-ratios → geomean with a 10 000-resample bootstrap
+95% CI, the same protocol as `_c4_bench.sh` / `_factor_perpair.sh`.
 
 Arms: `A0` = `original`; `C5L` = candidate5 `MAXREGION=legacy`; `C5N` =
 `MAXREGION=cech MAXREGION_SLACK=0`; `C5` = `MAXREGION=cech` (default).
+
+> The curve files are not committed.  They were regenerated from the official
+> Geolife 1.3 zip with the tree's own `geolife_converter.py`.  Identity with
+> candidate 4's data is established by `original`'s answers being
+> **bit-identical on all 100 pairs** to the `A0` column of `_c4_bench.csv`
+> (exact Epeck output — one differing coordinate would move the 20th digit),
+> all 200 manifest files present, and the manifest's `n` column matching
+> max(curve length).
+
+| contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) | decider calls |
+|---|---|---|---|---|
+| **`A0` → `C5`** | **1.69× [1.52, 1.90]** | 48.2× [36.8, 63.4] | 36.9× [28.4, 47.9] | 4.49× [3.72, 5.44] |
+| pipeline alone (`A0/C5N`) | 1.24× [1.14, 1.34] | 22.4× | 17.0× | 2.70× |
+| slack given pipeline (`C5N/C5`) | 1.36× [1.22, 1.53] | 2.16× | 2.17× | 1.66× |
+| control (`A0/C5L`) | 1.00× [0.97, 1.01] | 0.98× | 0.98× | 1.000× |
+
+Faster on **86/100** pairs; median 1.50×, p90 3.88×.  Absolute over all 100
+pairs: wall **68.0 s → 39.7 s**, arrangement **12.37 s → 0.61 s**, internal
+**21.07 s → 1.11 s**, decider calls **4 000 135 → 1 201 618**.
+
+Answers vs `original`: max |Δ| **1.11e-8**, **0/100** pairs over ε = 1e-7;
+`C5L` bit-identical on 100/100.
+
+### Against candidate 4, on the same pairs
+
+Both runs share `A0` = `original` as the baseline, so the `A0`-relative ratios
+are the comparable quantity.  Recomputed from `_c4_bench.csv` with
+`_c5_analyze.py`'s statistics (reproduces candidate 4 §6 exactly):
+
+| arm | WALL vs `original` | ARRANGEMENT | INTERNAL |
+|---|---|---|---|
+| candidate 2 | 1.38× [1.32, 1.44] | 12.7× | 5.6× |
+| candidate 4 | 1.98× [1.77, 2.24] | 42.3× | 33.8× |
+| **candidate 5** | **1.69× [1.52, 1.90]** | **48.2×** | **36.9×** |
+
+The **inner-loop** reduction of candidate 5 matches or exceeds candidate 4's —
+with the exact Epeck kernel throughout and none of candidate 2's rewrite.  The
+end-to-end column is *not* strictly comparable: the two runs are on different
+hosts, and the code neither arm touches costs 26.6 s on candidate 4's host
+against 46.9 s here (`wall − (arr+fre)` for `A0`), i.e. this host is ~1.8×
+slower on exactly the term that sets the Amdahl ceiling.  Read it as "candidate
+5 recovers most of candidate 4's end-to-end win without the float rewrite", not
+as a ranking.
+
+### Slack alignment matters here, unlike on synthetic data
+
+The two factors multiply as 1.24× (pipeline) × 1.36× (slack) = 1.69×.  On the
+synthetic `bench_100` of §5 slack alignment is not significant at all.  The
+mechanism is candidate 4 §5: real trajectories contain repeated and
+near-repeated points, so an un-aligned pipeline emits far more regions than the
+decider needs — on pair `13962/4238`, 2 606 regions without slack against **65**
+with it, and 606 ms against 207 ms.  Synthetic random-walk curves carry no such
+degeneracy, so there is nothing for the alignment to collapse.
+
+## 5. Measured runtime — synthetic `bench_100`
+
+Same protocol, `test_cases/bench_100` (100 synthetic pairs, n ∈ [100, 1000]),
+120 s censoring (0 censored).  Committed as `_c5_bench.csv` / `_c5_analysis.txt`;
+the geolife run is `_c5_bench_geo.csv` / `_c5_analysis_geo.txt`.
 
 | contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) | decider calls |
 |---|---|---|---|---|
@@ -93,40 +152,42 @@ pairs: wall **59.4 s → 39.8 s**, arrangement stage **5.03 s → 0.17 s**, inte
 Run twice end to end: 1.508× and 1.498×, i.e. reproducible inside the ~4% rep
 noise characterised in `_x1_results/ENVIRONMENT.md` §2.
 
-### This inverts candidate 4's factor decomposition
+### Why the pipeline alone carries this run
 
 Candidate 4 found the pipeline alone to be a wash (`D1/C4N` = 0.98×) with the
-whole 1.44× coming from slack alignment.  Here it is the other way round: the
-pipeline alone is 1.47× and slack alignment is **not significant** (CI spans 1).
+whole 1.44× coming from slack alignment.  On synthetic curves it is the other
+way round: the pipeline alone is 1.47× and slack alignment is not significant.
 
-Both readings are consistent, and the reason is what the pipeline is replacing.
-On candidate 2's double list the arrangement stage was already down to ~115 ms
-over 100 pairs (X1 §3), leaving nothing for a faster emitter to win — only the
-search trajectory could still move.  On `original` the Epeck arrangement *is* the
-dominant cost of the inner loop, so deleting it pays directly.
+Both readings are consistent, and the reason is what the pipeline replaces.  On
+candidate 2's double list the arrangement stage was already down to ~115 ms over
+100 pairs (X1 §3), leaving nothing for a faster emitter to win — only the search
+trajectory could still move.  On `original` the Epeck arrangement *is* the
+dominant cost of the inner loop, so deleting it pays directly.  What the two
+data sets then decide is how much is *left* for slack alignment: on geolife the
+degeneracy of real trajectories gives it a further 1.36× (§4), on synthetic
+random walks nothing.
 
-The end-to-end figure stays far below the 32.8× arrangement win for the ordinary
-Amdahl reason recorded in R1: the N6 loop is a minority share of the wall.  The
-remaining ~40 s is preprocessing and the driver's own decider calls.
+The end-to-end figure stays far below the arrangement win for the ordinary
+Amdahl reason recorded in R1: the N6 loop is a minority share of the wall.
 
-## 5. Correctness
+## 6. Correctness
 
-Against `original` (exact Epeck), over the 100 benchmark pairs:
+Against `original` (exact Epeck), over the 100 pairs of each run:
 
-| arm | max \|Δ\| | pairs over ε = 1e-7 | bit-identical |
-|---|---|---|---|
-| `C5L` | 0.00e+00 | 0/100 | **100/100** |
-| `C5N` | 7.13e-09 | 0/100 | 15/100 |
-| `C5`  | 1.15e-08 | 0/100 | 0/100 |
+| arm | max \|Δ\| geolife | max \|Δ\| synthetic | pairs over ε = 1e-7 | `C5L` bit-identical |
+|---|---|---|---|---|
+| `C5L` | 0.00e+00 | 0.00e+00 | 0/100 | **100/100** |
+| `C5N` | 1.09e-08 | 7.13e-09 | 0/100 | — |
+| `C5`  | 1.11e-08 | 1.15e-08 | 0/100 | — |
 
 `_c5_check.sh <case_dir> [N]` runs the gates: default vs `original`, the forced
 fallback of §3, and the `C5L` bit-identity check.
 
-## 6. Operating limits
+## 7. Operating limits
 
 * **The fallback is dormant on the `fut_lmf` path.**  With `CUT_LIMIT = 12` and
   `MAXREGION_DP_LIMIT = 20`, `overflow = 0` on every build (checked over 20
-  benchmark pairs).  The §4 numbers are therefore the pipeline alone; Epeck is
+  benchmark pairs).  The §4/§5 numbers are therefore the pipeline alone; Epeck is
   carried as a safety net, not as part of the measured path.
 * **The global `n6` entry point is parity.**  There the disc set is the full
   n₁·n₂ product, every component overflows, and all the work goes to the Epeck
@@ -137,17 +198,26 @@ fallback of §3, and the `C5L` bit-identity check.
 * `CUT_LIMIT` above `MAXREGION_DP_LIMIT` disables the pipeline entirely and
   leaves only the pre-pass overhead; see candidate 4 §7, which applies verbatim.
 
-## 7. Reproducing
+## 8. Reproducing
 
 ```
 bash _c5_build.sh                                   # -> ~/b_candidate5
 bash _build_one.sh original                         # -> ~/b_original  (baseline)
 bash _c5_check.sh  test_cases/bench_small 15        # correctness gates
+
+# geolife_100 (real data).  The curve files are NOT committed: run
+# original/test_data/benchmark/fetch_and_convert_data.py, then _cp_manifest_data.sh
+# to stage the manifest's files in a native-FS ~/geodata.
+bash _c5_bench_geo.sh 100 3 ~/_c5/bench_geo.csv
+python3 _c5_analyze.py ~/_c5/bench_geo.csv          # -> _c5_analysis_geo.txt
+
+# synthetic bench_100 (committed data, no download needed)
 bash _c5_bench.sh  test_cases/bench_100 100 3 ~/_c5/bench.csv
 python3 _c5_analyze.py ~/_c5/bench.csv              # -> _c5_analysis.txt
 ```
 
-Committed outputs: `_c5_bench.csv` (per-pair raw) and `_c5_analysis.txt`.
+Committed outputs: `_c5_bench_geo.csv` / `_c5_analysis_geo.txt` (geolife) and
+`_c5_bench.csv` / `_c5_analysis.txt` (synthetic), all per-pair raw.
 
 **Environment used for the §4 numbers** — WSL2 Ubuntu, g++ 15.2, CGAL **6.1.1**,
 CMake 4.2.3, `RelWithDebInfo`.  This is *not* the g++ 13 / CGAL 5.6 toolchain of
@@ -157,9 +227,8 @@ arms, so the contrast is unaffected; the committed `CMakeLists.txt` is left at
 C++14 to match the other arms.  Absolute times are not comparable across the two
 toolchains; the ratios are the result.
 
-**Data caveat.**  `geolife_100` needs the 2.2 GB Geolife dataset, which is not
-committed and was not available on the measuring host, so §4 uses the committed
-synthetic `bench_100`.  The prior arms' headline numbers are on `geolife_100`
-and are therefore **not** directly comparable.  The one same-dataset anchor is
-the repository's own `bench_100.out` (different machine), which recorded
-`original` → candidate 2 at 1.24×.
+**Data.**  §4 is on `geolife_100`, the same manifest and the same curve files
+as every prior arm, so it is directly comparable to candidate 2 and candidate 4
+through the shared `A0` baseline.  §5 is on the committed synthetic
+`bench_100`; the repository's own `bench_100.out` (different machine) recorded
+`original` → candidate 2 at 1.24× there.

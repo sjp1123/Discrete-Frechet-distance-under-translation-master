@@ -1,0 +1,38 @@
+== candidate5 analysis: /home/sj10132/_c5/bench_geo.csv ==  pairs=100
+censored: A0=0  C5L=0  C5N=0  C5=0
+
+-- answer agreement vs A0 (original, exact Epeck) --
+  C5L  n=100  max|d|=0.00e+00  mean|d|=0.00e+00  #(>eps=1e-7)=0  #(bit-identical)=100
+  C5N  n=100  max|d|=1.09e-08  mean|d|=3.84e-09  #(>eps=1e-7)=0  #(bit-identical)=21
+  C5   n=100  max|d|=1.11e-08  mean|d|=4.61e-09  #(>eps=1e-7)=0  #(bit-identical)=14
+
+################  metric = WALL  ################
+  MAIN  A0/C5 : geomean=1.687 CI[1.515,1.889]  sum-ratio=1.712  median=1.501  p10=0.996 p90=3.878  faster=86/100  (original -> original+Cech (slack-aligned))
+  pipe  A0/C5N: geomean=1.240 CI[1.140,1.342]  sum-ratio=1.332  median=1.198  p10=0.990 p90=1.938  faster=75/100  (pipeline only, no slack alignment)
+  slack C5N/C5: geomean=1.361 CI[1.217,1.531]  sum-ratio=1.285  median=1.002  p10=0.982 p90=3.868  faster=68/100  (slack alignment given the pipeline)
+  ctrl  A0/C5L: geomean=0.995 CI[0.974,1.014]  sum-ratio=1.003  median=1.001  p10=0.985 p90=1.060  faster=55/100  (control: same binary, legacy emitter)
+
+################  metric = ARRANGEMENT stage  ################
+  MAIN  A0/C5 : geomean=48.241 CI[36.768,63.359]  sum-ratio=20.339  median=32.443  p10=16.957 p90=396.444  faster=95/96  (original -> original+Cech (slack-aligned))
+  pipe  A0/C5N: geomean=22.391 CI[18.337,26.759]  sum-ratio=9.661  median=26.246  p10=10.238 p90=51.064  faster=94/96  (pipeline only, no slack alignment)
+  slack C5N/C5: geomean=2.155 CI[1.671,2.825]  sum-ratio=2.105  median=1.127  p10=0.891 p90=15.630  faster=73/96  (slack alignment given the pipeline)
+  ctrl  A0/C5L: geomean=0.979 CI[0.951,1.005]  sum-ratio=0.992  median=1.000  p10=0.825 p90=1.129  faster=47/96  (control: same binary, legacy emitter)
+
+################  metric = INTERNAL (arr+fre)  ################
+  MAIN  A0/C5 : geomean=36.872 CI[28.386,47.946]  sum-ratio=19.053  median=24.474  p10=13.170 p90=278.643  faster=95/96  (original -> original+Cech (slack-aligned))
+  pipe  A0/C5N: geomean=16.986 CI[14.029,20.220]  sum-ratio=10.616  median=19.307  p10=8.110 p90=37.154  faster=94/96  (pipeline only, no slack alignment)
+  slack C5N/C5: geomean=2.171 CI[1.676,2.846]  sum-ratio=1.795  median=1.144  p10=0.818 p90=16.811  faster=75/96  (slack alignment given the pipeline)
+  ctrl  A0/C5L: geomean=0.981 CI[0.957,1.006]  sum-ratio=0.996  median=0.996  p10=0.842 p90=1.133  faster=46/96  (control: same binary, legacy emitter)
+
+################  metric = BLACK-BOX CALLS  ################
+  MAIN  A0/C5 : geomean=4.487 CI[3.722,5.443]  sum-ratio=3.329  median=3.196  p10=1.841 p90=22.348  faster=96/100  (original -> original+Cech (slack-aligned))
+  pipe  A0/C5N: geomean=2.704 CI[2.422,3.012]  sum-ratio=2.677  median=2.804  p10=1.607 p90=5.128  faster=93/100  (pipeline only, no slack alignment)
+  slack C5N/C5: geomean=1.659 CI[1.413,1.971]  sum-ratio=1.244  median=1.016  p10=1.000 p90=8.621  faster=83/100  (slack alignment given the pipeline)
+  ctrl  A0/C5L: geomean=1.000 CI[1.000,1.000]  sum-ratio=1.000  median=1.000  p10=1.000 p90=1.000  faster=0/100  (control: same binary, legacy emitter)
+
+-- absolute totals (pairs where all arms completed: n=100) --
+  arm                                wall       arr   arr+fre    bbcalls
+  A0   original (Epeck+DCEL)       68.01s    12.37s    21.07s    4000135
+  C5L  c5 legacy control           67.81s    12.46s    21.15s    4000135
+  C5N  c5 Cech, no slack           51.06s     1.28s     1.98s    1494231
+  C5   c5 Cech + slack             39.74s     0.61s     1.11s    1201618
