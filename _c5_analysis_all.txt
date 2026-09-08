@@ -1,0 +1,46 @@
+== four-arm analysis: _c5_bench_all.csv ==  pairs=100
+censored: A0=0  D1=0  C4=0  C5=0
+
+-- answers vs A0 (original, exact Epeck) --
+  D1  max|d|=4.44e-09  over-eps(1e-7)=0/100  bit-identical=93
+  C4  max|d|=1.11e-08  over-eps(1e-7)=0/100  bit-identical=14
+  C5  max|d|=1.11e-08  over-eps(1e-7)=0/100  bit-identical=14
+
+################  metric = WALL  ################
+  A0/D1  geomean=  1.272 CI[1.205,1.340]  median=  1.278  faster=83/100
+  A0/C4  geomean=  1.685 CI[1.520,1.877]  median=  1.570  faster=83/100
+  A0/C5  geomean=  1.698 CI[1.533,1.894]  median=  1.591  faster=80/100
+  D1/C4  geomean=  1.324 CI[1.216,1.456]  median=  1.036  faster=75/100
+  D1/C5  geomean=  1.334 CI[1.223,1.470]  median=  1.089  faster=71/100
+  C4/C5  geomean=  1.008 CI[0.998,1.019]  median=  1.000  faster=53/100
+
+################  metric = ARRANGEMENT  ################
+  A0/D1  geomean= 12.873 CI[11.924,13.894]  median= 13.385  faster=96/96
+  A0/C4  geomean= 43.632 CI[33.248,57.430]  median= 30.138  faster=95/96
+  A0/C5  geomean= 48.087 CI[36.557,63.161]  median= 30.235  faster=95/96
+  D1/C4  geomean=  3.389 CI[2.583,4.440]  median=  2.168  faster=86/96
+  D1/C5  geomean=  3.735 CI[2.842,4.930]  median=  2.386  faster=88/96
+  C4/C5  geomean=  1.102 CI[1.028,1.184]  median=  1.098  faster=65/96
+
+################  metric = INTERNAL (arr+fre)  ################
+  A0/D1  geomean=  5.252 CI[4.624,5.979]  median=  5.060  faster=95/96
+  A0/C4  geomean= 33.990 CI[25.965,44.380]  median= 22.048  faster=95/96
+  A0/C5  geomean= 36.650 CI[28.009,48.458]  median= 22.789  faster=95/96
+  D1/C4  geomean=  6.472 CI[4.879,8.637]  median=  5.078  faster=89/96
+  D1/C5  geomean=  6.979 CI[5.259,9.287]  median=  5.565  faster=91/96
+  C4/C5  geomean=  1.078 CI[1.013,1.153]  median=  1.096  faster=63/96
+
+################  metric = DECIDER CALLS  ################
+  A0/D1  geomean=  2.082 CI[1.938,2.237]  median=  2.003  faster=94/100
+  A0/C4  geomean=  4.528 CI[3.746,5.481]  median=  3.204  faster=96/100
+  A0/C5  geomean=  4.487 CI[3.726,5.432]  median=  3.196  faster=96/100
+  D1/C4  geomean=  2.175 CI[1.848,2.599]  median=  1.498  faster=95/100
+  D1/C5  geomean=  2.156 CI[1.824,2.575]  median=  1.492  faster=94/100
+  C4/C5  geomean=  0.991 CI[0.973,1.000]  median=  1.000  faster=0/100
+
+-- absolute totals, all arms complete (n=100) --
+  arm                                  wall       arr   arr+fre  residual    bbcalls
+  A0   original (Epeck+DCEL)         72.71s    13.44s    22.85s    49.86s    4000135
+  D1   candidate2 (double list)      54.40s     1.08s     6.52s    47.88s    2002463
+  C4   candidate4 (double+Cech)      42.06s     0.67s     1.23s    40.83s    1192443
+  C5   candidate5 (Epeck+Cech)       41.56s     0.66s     1.21s    40.35s    1201618

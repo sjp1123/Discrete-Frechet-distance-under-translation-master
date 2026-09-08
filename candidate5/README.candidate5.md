@@ -101,26 +101,48 @@ pairs: wall **68.0 s → 39.7 s**, arrangement **12.37 s → 0.61 s**, internal
 Answers vs `original`: max |Δ| **1.11e-8**, **0/100** pairs over ε = 1e-7;
 `C5L` bit-identical on 100/100.
 
-### Against candidate 4, on the same pairs
+### Against candidate 2 and candidate 4 — same machine, same round-robin
 
-Both runs share `A0` = `original` as the baseline, so the `A0`-relative ratios
-are the comparable quantity.  Recomputed from `_c4_bench.csv` with
-`_c5_analyze.py`'s statistics (reproduces candidate 4 §6 exactly):
+`_c5_bench_all.sh` + `_c5_analyze_all.py` rebuild **all four arms on this host
+with this toolchain** and interleave them pair by pair in one run, so the
+untouched-code term that sets the Amdahl ceiling is identical for every arm.
+Sanity gate: `A0`, `D1` and `C4` reproduce the answers recorded in
+`_c4_bench.csv` bit-for-bit, so the arms are the same programs, just rebuilt.
 
-| arm | WALL vs `original` | ARRANGEMENT | INTERNAL |
-|---|---|---|---|
-| candidate 2 | 1.38× [1.32, 1.44] | 12.7× | 5.6× |
-| candidate 4 | 1.98× [1.77, 2.24] | 42.3× | 33.8× |
-| **candidate 5** | **1.69× [1.52, 1.90]** | **48.2×** | **36.9×** |
+| contrast | WALL | ARRANGEMENT | INTERNAL | decider calls |
+|---|---|---|---|---|
+| `original` → candidate 2 | 1.27× [1.21, 1.34] | 12.9× | 5.25× | 2.08× |
+| `original` → candidate 4 | 1.69× [1.52, 1.88] | 43.6× | 34.0× | 4.53× |
+| **`original` → candidate 5** | **1.70× [1.53, 1.89]** | 48.1× | 36.7× | 4.49× |
+| candidate 2 → candidate 5 | 1.33× [1.22, 1.47] | 3.74× | 6.98× | 2.16× |
+| **candidate 4 → candidate 5** | **1.01× [1.00, 1.02]** | 1.10× | 1.08× | 0.99× |
 
-The **inner-loop** reduction of candidate 5 matches or exceeds candidate 4's —
-with the exact Epeck kernel throughout and none of candidate 2's rewrite.  The
-end-to-end column is *not* strictly comparable: the two runs are on different
-hosts, and the code neither arm touches costs 26.6 s on candidate 4's host
-against 46.9 s here (`wall − (arr+fre)` for `A0`), i.e. this host is ~1.8×
-slower on exactly the term that sets the Amdahl ceiling.  Read it as "candidate
-5 recovers most of candidate 4's end-to-end win without the float rewrite", not
-as a ranking.
+Absolute over the 100 pairs:
+
+| arm | wall | arrangement | arr+fre | residual (wall − internal) | decider calls |
+|---|--:|--:|--:|--:|--:|
+| `A0` original | 72.71 s | 13.44 s | 22.85 s | 49.86 s | 4 000 135 |
+| `D1` candidate 2 | 54.40 s | 1.08 s | 6.52 s | 47.88 s | 2 002 463 |
+| `C4` candidate 4 | 42.06 s | 0.67 s | 1.23 s | 40.83 s | 1 192 443 |
+| `C5` candidate 5 | **41.56 s** | 0.66 s | 1.21 s | 40.35 s | 1 201 618 |
+
+**Candidate 4 and candidate 5 are indistinguishable** — 1.01× on the wall, CI
+[1.00, 1.02], and within 1% on every absolute total and on the decider-call
+count.  Once the Čech pipeline is in place, candidate 2's float rewrite buys
+nothing: candidate 5 reaches the same end point from the untouched exact-Epeck
+tree.  What the rewrite *was* worth on its own is the 1.27× of row 1, and the
+pipeline supersedes it (`D1` → `C5` = 1.33× on top).
+
+> Candidate 5's small edge on the internal metric (1.08×) is not a real
+> algorithmic difference: candidate 4's decider loop carries the per-query
+> `chrono` instrumentation and `x3q_row` call that candidate 5 does not.  Read
+> `C4 ≈ C5`, not `C5 > C4`.
+
+An earlier revision of this file compared candidate 5's run against candidate 4's
+*recorded* numbers from `_c4_bench.csv` and read 1.69× against 1.98×.  That gap
+was a host artifact — that recording was made on a machine whose untouched-code
+cost is 26.6 s against 49.9 s here.  Measured together, the two arms tie.  The
+cross-host comparison is retained nowhere; use `_c5_bench_all.sh`.
 
 ### Slack alignment matters here, unlike on synthetic data
 
@@ -208,24 +230,36 @@ bash _c5_check.sh  test_cases/bench_small 15        # correctness gates
 # geolife_100 (real data).  The curve files are NOT committed: run
 # original/test_data/benchmark/fetch_and_convert_data.py, then _cp_manifest_data.sh
 # to stage the manifest's files in a native-FS ~/geodata.
-bash _c5_bench_geo.sh 100 3 ~/_c5/bench_geo.csv
+bash _c5_bench_geo.sh 100 3 ~/_c5/bench_geo.csv     # A0 vs C5L/C5N/C5
 python3 _c5_analyze.py ~/_c5/bench_geo.csv          # -> _c5_analysis_geo.txt
+
+# ranking against candidate2 / candidate4 -- all four arms, one round-robin.
+# Build them here too, with the SAME toolchain flags, or the comparison is
+# confounded by the host:
+bash _build_one.sh candidate2 ; bash _c4_build.sh
+bash _c5_bench_all.sh 100 3 ~/_c5/bench_all.csv
+python3 _c5_analyze_all.py ~/_c5/bench_all.csv      # -> _c5_analysis_all.txt
 
 # synthetic bench_100 (committed data, no download needed)
 bash _c5_bench.sh  test_cases/bench_100 100 3 ~/_c5/bench.csv
 python3 _c5_analyze.py ~/_c5/bench.csv              # -> _c5_analysis.txt
 ```
 
-Committed outputs: `_c5_bench_geo.csv` / `_c5_analysis_geo.txt` (geolife) and
-`_c5_bench.csv` / `_c5_analysis.txt` (synthetic), all per-pair raw.
+Committed outputs, all per-pair raw: `_c5_bench_all.csv` /
+`_c5_analysis_all.txt` (four-arm ranking), `_c5_bench_geo.csv` /
+`_c5_analysis_geo.txt` (geolife factor decomposition), `_c5_bench.csv` /
+`_c5_analysis.txt` (synthetic).
 
 **Environment used for the §4 numbers** — WSL2 Ubuntu, g++ 15.2, CGAL **6.1.1**,
 CMake 4.2.3, `RelWithDebInfo`.  This is *not* the g++ 13 / CGAL 5.6 toolchain of
 `_x1_results/ENVIRONMENT.md`.  CGAL ≥ 6 requires C++17 while the tree requests
 C++14, so `-std=c++14` was raised to `-std=c++17` — applied identically to both
-arms, so the contrast is unaffected; the committed `CMakeLists.txt` is left at
-C++14 to match the other arms.  Absolute times are not comparable across the two
-toolchains; the ratios are the result.
+arms -- including candidate 2 and candidate 4 when they are rebuilt for
+`_c5_bench_all.sh` -- so no contrast is affected; the committed `CMakeLists.txt`
+is left at C++14 to match the other arms.  Absolute times here are **not**
+comparable to numbers recorded in `_c4_bench.csv` or `_x1_results/` on the
+g++ 13 / CGAL 5.6 host: `original` costs 39.5 s there against 72.7 s here on the
+same 100 pairs.  Any cross-arm claim must come from arms measured together.
 
 **Data.**  §4 is on `geolife_100`, the same manifest and the same curve files
 as every prior arm, so it is directly comparable to candidate 2 and candidate 4
