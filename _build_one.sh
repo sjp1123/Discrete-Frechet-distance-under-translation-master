@@ -3,7 +3,7 @@
 # Out-of-source build (source on /mnt/c, objects in WSL native fs ~/) of just the
 # calc_frechet_distance_under_translation target.
 name="$1"
-ROOT="/mnt/c/Users/shiju/Downloads/Discrete-Frechet-distance-under-translation-master/Discrete-Frechet-distance-under-translation-master"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 SRC="$ROOT/$name"
 BUILD="$HOME/b_$name"
 LOG="$ROOT/_build_${name}.log"
