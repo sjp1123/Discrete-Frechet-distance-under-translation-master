@@ -19,10 +19,24 @@ EPS = 1e-7
 PAPER_LMF = (140.0, 12387, 52.3)
 PAPER_DEC = {"all": (27.3, 1860), "same": (18.7, 1159)}
 
+import glob, io, tarfile
+_TARS = None
+def _open(fn):
+    """Loose CSV in results/, else the same file name inside results/raw_characters_uci_*.tar.gz."""
+    global _TARS
+    if os.path.exists(fn): return open(fn)
+    if _TARS is None: _TARS = [tarfile.open(t) for t in sorted(glob.glob(os.path.join(R, "raw_characters_uci_*.tar.gz")))]
+    base = os.path.basename(fn)
+    for t in _TARS:
+        try: return io.TextIOWrapper(t.extractfile(base), encoding="utf-8")
+        except KeyError: pass
+    return None
+
 def rows(fn):
-    if not os.path.exists(fn): return []
+    f = _open(fn)
+    if f is None: return []
     out = []
-    for r in csv.DictReader(open(fn)):
+    for r in csv.DictReader(f):
         if any(v in (None, "") for v in r.values()): continue
         out.append(r)
     return out
