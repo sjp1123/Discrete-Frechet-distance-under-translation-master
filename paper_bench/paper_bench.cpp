@@ -132,7 +132,13 @@ int main(int argc, char* argv[])
 		std::cerr << "decider: " << q << " queries -> " << out << "\n";
 	}
 	else if (mode == "gen") {
-		// verbatim formulas of src/fut_create_benchmark_decider.cpp
+		// Distance factors follow the PAPER (ESA 2020, section 6, "Decider experiments"):
+		//   NO  queries: (1 - 4^l) * delta_LB,  l = -10 .. -1
+		//   YES queries: (1 + 4^l) * delta_UB,  l = -10 ..  2
+		// with delta_LB = delta* - eps, delta_UB = delta* + eps, eps = 1e-7, so the
+		// interval [delta_LB, delta_UB] has width 2e-7 as the paper requires.
+		// (The tree's own fut_create_benchmark_decider.cpp uses 2^l instead, which makes
+		// the hardest NO query 1 - 9.8e-4 instead of the paper's 1 - 9.5e-7.)
 		const distance_t precision = 1e-7;
 		std::vector<int> ls_plus, ls_minus;
 		for (int l = -10; l <= 2; ++l) { ls_plus.push_back(l); }
@@ -154,11 +160,11 @@ int main(int argc, char* argv[])
 			auto delta_star = frechet.calcDistance2(c1, c2);
 			check << f1 << " " << f2 << " " << delta_star << "\n";
 			for (std::size_t i = 0; i < ls_minus.size(); ++i) {
-				auto distance = (delta_star - precision) * (1. - std::pow(2, ls_minus[i]));
+				auto distance = (delta_star - precision) * (1. - std::pow(4, ls_minus[i]));
 				fminus[i] << f1 << " " << f2 << " " << distance << "\n";
 			}
 			for (std::size_t i = 0; i < ls_plus.size(); ++i) {
-				auto distance = (delta_star + precision) * (1. + std::pow(2, ls_plus[i]));
+				auto distance = (delta_star + precision) * (1. + std::pow(4, ls_plus[i]));
 				fplus[i] << f1 << " " << f2 << " " << distance << "\n";
 			}
 			if (++q % 200 == 0) { std::cerr << "  " << q << " pairs\n"; }
