@@ -59,3 +59,81 @@ all-characters  & 21{,}000 & 100.60 & 24.06 & 4.18$\times$ & 12{,}246 & 3{,}144 
 \end{tabular}
 \end{table}
 ```
+
+## Table C — LMF profile in the format of the paper's Table 4 (21,000 `characters_full` instances)
+
+Rows are the same timers the authors' harness prints (`updateProfileValComp` in
+`src/fut_paper_experiments.cpp`): Preprocessing = `FUT_PREPROCESSING2`, Black-box calls
+(Lipschitz) = `FUT_BLACKBOX2`, Arrangement estimation = `FUT_DISCSELECTION2`, Arrangement
+algorithm = `FUT_ARRANGEMENT2` with Construction = `FUT_N6_ARR` and Black-box calls =
+`FUT_N6_FRECHET`; the same columns of `raw_characters_uci_lmf.tar.gz`. Sub-rows do not add up
+to the total exactly (untimed overhead), as in the paper.
+
+| Algorithm | Time | | Black-Box Calls |
+|---|---|--:|--:|
+| **LMF, baseline** (authors' code, this machine) | **2,112,604 ms** (100.6 ms per instance) | | **257,162,361** (12,245.8 per instance) |
+| | - Preprocessing | 68,013 ms | |
+| | - Black-box calls (Lipschitz) | 218,199 ms | |
+| | - Arrangement estimation | 143,772 ms | |
+| | - Arrangement algorithm | 1,651,253 ms | |
+| | &nbsp;&nbsp;\* Construction | 1,257,343 ms | |
+| | &nbsp;&nbsp;\* Black-box calls | 272,961 ms | |
+| **LMF, proposed** (maximal Čech regions, no slack) | **505,247 ms** (24.1 ms per instance) | | **66,015,748** (3,143.6 per instance) |
+| | - Preprocessing | 66,974 ms | |
+| | - Black-box calls (Lipschitz) | 221,416 ms | |
+| | - Arrangement estimation | 125,753 ms | |
+| | - Arrangement algorithm | 60,854 ms | |
+| | &nbsp;&nbsp;\* Construction | 33,968 ms | |
+| | &nbsp;&nbsp;\* Black-box calls | 26,239 ms | |
+| *LMF as reported in [BKN20], Table 4 (authors' machine)* | *2,938,512 ms (140.0 ms per instance)* | | *260,128,449 (12,387.1 per instance)* |
+| | - Preprocessing | 71,728 ms | |
+| | - Black-box calls (Lipschitz) | 400,189 ms | |
+| | - Arrangement estimation | 166,479 ms | |
+| | - Arrangement algorithm | 2,250,493 ms | |
+| | &nbsp;&nbsp;\* Construction | 1,537,500 ms | |
+| | &nbsp;&nbsp;\* Black-box calls | 545,442 ms | |
+
+```latex
+\begin{table}[t]
+\centering
+\caption{Value computation on the 21{,}000 \texttt{characters\_full} instances
+of~\cite{BKN20}, in the format of their Table~4: LMF with the original arrangement
+construction (baseline) and LMF with the proposed maximal-region construction, both
+measured here on the same machine, one measurement per instance. The rows are the timers
+of the authors' harness; sub-rows omit untimed overhead. For reference, \cite{BKN20}
+report 2{,}938{,}512\,ms (140.0\,ms per instance) and 260{,}128{,}449 black-box calls
+on their machine.}
+\label{tab:lmf-profile}
+\begin{tabular}{llrr}
+\toprule
+\textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Time}} & \textbf{Black-Box Calls} \\
+\midrule
+LMF (baseline) & \multicolumn{2}{c}{2{,}112{,}604 ms} & 257{,}162{,}361 \\
+               & \multicolumn{2}{c}{(100.6 ms per instance)} & (12{,}245.8 per instance) \\
+\cmidrule(r){2-3}
+& - Preprocessing                & 68{,}013 ms \\
+\cmidrule(r){2-3}
+& - Black-box calls (Lipschitz)  & 218{,}199 ms \\
+\cmidrule(r){2-3}
+& - Arrangement estimation       & 143{,}772 ms \\
+\cmidrule(r){2-3}
+& - Arrangement algorithm        & 1{,}651{,}253 ms \\
+& \hphantom{bla} * Construction    & 1{,}257{,}343 ms \\
+& \hphantom{bla} * Black-box calls & 272{,}961 ms \\
+\midrule
+LMF (proposed) & \multicolumn{2}{c}{505{,}247 ms} & 66{,}015{,}748 \\
+               & \multicolumn{2}{c}{(24.1 ms per instance)} & (3{,}143.6 per instance) \\
+\cmidrule(r){2-3}
+& - Preprocessing                & 66{,}974 ms \\
+\cmidrule(r){2-3}
+& - Black-box calls (Lipschitz)  & 221{,}416 ms \\
+\cmidrule(r){2-3}
+& - Arrangement estimation       & 125{,}753 ms \\
+\cmidrule(r){2-3}
+& - Arrangement algorithm        & 60{,}854 ms \\
+& \hphantom{bla} * Construction    & 33{,}968 ms \\
+& \hphantom{bla} * Black-box calls & 26{,}239 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
