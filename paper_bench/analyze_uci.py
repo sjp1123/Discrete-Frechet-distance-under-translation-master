@@ -8,6 +8,8 @@ same-letter pairs (s1 == s2).  Paper (ESA 2020, Table 4, all 21,000): 140.0 ms a
 12,387 black-box calls per instance, construction 52.3 % of the time.
 Decider: results/characters_uci_<all|same>_<tag>_<l>_<sign>_<arm>_r1.csv,
 tag paperq = the authors' files (2^l factors), paperq4 = same pairs with (1 +- 4^l).
+Rows are matched by line index (the authors' all-characters list contains two
+repeated pairs, which are kept as separate instances as in the harness).
 Paper (Table 2): all-characters 27.3 ms / 1,860 calls, same-characters 18.7 ms / 1,159
 calls per instance.
 """
@@ -40,13 +42,13 @@ sets = {}
 for l in open(os.path.join(here, "queries", "characters_uci_lmf_sets.txt")):
     a, b, s1, s2 = l.split(); sets[(a, b)] = (s1, s2)
 arms = ["original", "candidate5", "candidate5_noslack"]
-lmf = {a: {(r["file1"], r["file2"]): r for r in rows(os.path.join(R, f"characters_uci_lmf_{a}_r1.csv"))} for a in arms}
+lmf = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_lmf_{a}_r1.csv")))} for a in arms}
 arms = [a for a in arms if lmf[a]]
 if "original" in arms:
     out.append("## Value computation (LMF, `calcDistance2`), the authors' `characters_full_*` pairs\n")
     out.append(f"Paper Table 4 (all 21,000 instances, authors' machine): {PAPER_LMF[0]} ms, {PAPER_LMF[1]:,} black-box calls per instance, construction {PAPER_LMF[2]} % of time.\n")
     for label, keep in (("all pairs (210 letter pairs)", lambda s: True), ("same-letter pairs (20 files)", lambda s: s[0] == s[1])):
-        common = [k for k in lmf["original"] if keep(sets[k]) and all(k in lmf[a] for a in arms)]
+        common = [k for k in lmf["original"] if keep(sets[(lmf["original"][k]["file1"], lmf["original"][k]["file2"])]) and all(k in lmf[a] for a in arms)]
         if not common: continue
         out.append(f"### {label}: {len(common)} pairs measured on every arm\n")
         out.append("| arm | mean ms/instance | total s | bb calls/instance | construction % | arr. bb calls % | max abs diff vs original | pairs over 1e-7 (cand > orig) | vs original: sum-ratio, geomean [95% CI], median, faster |")
@@ -73,7 +75,7 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
     for ds, name in (("all", "all-characters"), ("same", "same-characters")):
         table = []; tot = {"original": [0, 0, 0], "candidate5": [0, 0, 0]}; wrong_t = [0, 0]; dis_t = 0
         for l, sign, exp in LS:
-            d = {a: {(r["file1"], r["file2"]): r for r in rows(os.path.join(R, f"characters_uci_{ds}_{tag}_{l}_{sign}_{a}_r1.csv"))} for a in tot}
+            d = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_{ds}_{tag}_{l}_{sign}_{a}_r1.csv")))} for a in tot}
             common = [k for k in d["original"] if k in d["candidate5"]]
             if not common: continue
             t = {a: sum(float(d[a][k]["time_ms"]) for k in common) for a in tot}
