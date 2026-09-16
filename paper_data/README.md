@@ -26,6 +26,16 @@ and the recorded source commits / checksums.
 | result | mean **120.99 vertices** per curve after duplicate removal (min 61, max 183) — the paper's 120.9 |
 | numbering | `data/1.txt … 1429.txt` = mirror's train set (letters in `labels_train.txt`), `1430.txt … 2858.txt` = mirror's test set.  The mirror's order is a **shuffle** of the UCI order, so the authors' index-based query files (`test_data/fut_*_benchmark_queries/characters_*`) cannot be replayed on it; `paper_bench/gen_pairs.py` draws fresh seeded pairs instead.  The per-letter counts of the labelled half are 45–60 % of the authors' per-letter totals (`character_classification_data/`), consistent with a random split of the same set. |
 
+## characters_uci/ — the ORIGINAL UCI file, authors' numbering (use this one)
+
+| item | value |
+|---|---|
+| source | `mixoutALL_shifted.mat` from the UCI repository (MATLAB 5.0 file created 2008-03-14), supplied by the user; SHA-256 in `characters_uci/SOURCE_SHA256.txt` |
+| conversion | `convert_characters_uci.py`, the authors' `character_converter.m` line by line; `data/<i>.txt`, i = 1..2858 in the file's order |
+| identity check | the authors' per-letter index lists (`test_data/character_classification_data/*_dataset.txt`, 2 858 entries) agree with `consts.charlabels` on every index; the authors' `characters_fut_decider_computed_distances.check` (δ* of their 1 000 all-characters pairs) is reproduced by `original` to within 1.2e-8 (see `paper_bench/results/RESULTS_uci.md`) |
+| result | 2 858 curves, mean 120.99 vertices after duplicate removal (min 61, max 183) |
+| consequence | the authors' instance files apply unchanged: `fut_val_computation_benchmark_queries/characters_full_*` (21 000 LMF pairs) and `fut_decider_benchmark_queries/characters_fut_decider{,_samechar}_*` (23 × 1 000 decider instances each). `paper_bench/run_uci.sh` runs exactly those. `characters/` (mirror order) is kept only for the earlier results. |
+
 ## sigspatial_subset/ — **101 of the 20 199 curves** (subset!)
 
 | item | value |
