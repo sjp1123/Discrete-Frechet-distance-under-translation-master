@@ -1,8 +1,11 @@
 # Paper tables — Characters, the authors' data and instances (UCI file)
 
-Source: `RESULTS_uci.md` (raw: `raw_characters_uci_{lmf,decider}.tar.gz`). One measurement per
-instance, single core. baseline = original (CGAL arrangement), proposed = candidate5_noslack
-(LMF) / candidate5 (decider). Paper columns from Bringmann–Künnemann–Nusser, ESA 2020.
+Source: `RESULTS_uci_r2.md` for LMF (raw: `raw_characters_uci_lmf_r2.tar.gz`; original, candidate5_noslack and
+candidate5_exact measured back-to-back on one idle core of the same container instance) and
+`RESULTS_uci.md` for the decider (raw: `raw_characters_uci_decider.tar.gz`, earlier container instance —
+absolute times are not comparable across the two instances). One measurement per instance.
+baseline = original (CGAL arrangement); proposed = candidate5 with MAXREGION_EXACT=1 and MAXREGION_SLACK=0
+(filtered P2/P3 predicates with rational fallback) for LMF, candidate5 for the decider. Paper columns from Bringmann–Künnemann–Nusser, ESA 2020.
 
 ## Table A — Decision problem, (1 ± 4^ℓ)·δ instances, 1,000 pairs × 23 sets
 
@@ -36,7 +39,7 @@ same-characters & 11.74 & 6.35 & 1.85$\times$ &    997  & 247 & 18.7 / 1{,}159 \
 
 | Data set | n | Time / instance (ms) baseline | proposed | speed-up (sum / geomean) | Black-box calls / instance baseline | proposed | Construction share baseline → proposed | Paper Table 4 (baseline) | pairs off by > 10⁻⁷ |
 |---|--:|--:|--:|--:|--:|--:|---|---|--:|
-| Characters | 21,000 | 100.60 | 24.06 | **4.18× / 3.84×** [3.81, 3.87] | 12,246 | 3,144 | 59.5 % → 6.7 % | 140.0 ms, 12,387 calls, 52.3 % | 0 |
+| Characters | 21,000 | 135.35 | 30.66 | **4.41× / 4.07×** [4.04, 4.10] | 12,246 | 3,146 | 60.1 % → 6.6 % | 140.0 ms, 12,387 calls, 52.3 % | 0 |
 
 ```latex
 \begin{table}[t]
@@ -54,85 +57,88 @@ values agree with the baseline to within $10^{-7}$.}
 \cmidrule(lr){3-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
 Data set & $n$ & baseline & proposed & speed-up & baseline & proposed & baseline & proposed \\
 \midrule
-Characters      & 21{,}000 & 100.60 & 24.06 & 4.18$\times$ & 12{,}246 & 3{,}144 & 59.5\,\% & 6.7\,\% \\
+Characters      & 21{,}000 & 135.35 & 30.66 & 4.41$\times$ & 12{,}246 & 3{,}146 & 60.1\,\% & 6.6\,\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 ```
 
-## Table C — LMF profile in the format of the paper's Table 4 (21,000 `characters_full` instances)
+## Table C — LMF profile in the format of the paper's Table 4 (21,000 `characters_full` instances, re-measurement)
 
-Rows are the same timers the authors' harness prints (`updateProfileValComp` in
+Rows are the timers the authors' harness prints (`updateProfileValComp` in
 `src/fut_paper_experiments.cpp`): Preprocessing = `FUT_PREPROCESSING2`, Black-box calls
 (Lipschitz) = `FUT_BLACKBOX2`, Arrangement estimation = `FUT_DISCSELECTION2`, Arrangement
 algorithm = `FUT_ARRANGEMENT2` with Construction = `FUT_N6_ARR` and Black-box calls =
-`FUT_N6_FRECHET`; the same columns of `raw_characters_uci_lmf.tar.gz`. Sub-rows do not add up
-to the total exactly (untimed overhead), as in the paper.
+`FUT_N6_FRECHET`. In the proposed arm `FUT_N6_ARR` times the maximal-set enumeration
+(disc classification, components, 2^m DP, witnesses) that replaces the arrangement, and
+`FUT_N6_FRECHET` the predicate evaluations at the witnesses. Sub-rows omit untimed overhead.
+Exact-mode predicate statistics over the run: P2 197,226,956 evaluations, 0 rational
+re-evaluations; P3 289,116,753 evaluations, 74 rational re-evaluations; overflow 0.
+candidate5_noslack (same predicates without the filter) took 645,780 ms — the filter costs 0.3 %.
 
 | Algorithm | Time | | Black-Box Calls |
 |---|---|--:|--:|
-| **LMF, baseline** (authors' code, this machine) | **2,112,604 ms** (100.6 ms per instance) | | **257,162,361** (12,245.8 per instance) |
-| | - Preprocessing | 68,013 ms | |
-| | - Black-box calls (Lipschitz) | 218,199 ms | |
-| | - Arrangement estimation | 143,772 ms | |
-| | - Arrangement algorithm | 1,651,253 ms | |
-| | &nbsp;&nbsp;\* Construction | 1,257,343 ms | |
-| | &nbsp;&nbsp;\* Black-box calls | 272,961 ms | |
-| **LMF, proposed** (maximal Čech regions, no slack) | **505,247 ms** (24.1 ms per instance) | | **66,015,748** (3,143.6 per instance) |
-| | - Preprocessing | 66,974 ms | |
-| | - Black-box calls (Lipschitz) | 221,416 ms | |
-| | - Arrangement estimation | 125,753 ms | |
-| | - Arrangement algorithm | 60,854 ms | |
-| | &nbsp;&nbsp;\* Construction | 33,968 ms | |
-| | &nbsp;&nbsp;\* Black-box calls | 26,239 ms | |
+| **LMF, baseline** (authors' code) | **2,842,300 ms** (135.3 ms per instance) | | **257,162,361** (12,245.8 per instance) |
+| | - Preprocessing | 87,237 ms | |
+| | - Black-box calls (Lipschitz) | 289,267 ms | |
+| | - Arrangement estimation | 190,210 ms | |
+| | - Arrangement algorithm | 2,233,926 ms | |
+| | &nbsp;&nbsp;\* Construction | 1,708,959 ms | |
+| | &nbsp;&nbsp;\* Black-box calls | 367,421 ms | |
+| **LMF, proposed** (maximal sets, exact predicates) | **643,923 ms** (30.7 ms per instance) | | **66,067,601** (3,146.1 per instance) |
+| | - Preprocessing | 82,581 ms | |
+| | - Black-box calls (Lipschitz) | 282,761 ms | |
+| | - Arrangement estimation | 162,130 ms | |
+| | - Arrangement algorithm | 77,596 ms | |
+| | &nbsp;&nbsp;\* Construction | 42,777 ms | |
+| | &nbsp;&nbsp;\* Black-box calls | 33,978 ms | |
 | *LMF as reported in [BKN20], Table 4 (authors' machine)* | *2,938,512 ms (140.0 ms per instance)* | | *260,128,449 (12,387.1 per instance)* |
-| | - Preprocessing | 71,728 ms | |
-| | - Black-box calls (Lipschitz) | 400,189 ms | |
-| | - Arrangement estimation | 166,479 ms | |
-| | - Arrangement algorithm | 2,250,493 ms | |
-| | &nbsp;&nbsp;\* Construction | 1,537,500 ms | |
-| | &nbsp;&nbsp;\* Black-box calls | 545,442 ms | |
+
+Speed-up 4.41× (sum of times; geomean of per-instance ratios 4.07 [4.04, 4.10], faster on 20,904/21,000);
+black-box calls 3.9×; Construction 40×; arrangement black-box calls 10.8×; arrangement-algorithm
+share 78.6 % → 12.0 %; the three unchanged stages are 81.9 % of the proposed time. All 21,000 values
+agree with the baseline to within 8.9e-9.
 
 ```latex
 \begin{table}[t]
 \centering
 \caption{Value computation on the 21{,}000 \texttt{characters\_full} instances
 of~\cite{BKN20}, in the format of their Table~4: LMF with the original arrangement
-construction (baseline) and LMF with the proposed maximal-region construction, both
-measured here on the same machine, one measurement per instance. The rows are the timers
-of the authors' harness; sub-rows omit untimed overhead. For reference, \cite{BKN20}
-report 2{,}938{,}512\,ms (140.0\,ms per instance) and 260{,}128{,}449 black-box calls
-on their machine.}
+construction (baseline) and LMF with the proposed maximal-set enumeration (proposed),
+measured back-to-back on the same machine, one measurement per instance. In the proposed
+arm the Construction row times the enumeration of maximal sets and witnesses, and the
+black-box calls below it the predicate evaluations at the witnesses. \cite{BKN20} report
+2{,}938{,}512\,ms (140.0\,ms per instance) and 260{,}128{,}449 calls on their machine.}
 \label{tab:lmf-profile}
 \begin{tabular}{llrr}
 \toprule
 \textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Time}} & \textbf{Black-Box Calls} \\
 \midrule
-LMF (baseline) & \multicolumn{2}{c}{2{,}112{,}604 ms} & 257{,}162{,}361 \\
-               & \multicolumn{2}{c}{(100.6 ms per instance)} & (12{,}245.8 per instance) \\
+LMF, baseline & \multicolumn{2}{c}{2{,}842{,}300 ms} & 257{,}162{,}361 \\
+              & \multicolumn{2}{c}{(135.3 ms/inst.)} & (12{,}245.8/inst.) \\
 \cmidrule(r){2-3}
-& - Preprocessing                & 68{,}013 ms \\
+& -- Preprocessing                & 87{,}237 ms \\
 \cmidrule(r){2-3}
-& - Black-box calls (Lipschitz)  & 218{,}199 ms \\
+& -- Black-box calls (Lipschitz)  & 289{,}267 ms \\
 \cmidrule(r){2-3}
-& - Arrangement estimation       & 143{,}772 ms \\
+& -- Arrangement estimation       & 190{,}210 ms \\
 \cmidrule(r){2-3}
-& - Arrangement algorithm        & 1{,}651{,}253 ms \\
-& \hphantom{bla} * Construction    & 1{,}257{,}343 ms \\
-& \hphantom{bla} * Black-box calls & 272{,}961 ms \\
+& -- Arrangement algorithm        & 2{,}233{,}926 ms \\
+& \hphantom{bla} * Construction    & 1{,}708{,}959 ms \\
+& \hphantom{bla} * Black-box calls & 367{,}421 ms \\
 \midrule
-LMF (proposed) & \multicolumn{2}{c}{505{,}247 ms} & 66{,}015{,}748 \\
-               & \multicolumn{2}{c}{(24.1 ms per instance)} & (3{,}143.6 per instance) \\
+LMF, proposed & \multicolumn{2}{c}{643{,}923 ms} & 66{,}067{,}601 \\
+              & \multicolumn{2}{c}{(30.7 ms/inst.)} & (3{,}146.1/inst.) \\
 \cmidrule(r){2-3}
-& - Preprocessing                & 66{,}974 ms \\
+& -- Preprocessing                & 82{,}581 ms \\
 \cmidrule(r){2-3}
-& - Black-box calls (Lipschitz)  & 221{,}416 ms \\
+& -- Black-box calls (Lipschitz)  & 282{,}761 ms \\
 \cmidrule(r){2-3}
-& - Arrangement estimation       & 125{,}753 ms \\
+& -- Arrangement estimation       & 162{,}130 ms \\
 \cmidrule(r){2-3}
-& - Arrangement algorithm        & 60{,}854 ms \\
-& \hphantom{bla} * Construction    & 33{,}968 ms \\
-& \hphantom{bla} * Black-box calls & 26{,}239 ms \\
+& -- Arrangement algorithm        & 77{,}596 ms \\
+& \hphantom{bla} * Construction    & 42{,}777 ms \\
+& \hphantom{bla} * Black-box calls & 33{,}978 ms \\
 \bottomrule
 \end{tabular}
 \end{table}

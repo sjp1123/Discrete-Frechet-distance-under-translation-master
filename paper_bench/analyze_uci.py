@@ -18,6 +18,7 @@ calls per instance.
 import csv, math, os, random, statistics
 here = os.path.dirname(os.path.abspath(__file__)); R = os.path.join(here, "results")
 EPS = 1e-7
+LMF_REP = os.environ.get("LMF_REP", "r1")   # r1: first instance; r2: re-measurement of all arms back-to-back
 PAPER_LMF = (140.0, 12387, 52.3)
 PAPER_DEC = {"all": (27.3, 1860), "same": (18.7, 1159)}
 
@@ -51,14 +52,14 @@ def geomean_ci(ratios, B=2000, seed=1):
         s = [rng.choice(logs) for _ in logs]; bs.append(math.exp(sum(s) / len(s)))
     bs.sort(); return g, bs[int(0.025 * B)], bs[int(0.975 * B)]
 
-out = ["# Characters on the original UCI file, the authors' instances (one measurement each)\n"]
+out = [f"# Characters on the original UCI file, the authors' instances (one measurement each; LMF repetition {LMF_REP})\n"]
 
 # ---------------- LMF ----------------
 sets = {}
 for l in open(os.path.join(here, "queries", "characters_uci_lmf_sets.txt")):
     a, b, s1, s2 = l.split(); sets[(a, b)] = (s1, s2)
 arms = ["original", "candidate5", "candidate5_noslack", "candidate5_exact"]
-lmf = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_lmf_{a}_r1.csv")))} for a in arms}
+lmf = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_lmf_{a}_{LMF_REP}.csv")))} for a in arms}
 arms = [a for a in arms if lmf[a]]
 if "original" in arms:
     out.append("## Value computation (LMF, `calcDistance2`), the authors' `characters_full_*` pairs\n")
@@ -112,5 +113,5 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
         out.append(f"| **all sets** | | {n} | **{o[0]/n:.4f}** | **{c5[0]/n:.4f}** | **{o[0]/c5[0]:.3f}** | {o[2]/n:.1f} | {c5[2]/n:.1f} | **{wrong_t[0]} / {wrong_t[1]}** | **{dis_t}** |")
         out.append(f"\nTotals over {n} instances: original {o[0]/1000:.2f} s, candidate5 {c5[0]/1000:.2f} s.\n")
 
-open(os.path.join(R, "RESULTS_uci.md"), "w").write("\n".join(out) + "\n")
+open(os.path.join(R, os.environ.get("OUT", "RESULTS_uci.md")), "w").write("\n".join(out) + "\n")
 print("\n".join(out))

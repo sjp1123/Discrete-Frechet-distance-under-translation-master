@@ -1,4 +1,4 @@
-# Characters on the original UCI file, the authors' instances (one measurement each; LMF repetition r1)
+# Characters on the original UCI file, the authors' instances (one measurement each; LMF repetition r2)
 
 ## Value computation (LMF, `calcDistance2`), the authors' `characters_full_*` pairs
 
@@ -8,17 +8,17 @@ Paper Table 4 (all 21,000 instances, authors' machine): 140.0 ms, 12,387 black-b
 
 | arm | mean ms/instance | total s | bb calls/instance | construction % | arr. bb calls % | max abs diff vs original | pairs over 1e-7 (cand > orig) | vs original: sum-ratio, geomean [95% CI], median, faster |
 |---|--:|--:|--:|--:|--:|--:|--:|---|
-| original | 100.60 | 2112.6 | 12,246 | 59.5 | 12.9 | — | — | — |
-| candidate5 | 18.94 | 397.8 | 2,600 | 6.2 | 5.4 | 2.396e-06 | 1 (1) | 5.31, 5.47 [5.40, 5.53], 4.97, 20513/21000 |
-| candidate5_noslack | 24.06 | 505.2 | 3,144 | 6.7 | 5.2 | 8.732e-09 | 0 (0) | 4.18, 3.84 [3.81, 3.87], 4.27, 20431/21000 |
+| original | 135.35 | 2842.3 | 12,246 | 60.1 | 12.9 | — | — | — |
+| candidate5_noslack | 30.75 | 645.8 | 3,144 | 6.5 | 5.3 | 8.732e-09 | 0 (0) | 4.40, 4.07 [4.04, 4.10], 4.60, 20853/21000 |
+| candidate5_exact | 30.66 | 643.9 | 3,146 | 6.6 | 5.3 | 8.844e-09 | 0 (0) | 4.41, 4.07 [4.04, 4.10], 4.61, 20904/21000 |
 
 ### same-letter pairs (20 files): 2000 pairs measured on every arm
 
 | arm | mean ms/instance | total s | bb calls/instance | construction % | arr. bb calls % | max abs diff vs original | pairs over 1e-7 (cand > orig) | vs original: sum-ratio, geomean [95% CI], median, faster |
 |---|--:|--:|--:|--:|--:|--:|--:|---|
-| original | 77.47 | 154.9 | 8,728 | 60.6 | 12.9 | — | — | — |
-| candidate5 | 13.72 | 27.4 | 1,606 | 6.5 | 7.1 | 1.318e-08 | 0 (0) | 5.65, 5.63 [5.46, 5.81], 5.23, 1976/2000 |
-| candidate5_noslack | 18.79 | 37.6 | 2,020 | 7.1 | 6.9 | 8.252e-09 | 0 (0) | 4.12, 3.93 [3.85, 4.02], 4.07, 1969/2000 |
+| original | 104.50 | 209.0 | 8,728 | 60.9 | 13.0 | — | — | — |
+| candidate5_noslack | 23.62 | 47.2 | 2,020 | 6.8 | 7.1 | 8.252e-09 | 0 (0) | 4.42, 4.24 [4.16, 4.33], 4.49, 1994/2000 |
+| candidate5_exact | 23.62 | 47.2 | 2,020 | 6.9 | 7.1 | 8.252e-09 | 0 (0) | 4.42, 4.24 [4.16, 4.33], 4.47, 1997/2000 |
 
 ## Decision problem, all-characters, the authors' query files (factors 1 ± 2^l)
 
