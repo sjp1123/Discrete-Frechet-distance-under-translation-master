@@ -138,6 +138,8 @@ maxregion::Params const& region_params() {
 		maxregion::Params p;
 		p.band     = env_double("MAXREGION_BAND", 1e-12);
 		p.dp_limit = env_size("MAXREGION_DP_LIMIT", 20);
+		// MAXREGION_EXACT=1: filtered predicates with a rational fallback (band ignored)
+		if (const char* e = std::getenv("MAXREGION_EXACT")) p.exact = (*e && *e != '0');
 		return p;
 	}();
 	return cached;

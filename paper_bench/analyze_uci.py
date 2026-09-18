@@ -6,6 +6,8 @@ LMF: results/characters_uci_lmf_<arm>_r1.csv over the 21,000 pairs of
 characters_full_<s1>_<s2>.txt; reported for all pairs and for the 2,000
 same-letter pairs (s1 == s2).  Paper (ESA 2020, Table 4, all 21,000): 140.0 ms and
 12,387 black-box calls per instance, construction 52.3 % of the time.
+candidate5_exact = candidate5_noslack with MAXREGION_EXACT=1 (filtered P2/P3 predicates,
+rational fallback; see candidate5/lib/cgal_disk_arrangements/maximal_regions.cpp).
 Decider: results/characters_uci_<all|same>_<tag>_<l>_<sign>_<arm>_r1.csv,
 tag paperq = the authors' files (2^l factors), paperq4 = same pairs with (1 +- 4^l).
 Rows are matched by line index (the authors' all-characters list contains two
@@ -55,7 +57,7 @@ out = ["# Characters on the original UCI file, the authors' instances (one measu
 sets = {}
 for l in open(os.path.join(here, "queries", "characters_uci_lmf_sets.txt")):
     a, b, s1, s2 = l.split(); sets[(a, b)] = (s1, s2)
-arms = ["original", "candidate5", "candidate5_noslack"]
+arms = ["original", "candidate5", "candidate5_noslack", "candidate5_exact"]
 lmf = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_lmf_{a}_r1.csv")))} for a in arms}
 arms = [a for a in arms if lmf[a]]
 if "original" in arms:

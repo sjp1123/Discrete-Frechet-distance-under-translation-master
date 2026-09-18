@@ -5,6 +5,8 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <limits>
+#include <boost/multiprecision/cpp_int.hpp>
 #include <utility>
 
 namespace cgal_disk_arrangements
@@ -119,6 +121,92 @@ bool pred3(double ax, double ay, double bx, double by, double cx, double cy,
 	return a2*b2*c2 <= four_r2 * (cross*cross);
 }
 
+// ── Exact mode: filtered predicates with a rational fallback ──────────────────
+// Every input is a double, so the exact value of each predicate is a rational
+// number.  We evaluate in double first, bound the rounding error of the
+// comparison rigorously (u = 2^-53 unit roundoff; fl(a∘b) = (a∘b)(1+d), |d| ≤ u,
+// and the coordinate differences are correctly rounded so they carry relative
+// error ≤ u), and fall back to boost::multiprecision::cpp_rational only when the
+// bound does not certify the sign.  The rational path uses the exact radius r,
+// never the rounded four_r2.
+using Q = boost::multiprecision::cpp_rational;
+constexpr double U = std::numeric_limits<double>::epsilon() / 2.0;   // 2^-53
+
+inline bool pred2_exact(double xi, double yi, double xj, double yj, double r,
+                        double four_r2, Stats& S)
+{
+	++S.p2_calls;
+	double const dx = xj - xi, dy = yj - yi;
+	double const lhs = dx*dx + dy*dy;
+	// dx² and dy² carry ≤ 3u relative error, their sum ≤ 5u (no cancellation);
+	// four_r2 = 4·fl(r·r) carries ≤ u.  8u·(lhs + four_r2) therefore bounds the
+	// rounding error of the difference lhs − four_r2.
+	double const err = 8.0 * U * (lhs + four_r2);
+	if (std::abs(lhs - four_r2) > err) return lhs <= four_r2;
+	++S.p2_exact;
+	Q const qdx = Q(xj) - Q(xi), qdy = Q(yj) - Q(yi), qr = Q(r);
+	return qdx*qdx + qdy*qdy <= 4*qr*qr;
+}
+
+// Exact P3 in rational arithmetic (MEC of three points has radius ≤ r).
+// |cross| = 2·area is independent of the apex, so any vertex may serve.
+inline bool pred3_rational(double ax, double ay, double bx, double by,
+                           double cx, double cy, double r)
+{
+	Q const abx = Q(bx)-Q(ax), aby = Q(by)-Q(ay);
+	Q const acx = Q(cx)-Q(ax), acy = Q(cy)-Q(ay);
+	Q const bcx = Q(cx)-Q(bx), bcy = Q(cy)-Q(by);
+	Q const a2 = bcx*bcx + bcy*bcy, b2 = acx*acx + acy*acy, c2 = abx*abx + aby*aby;
+	Q hi = a2, s1 = b2, s2 = c2;
+	if (b2 >= a2 && b2 >= c2) { hi = b2; s1 = a2; s2 = c2; }
+	else if (c2 >= a2 && c2 >= b2) { hi = c2; s1 = a2; s2 = b2; }
+	Q const four_r2 = 4 * Q(r) * Q(r);
+	if (hi >= s1 + s2) return hi <= four_r2;                  // right/obtuse
+	Q const cross = abx*acy - aby*acx;
+	return a2*b2*c2 <= four_r2 * cross * cross;               // acute
+}
+
+inline bool pred3_exact(double ax, double ay, double bx, double by, double cx, double cy,
+                        double r, double four_r2, Stats& S)
+{
+	++S.p3_calls;
+	double const abx = bx - ax, aby = by - ay;
+	double const acx = cx - ax, acy = cy - ay;
+	double const bcx = cx - bx, bcy = cy - by;
+	double const a2 = bcx*bcx + bcy*bcy;
+	double const b2 = acx*acx + acy*acy;
+	double const c2 = abx*abx + aby*aby;
+
+	double hi, s1, s2, ux, uy, vx, vy;
+	if (a2 >= b2 && a2 >= c2) { hi = a2; s1 = b2; s2 = c2; ux =  abx; uy =  aby; vx =  acx; vy =  acy; }
+	else if (b2 >= c2)        { hi = b2; s1 = a2; s2 = c2; ux = -abx; uy = -aby; vx =  bcx; vy =  bcy; }
+	else                      { hi = c2; s1 = a2; s2 = b2; ux = -acx; uy = -acy; vx = -bcx; vy = -bcy; }
+
+	// Each squared length carries ≤ 5u relative error.  If the right/obtuse test
+	// is within its rounding error, the branch itself is uncertain → rational.
+	if (std::abs(hi - (s1 + s2)) <= 6.0 * U * (hi + s1 + s2)) {
+		++S.p3_exact; return pred3_rational(ax, ay, bx, by, cx, cy, r);
+	}
+	if (hi >= s1 + s2) {                                      // diameter branch
+		if (std::abs(hi - four_r2) > 8.0 * U * (hi + four_r2)) return hi <= four_r2;
+		++S.p3_exact; return pred3_rational(ax, ay, bx, by, cx, cy, r);
+	}
+	++S.p3_acute;
+	double const p = ux*vy, q = uy*vx;
+	double const cr = p - q;                                  // 2·signed area
+	if (cr*cr < 1e-8 * b2 * c2) ++S.p3_sliver;
+	// cr: each product ≤ 3u relative, the difference adds ≤ u of |cr| — absolute
+	// error ≤ 5u·(|p|+|q|).  lhs = a2·b2·c2 ≤ 18u relative.  rhs = four_r2·cr²:
+	// propagate the absolute error of cr through the square, plus 4u relative.
+	double const lhs = a2*b2*c2;
+	double const rhs = four_r2 * (cr*cr);
+	double const dc  = 5.0 * U * (std::abs(p) + std::abs(q));
+	double const err = 18.0 * U * lhs + four_r2 * (2.0*std::abs(cr)*dc + dc*dc) + 4.0 * U * rhs;
+	if (std::abs(lhs - rhs) > err) return lhs <= rhs;
+	++S.p3_exact;
+	return pred3_rational(ax, ay, bx, by, cx, cy, r);
+}
+
 // ── Stage 5 helper: minimum enclosing circle (Welzl, incremental) ─────────────
 struct Disk2 { double x, y, r2; };
 
@@ -207,10 +295,12 @@ Stats& global_stats() {
 				"[maxregion-stats] calls=%lld discs=%lld groups=%lld comps=%lld"
 				" max_comp=%lld dp_masks=%lld regions=%lld singleton=%lld"
 				" overflow=%lld mec_fail=%lld p3_acute=%lld p3_sliver=%lld"
+				" p2_calls=%lld p2_exact=%lld p3_calls=%lld p3_exact=%lld"
 				" pre_ms=%.1f dp_ms=%.1f mec_ms=%.1f\n",
 				s.calls, s.discs, s.groups, s.comps, s.max_comp, s.dp_masks,
 				s.regions, s.singleton, s.overflow_comps, s.mec_fail,
 				s.p3_acute, s.p3_sliver,
+				s.p2_calls, s.p2_exact, s.p3_calls, s.p3_exact,
 				s.pre_ns/1e6, s.dp_ns/1e6, s.mec_ns/1e6);
 		}
 	};
@@ -240,8 +330,9 @@ Result enumerate(Discs const& discs, Params const& params, Stats* stats)
 
 	// One lenient threshold, used by P2, P3 and the proximity graph alike, so the
 	// three stages agree on exactly which radius they are talking about.
-	double const band    = params.band;
-	double const four_r2 = 4.0 * r2 * (1.0 + band);    // radius r√(1+band)
+	bool const   exact   = params.exact;
+	double const band    = exact ? 0.0 : params.band;
+	double const four_r2 = 4.0 * r2 * (1.0 + band);    // radius r√(1+band); exact mode: 4·fl(r²), filter only
 
 	// The DP is Θ(m·2^m) while the arrangement fall-back is polynomial (~m⁴ for the
 	// vertex sweep plus its filter), so the DP is only the cheaper *producer* below
@@ -300,7 +391,8 @@ Result enumerate(Discs const& discs, Params const& params, Stats* stats)
 	};
 	for (std::size_t i = 0; i < M; ++i)
 		for (std::size_t j = i + 1; j < M; ++j)
-			if (pred2(gx[j] - gx[i], gy[j] - gy[i], four_r2)) {
+			if (exact ? pred2_exact(gx[i], gy[i], gx[j], gy[j], r, four_r2, S)
+			          : pred2(gx[j] - gx[i], gy[j] - gy[i], four_r2)) {
 				std::size_t a = find(i), b = find(j);
 				if (a != b) parent[a] = b;
 			}
@@ -398,7 +490,8 @@ Result enumerate(Discs const& discs, Params const& params, Stats* stats)
 				int const j = lowest_bit(b);
 				double const dx = gx[comp[j]] - gx[comp[i]];
 				double const dy = gy[comp[j]] - gy[comp[i]];
-				if (pred2(dx, dy, four_r2)) valid.set(Mm);
+				if (exact ? pred2_exact(gx[comp[i]], gy[comp[i]], gx[comp[j]], gy[comp[j]], r, four_r2, S)
+				          : pred2(dx, dy, four_r2)) valid.set(Mm);
 				continue;
 			}
 			if (p == 3) {
@@ -408,8 +501,10 @@ Result enumerate(Discs const& discs, Params const& params, Stats* stats)
 				int const k = lowest_bit(b);
 				// P3 ⇒ all three P2 (MEC ≤ r ⇒ every pair within 2r), so the pair
 				// predicate does not need to be re-checked here.
-				if (pred3(gx[comp[i]], gy[comp[i]], gx[comp[j]], gy[comp[j]],
-				          gx[comp[k]], gy[comp[k]], four_r2, S)) valid.set(Mm);
+				if (exact ? pred3_exact(gx[comp[i]], gy[comp[i]], gx[comp[j]], gy[comp[j]],
+				                        gx[comp[k]], gy[comp[k]], r, four_r2, S)
+				          : pred3(gx[comp[i]], gy[comp[i]], gx[comp[j]], gy[comp[j]],
+				                  gx[comp[k]], gy[comp[k]], four_r2, S)) valid.set(Mm);
 				continue;
 			}
 			bool ok = true;

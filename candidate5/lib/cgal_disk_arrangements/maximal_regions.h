@@ -53,6 +53,11 @@ struct Params {
 	// Components larger than this are handed back to the caller (`overflow`)
 	// instead of being run through the 2^m downward-closed DP.
 	std::size_t dp_limit = 20;
+	// Exact mode (MAXREGION_EXACT=1): P2 and P3 are decided in double only when a
+	// rigorous forward error bound certifies the sign of the comparison; otherwise
+	// they are re-evaluated in rational arithmetic (boost cpp_rational) on the
+	// exact radius.  `band` is treated as 0 in this mode.
+	bool        exact    = false;
 };
 
 struct Stats {
@@ -70,6 +75,8 @@ struct Stats {
 	long long p3_sliver      = 0;  // …of those, how many are slivers (sin < 1e-4 at the
 	                               // first-argument vertex) — the configuration a
 	                               // fixed-apex P3 would evaluate ill-conditioned
+	long long p2_calls = 0, p2_exact = 0;  // exact mode: P2 evaluations / rational re-evaluations
+	long long p3_calls = 0, p3_exact = 0;  // exact mode: P3 evaluations / rational re-evaluations
 	long long pre_ns  = 0, dp_ns = 0, mec_ns = 0;
 };
 
