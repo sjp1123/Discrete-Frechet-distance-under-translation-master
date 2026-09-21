@@ -14,6 +14,12 @@ baseline = original (CGAL arrangement); proposed = candidate5 with MAXREGION_EXA
 | all-characters | 16.77 | 7.46 | **2.25×** | 1,616 | 386 | 27.3 ms, 1,860 calls | 0 / 0 |
 | same-characters | 11.74 | 6.35 | **1.85×** | 997 | 247 | 18.7 ms, 1,159 calls | 0 / 0 |
 
+Note on the Paper Table 4 column: the black-box call count is not a deterministic function of the
+instance. Rebuilding the same `original` code with `-O3 -march=native` instead of the default
+RelWithDebInfo changes the count on 46 of the first 299 instances (total +0.10 %, one instance
++28 %) while every value agrees to 1.4e-14 (`raw_characters_uci_fpsens.tar.gz`, experiment_log §6.8);
+the 1.1 % gap to the authors' 12,387.1 is within that environment sensitivity.
+
 ```latex
 \begin{table}[t]
 \centering
