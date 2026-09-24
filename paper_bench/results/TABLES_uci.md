@@ -149,3 +149,31 @@ LMF, proposed & \multicolumn{2}{c}{643{,}923 ms} & 66{,}067{,}601 \\
 \end{tabular}
 \end{table}
 ```
+
+## Table D — Sigspatial, the full 20,199-curve set, the authors' 1,000 decider pairs (user PC, WSL2; see experiment_log §6.9)
+
+Value computation (LMF); proposed = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0; 998 pairs measured on both arms
+(on 2 pairs the baseline was killed at 7.4 GB under the default 7.5 GB WSL limit and again at 11.8 GB under a 12 GB limit, i.e. it needs more than 12 GB; the proposed arm finished them in 0.6 s and 2.0 s with values matching the authors' delta*).
+
+| Algorithm | Time | Black-Box Calls |
+|---|--:|--:|
+| **LMF, baseline** | **2,318,393 ms** (2,323.0 ms per instance) | **12,554,186** (12,579.3 per instance) |
+| - Preprocessing | 20,176 ms | |
+| - Black-box calls (Lipschitz) | 16,289 ms | |
+| - Arrangement estimation | 27,722 ms | |
+| - Arrangement algorithm | 2,251,388 ms | |
+| &nbsp;&nbsp;\* Construction | 2,230,595 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 15,283 ms | |
+| **LMF, proposed** | **70,549 ms** (70.7 ms per instance) | **3,561,796** (3,568.9 per instance) |
+| - Preprocessing | 19,164 ms | |
+| - Black-box calls (Lipschitz) | 18,273 ms | |
+| - Arrangement estimation | 25,881 ms | |
+| - Arrangement algorithm | 4,234 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 2,502 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 1,622 ms | |
+
+Speed-up 32.9x (sum), geomean of per-instance ratios 2.37 [2.26, 2.49], median 2.27, faster on 893/998; all 998 values agree
+to within 8.6e-9 and all arms reproduce the authors' delta* to within 1.33e-8. The sum is dominated by a few instances on which
+the baseline's arrangement construction takes 12-795 s (5 instances above 60 s); excluding the 10 slowest baseline instances the
+per-instance times are 146.4 vs 60.4 ms (2.42x). Decider (23 x 1,000 instances, both arms 0 wrong, 0 disagreements):
+authors' 2^l files 0.369 vs 0.393 ms (0.94x), 4^l sets 41.74 vs 34.51 ms (1.21x), calls 1,146 -> 293.

@@ -278,3 +278,53 @@ candidate5_exact 세 arm을 같은 인스턴스에서 코어 2 단독으로 연�
   논문 실행 당시 γ 기본값이 달랐을 가능성도 남는다(논문 본문은 γ 값을 밝히지 않음).
 - 원시: `results/raw_characters_uci_fpsens.tar.gz` (쌍 목록 + 두 CSV).
 
+### 6.9 Sigspatial 전체 집합(20,199곡선)에서의 재현 — `paper_bench/run_sig.sh` (2026-09-24, 사용자 PC WSL)
+
+**데이터**: 사용자가 확보한 저자의 `shortest-sf.tgz`(54.6 MB, SHA-256 `33d3262ef389e543…`, `paper_data/sigspatial/`에 커밋)를
+`paper_data/convert_sigspatial.py`(저자 `fetch_and_convert_data.py`의 `tail -n +2`와 동일)로 변환 → 20,199곡선, 평균 247.9정점
+(논문 Table 1: 247.8). 저자의 결정 문제 파일 `sigspatial_fut_decider_*`(1,000쌍 × 23세트, 2^ℓ)를 그대로 복사해 `queries/sigspatial_paperq_*`로 쓰고,
+4^ℓ 세트(`sigspatial_paperq4_*`)는 저자의 δ* 파일에서 `paper_bench gen`과 같은 식으로 생성했다(gen 자체는 original의 δ* 재계산이 아래의
+OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(original은 998쌍)의 계산값이 저자 δ*와 최대 1.33×10⁻⁸ 이내로 일치.
+
+**환경**: Windows 11 호스트(15.5 GB) 위 WSL2 Ubuntu 22.04, g++ 11.4, CGAL 5.4, 18코어. 기본 WSL 메모리 한도 7.5 GB.
+저자 하네스처럼 인스턴스당 1회 측정, arm마다 코어 하나에 고정(`taskset`). 결정 문제의 두 arm과 LMF는 서로 다른 코어에서 동시에 돌렸다.
+하네스에 행 단위 `csv.flush()`를 추가했다(프로세스가 나중 쌍에서 죽어도 앞 행이 남도록; 측정에는 영향 없음).
+
+**LMF (값 계산, 저자 결정 문제의 1,000쌍)** — proposed = candidate5 `MAXREGION_EXACT=1 MAXREGION_SLACK=0`, 998쌍 공통:
+
+| arm | ms/인스턴스 | 총 시간 | 호출/인스턴스 | Construction(열거) | 불일치 | vs original (합 / geomean / 중앙값) |
+|---|--:|--:|--:|--:|--:|---|
+| original | 2,323.0 | 2,318 s | 12,579 | 2,230,595 ms (96.2 %) | — | — |
+| candidate5_exact | 70.7 | 70.5 s | 3,569 | 2,502 ms (3.5 %) | 0/998 (최대 8.6e-9) | **32.9× / 2.37× [2.26, 2.49] / 2.27×** |
+| candidate5_noslack | 55.4 | 55.3 s | 2,841 | 1,646 ms (3.0 %) | 0/998 | 41.9× / 3.04× / 2.49× |
+
+- 합의 32.9×는 소수의 병적 쌍이 만든다. original이 60 s를 넘는 쌍 5개(최대 795 s, 모두 Construction 97~99.8 %),
+  10 s 초과 8개, 1 s 초과 18개. 같은 쌍을 candidate5는 1.1~1.7 s에 끝냈다. 가장 느린 10쌍을 빼면 146.4 → 60.4 ms(2.42×),
+  중앙값 71.0 → 30.0 ms(2.37×). Characters(4.41×)보다 전형적 이득은 작고 꼬리 이득은 훨씬 크다.
+- **original이 메모리로 죽는 쌍 2개**: 125번(`file-003586`/`file-002157`)과 432번(`file-002502`/`file-016674`)에서 RSS 7.4 GB에 이르러
+  WSL OOM killer에 죽었다(120 s, 193 s 시점). candidate5는 두 쌍을 각각 1 s 안팎에 처리했다. 위 표는 이 2쌍을 제외한 998쌍이다.
+  **OOM 쌍 재측정**: WSL 한도를 12 GB로 올려 다시 돌려도 두 쌍 모두 RSS 11.8 GB에서 죽었다(125번 312 s, 432번 203 s 시점).
+  즉 original은 이 두 쌍에 12 GB 이상이 필요하고, candidate5(exact)는 각각 0.59 s / 1.97 s, 값은 저자 δ*와 7.5e-10 / 3.6e-9 이내로 일치한다.
+  쌍별 시간·최대 RSS는 `raw_sigspatial_lmf.tar.gz`의 `sigspatial_lmf_original_perpair_status.txt`에 있다.
+- exact arm이 noslack보다 느리고 호출이 많다(70.7 vs 55.4 ms, 3,569 vs 2,841회). 정확 모드는 band=0이라 접하는 원판이 별도 극대
+  집합으로 갈라지고, 유리수 재계산도 Characters(74회)보다 훨씬 잦다(P2 4,765 / 9.39M, P3 9,789 / 13.7M; 좌표가 EPSG:3857 미터 단위
+  ~1.4×10⁷이라 필터의 오차 상한이 커짐). 정확성은 두 arm 모두 유지된다.
+- 단계별(998쌍 합, ms): original 전처리 20,176 / Lipschitz 호출 16,289 / 배열 추정 27,722 / 배열 알고리즘 2,251,388(구성 2,230,595 + 호출 15,283);
+  exact 19,164 / 18,273 / 25,881 / 4,234(열거 2,502 + 호출 1,622).
+
+**결정 문제 (저자 23세트 × 1,000쌍)** — 두 arm 모두 오답 0, 서로 불일치 0:
+
+| 세트 | original ms/질의 | candidate5 ms/질의 | 가속 | 호출/질의 | original 구성 비중 |
+|---|--:|--:|--:|---|--:|
+| 2^ℓ (저자 파일) | 0.369 | 0.393 | 0.94× | 24.2 → 22.8 | 3.8 % |
+| 4^ℓ (논문 본문) | 41.74 | 34.51 | 1.21× | 1,146 → 293 | 14.3 % |
+
+- 결정 문제에서는 이득이 작다. Sigspatial 결정 질의는 original도 배열 구성이 4^ℓ에서 14 %, 2^ℓ에서 4 %뿐이고 나머지가 Lipschitz 탐색이라,
+  배열 단계를 없애도 줄일 몫이 그만큼이다(4^ℓ에서 구성 137 s → 4.6 s, 호출 35 s → 3.4 s; 나머지 788 s vs 786 s).
+  2^ℓ 세트는 질의당 0.4 ms라 후보 열거의 고정 비용이 드러나 6 % 느리다. 가장 어려운 세트(ℓ=−10 minus)는 331.6 → 261.4 ms(1.27×).
+- 논문 Table 2의 Sigspatial 값과 직접 비교는 하지 않았다(2^ℓ/4^ℓ 문제는 §6.6과 같음).
+
+**결론**: Characters와 달리 Sigspatial에서는 original의 배열 구성이 값 계산 시간의 96 %를 차지하고 일부 쌍에서 수백 초·7 GB 이상을 쓴다.
+제안 방법은 같은 답을 내면서 모든 쌍을 2 s 이내·수십 MB에 끝낸다. 초록의 Characters 수치(4.41×)에 더해 "Sigspatial 1,000쌍에서 합 32.9×,
+중앙값 2.4×, original이 메모리 부족으로 실패한 2쌍 포함 전부 성공"이 본문에 넣을 수 있는 결과다.
+원시: `results/raw_sigspatial_lmf.tar.gz`, `results/raw_sigspatial_decider.tar.gz`; 요약 `results/RESULTS_sig.md`; 표 `results/TABLES_uci.md` 표 D.

@@ -36,6 +36,15 @@ and the recorded source commits / checksums.
 | result | 2 858 curves, mean 120.99 vertices after duplicate removal (min 61, max 183) |
 | consequence | the authors' instance files apply unchanged: `fut_val_computation_benchmark_queries/characters_full_*` (21 000 LMF pairs) and `fut_decider_benchmark_queries/characters_fut_decider{,_samechar}_*` (23 × 1 000 decider instances each). `paper_bench/run_uci.sh` runs exactly those. `characters/` (mirror order) is kept only for the earlier results. |
 
+## sigspatial/ — the FULL set (20 199 curves), the authors' `shortest-sf.tgz`
+
+| item | value |
+|---|---|
+| source | `shortest-sf.tgz` (ACM SIGSPATIAL GIS Cup 2017, the file the authors' `fetch_and_convert_data.py` downloads from martinwerner.de; that host is down, the file was obtained by other means and is committed here as `sigspatial/shortest-sf.tgz`, 54.6 MB); SHA-256 in `sigspatial/SOURCE_SHA256.txt` |
+| conversion | `convert_sigspatial.py`: header line `x y k tid` removed from every `files/file-NNNNNN.dat`, exactly the authors' `tail -n +2`; the parser ignores columns 3-4.  `sigspatial/data/` (207 MB) is git-ignored, regenerate it with `python3 paper_data/convert_sigspatial.py` |
+| result | 20 199 curves, mean **247.9 vertices** (paper Table 1: 247.8); `dataset.txt` = sorted file names |
+| identity check | the authors' `sigspatial_fut_decider_computed_distances.check` (delta* of their 1 000 pairs) is reproduced by all three arms to within 1.33e-8 on every pair (`original` on 998 of the 1 000: two pairs exceed 7.5 GB; see experiment_log §6.9 and `paper_bench/results/RESULTS_sig.md`); the authors' 23 decider files `sigspatial_fut_decider_<l>_<sign>.txt` are copied unchanged to `paper_bench/queries/sigspatial_paperq_*` and run by `paper_bench/run_sig.sh` |
+
 ## sigspatial_subset/ — **101 of the 20 199 curves** (subset!) — NOT INCLUDED in this branch
 
 | item | value |

@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
 			    << timerMs(EXP::FUT_N6_ARR) << "," << timerMs(EXP::FUT_N6_FRECHET) << ","
 			    << timerMs(EXP::FUT_PREPROCESSING2) << "," << timerMs(EXP::FUT_BLACKBOX2) << ","
 			    << timerMs(EXP::FUT_DISCSELECTION2) << "," << timerMs(EXP::FUT_ARRANGEMENT2) << "\n";
+			csv.flush();   // keep the row if the process is killed later (OOM on a later pair)
 			if (++q % 200 == 0) { std::cerr << "  " << q << " queries\n"; }
 		}
 		std::cerr << "lmf: " << q << " queries -> " << out << "\n";
@@ -127,6 +128,7 @@ int main(int argc, char* argv[])
 			csv << f1 << "," << f2 << "," << distance << "," << (answer ? 1 : 0) << ","
 			    << ns / 1000000. << "," << counter(EXP::BBCALLS_COUNTER) << ","
 			    << timerMs(EXP::FUT_N6_ARR) << "," << timerMs(EXP::FUT_N6_FRECHET) << "\n";
+			csv.flush();   // keep the row if the process is killed later (OOM on a later pair)
 			if (++q % 2000 == 0) { std::cerr << "  " << q << " queries\n"; }
 		}
 		std::cerr << "decider: " << q << " queries -> " << out << "\n";

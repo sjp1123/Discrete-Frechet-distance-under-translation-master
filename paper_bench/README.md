@@ -12,6 +12,9 @@ bash paper_bench/build.sh              # -> ~/b_pb_original/paper_bench, ~/b_pb_
 bash paper_bench/run_uci.sh lmf        # the authors' 21,000 characters_full pairs, one measurement each
 bash paper_bench/run_uci.sh decider    # the authors' 23 x 1,000 decider instances (2^l files and 4^l sets)
 python3 paper_bench/analyze_uci.py     # -> results/RESULTS_uci.md; tables in results/TABLES_uci.md
+bash paper_bench/run_sig.sh decider    # Sigspatial, full set: the authors' 23 x 1,000 decider instances (2^l files, 4^l sets)
+bash paper_bench/run_sig.sh lmf        # Sigspatial: value computation on the same 1,000 pairs (not in the paper)
+DATASET=sigspatial python3 paper_bench/analyze_uci.py   # -> results/RESULTS_sig.md
 ```
 
 This branch holds only the runs the abstract cites: the authors' own Characters instances
@@ -34,6 +37,7 @@ mirror-order data sets, the random-pair runs (`run_bench.sh`, `analyze.py`,
 |---|--:|--:|---|
 | `characters_uci` (LMF) | 2 858 | 21 000 | the authors' `characters_full_<s1>_<s2>.txt`, 210 files x 100 (paper Table 4) |
 | `characters_uci_all` / `_same` (decider) | 2 858 | 1 000 each | the authors' decider pair files, 23 sets each |
+| `sigspatial` (decider, LMF) | 20 199 | 1 000 | the authors' `sigspatial_fut_decider_*` files (full GIS Cup set, `paper_data/sigspatial`) |
 
 ## Correctness gates
 

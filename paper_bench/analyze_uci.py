@@ -16,11 +16,30 @@ Paper (Table 2): all-characters 27.3 ms / 1,860 calls, same-characters 18.7 ms /
 calls per instance.
 """
 import csv, math, os, random, statistics
+import sys; sys.stdout.reconfigure(encoding="utf-8")   # Windows console defaults to cp949
 here = os.path.dirname(os.path.abspath(__file__)); R = os.path.join(here, "results")
 EPS = 1e-7
 LMF_REP = os.environ.get("LMF_REP", "r1")   # r1: first instance; r2: re-measurement of all arms back-to-back
-PAPER_LMF = (140.0, 12387, 52.3)
-PAPER_DEC = {"all": (27.3, 1860), "same": (18.7, 1159)}
+# DATASET=characters_uci (default): characters_uci_<all|same>_... files, LMF grouped by letter sets.
+# DATASET=sigspatial: run_sig.sh output, sigspatial_<tag>_... files, LMF on the 1,000 decider pairs.
+DATASET = os.environ.get("DATASET", "characters_uci")
+if DATASET == "sigspatial":
+    TITLE = "Sigspatial, the full 20,199-curve set, the authors' decider instances (one measurement each)"
+    DS = [("", "Sigspatial")]; PREFIX = "sigspatial"; TAR_GLOB = "raw_sigspatial_*.tar.gz"
+    PAPER_LMF = None; PAPER_DEC = {"": (None, None)}
+    LMF_TITLE = "## Value computation (LMF, `calcDistance2`) on the 1,000 pairs of the authors' Sigspatial decider set\n"
+    LMF_GROUPS = (("all 1,000 pairs", lambda s: True),)
+else:
+    TITLE = f"Characters on the original UCI file, the authors' instances (one measurement each; LMF repetition {LMF_REP})"
+    DS = [("all", "all-characters"), ("same", "same-characters")]; PREFIX = "characters_uci"; TAR_GLOB = "raw_characters_uci_*.tar.gz"
+    PAPER_LMF = (140.0, 12387, 52.3)
+    PAPER_DEC = {"all": (27.3, 1860), "same": (18.7, 1159)}
+    LMF_TITLE = "## Value computation (LMF, `calcDistance2`), the authors' `characters_full_*` pairs\n"
+    LMF_GROUPS = (("all pairs (210 letter pairs)", lambda s: True), ("same-letter pairs (20 files)", lambda s: s[0] == s[1]))
+def dsname(ds): return f"{PREFIX}_{ds}" if ds else PREFIX
+# Sigspatial rows are keyed by the pair (the authors' list has no repeats and one arm may lack rows);
+# Characters rows by line index (their all-characters list repeats two pairs).
+def keyed(rs): return {(r["file1"], r["file2"]): r for r in rs} if DATASET == "sigspatial" else {i: r for i, r in enumerate(rs)}
 
 import glob, io, tarfile
 _TARS = None
@@ -28,7 +47,7 @@ def _open(fn):
     """Loose CSV in results/, else the same file name inside results/raw_characters_uci_*.tar.gz."""
     global _TARS
     if os.path.exists(fn): return open(fn)
-    if _TARS is None: _TARS = [tarfile.open(t) for t in sorted(glob.glob(os.path.join(R, "raw_characters_uci_*.tar.gz")))]
+    if _TARS is None: _TARS = [tarfile.open(t) for t in sorted(glob.glob(os.path.join(R, TAR_GLOB)))]
     base = os.path.basename(fn)
     for t in _TARS:
         try: return io.TextIOWrapper(t.extractfile(base), encoding="utf-8")
@@ -52,20 +71,21 @@ def geomean_ci(ratios, B=2000, seed=1):
         s = [rng.choice(logs) for _ in logs]; bs.append(math.exp(sum(s) / len(s)))
     bs.sort(); return g, bs[int(0.025 * B)], bs[int(0.975 * B)]
 
-out = [f"# Characters on the original UCI file, the authors' instances (one measurement each; LMF repetition {LMF_REP})\n"]
+out = [f"# {TITLE}\n"]
 
 # ---------------- LMF ----------------
 sets = {}
-for l in open(os.path.join(here, "queries", "characters_uci_lmf_sets.txt")):
-    a, b, s1, s2 = l.split(); sets[(a, b)] = (s1, s2)
+if DATASET != "sigspatial":
+    for l in open(os.path.join(here, "queries", "characters_uci_lmf_sets.txt")):
+        a, b, s1, s2 = l.split(); sets[(a, b)] = (s1, s2)
 arms = ["original", "candidate5", "candidate5_noslack", "candidate5_exact"]
-lmf = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_lmf_{a}_{LMF_REP}.csv")))} for a in arms}
+lmf = {a: keyed(rows(os.path.join(R, f"{PREFIX}_lmf_{a}_{LMF_REP}.csv"))) for a in arms}
 arms = [a for a in arms if lmf[a]]
 if "original" in arms:
-    out.append("## Value computation (LMF, `calcDistance2`), the authors' `characters_full_*` pairs\n")
-    out.append(f"Paper Table 4 (all 21,000 instances, authors' machine): {PAPER_LMF[0]} ms, {PAPER_LMF[1]:,} black-box calls per instance, construction {PAPER_LMF[2]} % of time.\n")
-    for label, keep in (("all pairs (210 letter pairs)", lambda s: True), ("same-letter pairs (20 files)", lambda s: s[0] == s[1])):
-        common = [k for k in lmf["original"] if keep(sets[(lmf["original"][k]["file1"], lmf["original"][k]["file2"])]) and all(k in lmf[a] for a in arms)]
+    out.append(LMF_TITLE)
+    if PAPER_LMF: out.append(f"Paper Table 4 (all 21,000 instances, authors' machine): {PAPER_LMF[0]} ms, {PAPER_LMF[1]:,} black-box calls per instance, construction {PAPER_LMF[2]} % of time.\n")
+    for label, keep in LMF_GROUPS:
+        common = [k for k in lmf["original"] if keep(sets.get((lmf["original"][k]["file1"], lmf["original"][k]["file2"]), ("", ""))) and all(k in lmf[a] for a in arms)]
         if not common: continue
         out.append(f"### {label}: {len(common)} pairs measured on every arm\n")
         out.append("| arm | mean ms/instance | total s | bb calls/instance | construction % | arr. bb calls % | max abs diff vs original | pairs over 1e-7 (cand > orig) | vs original: sum-ratio, geomean [95% CI], median, faster |")
@@ -89,10 +109,10 @@ if "original" in arms:
 # ---------------- decider ----------------
 LS = [(l, "plus", 1) for l in range(-10, 3)] + [(l, "minus", 0) for l in range(-10, 0)]
 for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("paperq4", "same pairs, factors (1 ± 4^l) as in the paper text")):
-    for ds, name in (("all", "all-characters"), ("same", "same-characters")):
+    for ds, name in DS:
         table = []; tot = {"original": [0, 0, 0], "candidate5": [0, 0, 0]}; wrong_t = [0, 0]; dis_t = 0
         for l, sign, exp in LS:
-            d = {a: {i: r for i, r in enumerate(rows(os.path.join(R, f"characters_uci_{ds}_{tag}_{l}_{sign}_{a}_r1.csv")))} for a in tot}
+            d = {a: keyed(rows(os.path.join(R, f"{dsname(ds)}_{tag}_{l}_{sign}_{a}_r1.csv"))) for a in tot}
             common = [k for k in d["original"] if k in d["candidate5"]]
             if not common: continue
             t = {a: sum(float(d[a][k]["time_ms"]) for k in common) for a in tot}
@@ -105,7 +125,7 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
         if not table: continue
         n = tot["original"][1]
         out.append(f"## Decision problem, {name}, {desc}\n")
-        out.append(f"Paper Table 2 ({name}, authors' machine): {PAPER_DEC[ds][0]} ms and {PAPER_DEC[ds][1]:,} black-box calls per instance.\n")
+        if PAPER_DEC[ds][0] is not None: out.append(f"Paper Table 2 ({name}, authors' machine): {PAPER_DEC[ds][0]} ms and {PAPER_DEC[ds][1]:,} black-box calls per instance.\n")
         out.append("| set | expected | n | original ms/instance | candidate5 ms/instance | ratio | bb calls orig | bb calls c5 | wrong (orig / c5) | arms disagree |")
         out.append("|---|---|--:|--:|--:|--:|--:|--:|--:|--:|")
         out += table
@@ -113,5 +133,5 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
         out.append(f"| **all sets** | | {n} | **{o[0]/n:.4f}** | **{c5[0]/n:.4f}** | **{o[0]/c5[0]:.3f}** | {o[2]/n:.1f} | {c5[2]/n:.1f} | **{wrong_t[0]} / {wrong_t[1]}** | **{dis_t}** |")
         out.append(f"\nTotals over {n} instances: original {o[0]/1000:.2f} s, candidate5 {c5[0]/1000:.2f} s.\n")
 
-open(os.path.join(R, os.environ.get("OUT", "RESULTS_uci.md")), "w").write("\n".join(out) + "\n")
+open(os.path.join(R, os.environ.get("OUT", "RESULTS_sig.md" if DATASET == "sigspatial" else "RESULTS_uci.md")), "w", encoding="utf-8", newline=chr(10)).write("\n".join(out) + "\n")
 print("\n".join(out))
