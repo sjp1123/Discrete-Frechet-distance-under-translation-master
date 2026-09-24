@@ -328,3 +328,14 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 제안 방법은 같은 답을 내면서 모든 쌍을 2 s 이내·수십 MB에 끝낸다. 초록의 Characters 수치(4.41×)에 더해 "Sigspatial 1,000쌍에서 합 32.9×,
 중앙값 2.4×, original이 메모리 부족으로 실패한 2쌍 포함 전부 성공"이 본문에 넣을 수 있는 결과다.
 원시: `results/raw_sigspatial_lmf.tar.gz`, `results/raw_sigspatial_decider.tar.gz`; 요약 `results/RESULTS_sig.md`; 표 `results/TABLES_uci.md` 표 D.
+
+### 6.10 original arm이 선행 연구를 재현하는지 — `paper_bench/results/REPRO_check.md`
+
+세 층위로 대조했다. (1) 저자가 저장소에 함께 배포한 자기들 측정 출력(`experiments/*.txt`, 2^ℓ 질의 파일의 세트별 평균)과 같은 파일에서
+돌린 우리 original: 호출 수가 의미 있는 세트 대부분에서 2 % 이내(대부분 0.2 % 이내)로 일치하고, 차이는 δ*에 가장 가까운 NO 세트
+(ℓ = −8…−10 minus)에만 몰려 있다(same-characters ℓ=−10 minus 275 vs 569회). 총합은 +6 % / +30 % / +6 %, 시간은 기계 차이로
+×1.15(컨테이너) / ×1.84(이 PC WSL). (2) 논문 Table 2(4^ℓ)와 우리 4^ℓ 세트: 호출 수 −13~−16 %(논문의 4^ℓ 인스턴스 파일은
+배포되지 않아 표본이 다를 수 있음), 단계 비중은 일치(배열 알고리즘 61/53/21 % vs 54/46/18 %). (3) 논문 Table 4와 Characters LMF r2:
+호출 수 −1.1 %, 시간비 0.97, 구성 비중 52 % vs 60 %. 저자가 배포한 같은 벤치마크의 다른 실행(`experiments/characters_valcomp_full_total_table.tex`)은
+논문보다 33 % 적은 8,358회/인스턴스라, 호출 수는 저자 스스로도 실행마다 달라지는 양이다. 결론: original은 저자 코드·저자 인스턴스·저자
+데이터 위에서 돌며 거리는 10⁻⁸ 수준, 호출 수는 동일 파일에서 세트별 2 % 이내로 저자 출력을 재현한다.
