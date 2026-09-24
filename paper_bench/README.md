@@ -9,10 +9,15 @@ around `FrechetUnderTranslation` construction + call, default parameters
 
 ```
 bash paper_bench/build.sh              # -> ~/b_pb_original/paper_bench, ~/b_pb_candidate5/paper_bench
-python3 paper_bench/gen_pairs.py       # seeded pair lists (already committed in queries/)
-bash paper_bench/run_bench.sh 3        # gen decider sets (original arm) + 3 reps, alternating arm order
-python3 paper_bench/analyze.py         # -> results/RESULTS.md, results/*_merged.csv
+bash paper_bench/run_uci.sh lmf        # the authors' 21,000 characters_full pairs, one measurement each
+bash paper_bench/run_uci.sh decider    # the authors' 23 x 1,000 decider instances (2^l files and 4^l sets)
+python3 paper_bench/analyze_uci.py     # -> results/RESULTS_uci.md; tables in results/TABLES_uci.md
 ```
+
+This branch holds only the runs the abstract cites: the authors' own Characters instances
+(`paper_data/characters_uci`, `queries/characters_uci_*`, `results/*_uci_*`).  The
+mirror-order data sets, the random-pair runs (`run_bench.sh`, `analyze.py`,
+`results/RESULTS.md`) and the figure scripts live in the full branch.
 
 ## What is measured
 
@@ -27,9 +32,8 @@ python3 paper_bench/analyze.py         # -> results/RESULTS.md, results/*_merged
 
 | set | curves | pairs | note |
 |---|--:|--:|---|
-| `characters_all` | 2 858 | 2 000 | random pairs over all characters |
-| `characters_same` | 1 429 (labelled half) | 1 000 | same-letter pairs |
-| `sigspatial_subset` | **101** | 1 000 | the GIS Cup sample only — full 20 199-curve set was unreachable |
+| `characters_uci` (LMF) | 2 858 | 21 000 | the authors' `characters_full_<s1>_<s2>.txt`, 210 files x 100 (paper Table 4) |
+| `characters_uci_all` / `_same` (decider) | 2 858 | 1 000 each | the authors' decider pair files, 23 sets each |
 
 ## Correctness gates
 

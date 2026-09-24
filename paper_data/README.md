@@ -16,7 +16,7 @@ sigspatial.org, the MPI/TUM mirrors, archive.org, HuggingFace, Zenodo or Kaggle*
 documented below.  Everything here is reproducible from `convert_characters.py`
 and the recorded source commits / checksums.
 
-## characters/ — complete (2 858 curves)
+## characters/ — complete (2 858 curves) — NOT INCLUDED in this branch (mirror-order copy; see the full branch)
 
 | item | value |
 |---|---|
@@ -36,7 +36,7 @@ and the recorded source commits / checksums.
 | result | 2 858 curves, mean 120.99 vertices after duplicate removal (min 61, max 183) |
 | consequence | the authors' instance files apply unchanged: `fut_val_computation_benchmark_queries/characters_full_*` (21 000 LMF pairs) and `fut_decider_benchmark_queries/characters_fut_decider{,_samechar}_*` (23 × 1 000 decider instances each). `paper_bench/run_uci.sh` runs exactly those. `characters/` (mirror order) is kept only for the earlier results. |
 
-## sigspatial_subset/ — **101 of the 20 199 curves** (subset!)
+## sigspatial_subset/ — **101 of the 20 199 curves** (subset!) — NOT INCLUDED in this branch
 
 | item | value |
 |---|---|
