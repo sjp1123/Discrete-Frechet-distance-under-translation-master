@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 	}
 	else if (mode == "decider") {
 		std::ofstream csv(out);
-		csv << "file1,file2,distance,answer,time_ms,bbcalls,n6_arr_ms,n6_fre_ms\n";
+		csv << "file1,file2,distance,answer,time_ms,bbcalls,n6_arr_ms,n6_fre_ms,pre1_ms,bb1_ms,disc1_ms,arr1_ms\n";
 		csv << std::setprecision(20);
 		std::string f1, f2, line;
 		distance_t distance;
@@ -127,7 +127,9 @@ int main(int argc, char* argv[])
 
 			csv << f1 << "," << f2 << "," << distance << "," << (answer ? 1 : 0) << ","
 			    << ns / 1000000. << "," << counter(EXP::BBCALLS_COUNTER) << ","
-			    << timerMs(EXP::FUT_N6_ARR) << "," << timerMs(EXP::FUT_N6_FRECHET) << "\n";
+			    << timerMs(EXP::FUT_N6_ARR) << "," << timerMs(EXP::FUT_N6_FRECHET) << ","
+			    << timerMs(EXP::FUT_PREPROCESSING1) << "," << timerMs(EXP::FUT_BLACKBOX1) << ","
+			    << timerMs(EXP::FUT_DISCSELECTION1) << "," << timerMs(EXP::FUT_ARRANGEMENT1) << "\n";
 			csv.flush();   // keep the row if the process is killed later (OOM on a later pair)
 			if (++q % 2000 == 0) { std::cerr << "  " << q << " queries\n"; }
 		}

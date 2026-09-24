@@ -339,3 +339,21 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 호출 수 −1.1 %, 시간비 0.97, 구성 비중 52 % vs 60 %. 저자가 배포한 같은 벤치마크의 다른 실행(`experiments/characters_valcomp_full_total_table.tex`)은
 논문보다 33 % 적은 8,358회/인스턴스라, 호출 수는 저자 스스로도 실행마다 달라지는 양이다. 결론: original은 저자 코드·저자 인스턴스·저자
 데이터 위에서 돌며 거리는 10⁻⁸ 수준, 호출 수는 동일 파일에서 세트별 2 % 이내로 저자 출력을 재현한다.
+
+### 6.11 결정 문제를 논문 Table 2 형식으로 — 세 벤치마크, 단계별 타이머 (r2, 이 PC WSL2) — `TABLES_uci.md` 표 E
+
+하네스의 decider 모드에 저자 `updateProfileDec`가 쓰는 네 타이머(`FUT_PREPROCESSING1`, `FUT_BLACKBOX1`, `FUT_DISCSELECTION1`,
+`FUT_ARRANGEMENT1`)를 기록하도록 열을 추가하고(`pre1_ms, bb1_ms, disc1_ms, arr1_ms`), 세 벤치마크(same-/all-characters, Sigspatial)의
+23×1,000 인스턴스를 두 arm 모두 다시 돌렸다(2^ℓ 저자 파일 + 4^ℓ 세트, arm마다 코어 하나, 이 PC). 호출 수는 r1과 인스턴스 평균까지 동일,
+오답 0, 불일치 0. 4^ℓ 결과(ms/인스턴스, baseline → proposed; 배열 알고리즘 단계 ms):
+
+| 벤치마크 | 논문 Table 2 | baseline | proposed | 가속 | 호출/인스턴스 | 배열 알고리즘 |
+|---|--:|--:|--:|--:|---|---|
+| same-characters | 18.7 | 15.42 | 8.07 | 1.91× | 997 → 247 | 186,962 → 8,492 |
+| all-characters | 27.3 | 22.79 | 9.62 | 2.37× | 1,616 → 386 | 312,196 → 11,863 |
+| Sigspatial | 52.5 | 43.85 | 36.44 | 1.20× | 1,146 → 293 | 199,749 → 8,848 |
+
+- 단계 비중이 논문과 같다: all-characters 배열 알고리즘 61 %(논문) vs 60 %(baseline), Sigspatial은 배열 추정이 76 % vs 76 %로 지배적.
+  결정 문제의 이득 상한은 배열 알고리즘 비중 자체이므로, Characters에서 2.4배, Sigspatial에서 1.2배에 그친다.
+- 원시: `results/raw_characters_uci_decider_r2.tar.gz`(184 CSV), `results/raw_sigspatial_decider_r2.tar.gz`(92 CSV). r1(첫 실행, 단계 타이머
+  없음)은 그대로 두었고 REPRO_check·RESULTS_*의 세트별 표는 r1 기준이다.
