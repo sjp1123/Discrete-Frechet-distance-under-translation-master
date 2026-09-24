@@ -4,8 +4,9 @@
 // It is compiled once per arm against that arm's own sources (see
 // CMakeLists.txt / build.sh), so both arms run exactly the code path of the
 // paper's harness (src/fut_paper_experiments.cpp): `trans` objects, -DTRANSLATION,
-// FrechetUnderTranslation with default parameters, timed with the same
-// high_resolution_clock around construction + call.
+// FrechetUnderTranslation with default parameters, timed around construction + call
+// like the paper's harness, but with steady_clock instead of its high_resolution_clock
+// (system_clock in libstdc++, which WSL2 steps; experiment_log 6.12).
 //
 //   paper_bench lmf     <pairs.txt>   <curve_dir> <out.csv>
 //        value computation, calcDistance2 (LMF), one row per pair
@@ -36,7 +37,7 @@
 
 namespace {
 
-using hrc = std::chrono::high_resolution_clock;
+using hrc = std::chrono::steady_clock;   // monotonic; high_resolution_clock = system_clock steps under WSL2
 
 std::map<std::string, Curve> curve_cache;
 

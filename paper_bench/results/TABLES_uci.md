@@ -1,11 +1,14 @@
-# Paper tables — Characters, the authors' data and instances (UCI file)
+# Paper tables — the authors' data and instances (Characters UCI file; Sigspatial full set)
 
-Source: `RESULTS_uci_r2.md` for LMF (raw: `raw_characters_uci_lmf_r2.tar.gz`; original, candidate5_noslack and
-candidate5_exact measured back-to-back on one idle core of the same container instance) and
+Tables A-C (container, Characters): `RESULTS_uci_r2.md` for LMF (raw: `raw_characters_uci_lmf_r2.tar.gz`; original,
+candidate5_noslack and candidate5_exact measured back-to-back on one idle core of the same container instance) and
 `RESULTS_uci.md` for the decider (raw: `raw_characters_uci_decider.tar.gz`, earlier container instance —
 absolute times are not comparable across the two instances). One measurement per instance.
 baseline = original (CGAL arrangement); proposed = candidate5 with MAXREGION_EXACT=1 and MAXREGION_SLACK=0
-(filtered P2/P3 predicates with rational fallback) for LMF, candidate5 for the decider. Paper columns from Bringmann–Künnemann–Nusser, ESA 2020.
+(filtered P2/P3 predicates with rational fallback) for LMF, default candidate5 for the Table A decider.
+Tables D-E (user PC, WSL2, r3; `experiment_log` 6.12): Sigspatial value computation and the decider on all three benchmarks,
+proposed = candidate5 with MAXREGION_EXACT=1 and MAXREGION_SLACK=0 throughout; absolute times are not comparable with A-C.
+Paper columns from Bringmann–Künnemann–Nusser, ESA 2020.
 
 ## Table A — Decision problem, (1 ± 4^ℓ)·δ instances, 1,000 pairs × 23 sets
 
@@ -150,167 +153,189 @@ LMF, proposed & \multicolumn{2}{c}{643{,}923 ms} & 66{,}067{,}601 \\
 \end{table}
 ```
 
-## Table D — Sigspatial, the full 20,199-curve set, the authors' 1,000 decider pairs (user PC, WSL2; see experiment_log §6.9)
+## Table D - Sigspatial value computation, the authors' 1,000 decider pairs, in the format of the paper's Table 4 (user PC, WSL2, r3)
 
-Value computation (LMF); proposed = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0; 998 pairs measured on both arms
-(on 2 pairs the baseline was killed at 7.4 GB under the default 7.5 GB WSL limit and again at 11.8 GB under a 12 GB limit, i.e. it needs more than 12 GB; the proposed arm finished them in 0.6 s and 2.0 s with values matching the authors' delta*).
+Not in the paper (its Table 4 is Characters only). The authors' Sigspatial decider pairs on the full 20,199-curve set; value
+computation (`calcDistance2`), one measurement per instance; `run_wsl_paired.sh`: steady_clock, the arms of each pair back-to-back
+on one vCPU, one process per pair and arm; proposed = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0. 998 pairs measured on
+both arms. On the other 2 the baseline is OOM-killed even under a 12 GB limit (at 312 s and 203 s in an
+earlier run with the old clock, `sigspatial_lmf_original_oom_12gb.txt` in the archive; an approximate lower bound on its time),
+and the proposed arm finishes them in 0.52 s and 1.85 s. The rows below cover the 998 pairs.
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
-| **LMF, baseline** | **2,318,393 ms** (2,323.0 ms per instance) | **12,554,186** (12,579.3 per instance) |
-| - Preprocessing | 20,176 ms | |
-| - Black-box calls (Lipschitz) | 16,289 ms | |
-| - Arrangement estimation | 27,722 ms | |
-| - Arrangement algorithm | 2,251,388 ms | |
-| &nbsp;&nbsp;\* Construction | 2,230,595 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 15,283 ms | |
-| **LMF, proposed** | **70,549 ms** (70.7 ms per instance) | **3,561,796** (3,568.9 per instance) |
-| - Preprocessing | 19,164 ms | |
-| - Black-box calls (Lipschitz) | 18,273 ms | |
-| - Arrangement estimation | 25,881 ms | |
-| - Arrangement algorithm | 4,234 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 2,502 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 1,622 ms | |
+| **LMF, baseline** | **2,456,421 ms** (2,461.34 ms per instance) | **12,554,186** (12,579.34 per instance) |
+| - Preprocessing | 18,379 ms | |
+| - Black-box calls (Lipschitz) | 17,777 ms | |
+| - Arrangement estimation | 29,700 ms | |
+| - Arrangement algorithm | 2,387,716 ms | |
+| &nbsp;&nbsp;\* Construction | 2,365,749 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 15,590 ms | |
+| **LMF, proposed** | **65,571 ms** (65.70 ms per instance) | **3,561,796** (3,568.93 per instance) |
+| - Preprocessing | 18,463 ms | |
+| - Black-box calls (Lipschitz) | 17,415 ms | |
+| - Arrangement estimation | 23,130 ms | |
+| - Arrangement algorithm | 3,892 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 2,371 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 1,435 ms | |
 
-Speed-up 32.9x (sum), geomean of per-instance ratios 2.37 [2.26, 2.49], median 2.27, faster on 893/998; all 998 values agree
-to within 8.6e-9 and all arms reproduce the authors' delta* to within 1.33e-8. The sum is dominated by a few instances on which
-the baseline's arrangement construction takes 12-795 s (5 instances above 60 s); excluding the 10 slowest baseline instances the
-per-instance times are 146.4 vs 60.4 ms (2.42x). Decider (23 x 1,000 instances, both arms 0 wrong, 0 disagreements):
-authors' 2^l files 0.369 vs 0.393 ms (0.94x), 4^l sets 41.74 vs 34.51 ms (1.21x), calls 1,146 -> 293.
+Per-instance speed-up: geometric mean 2.47 [95 % bootstrap interval 2.36, 2.59], median 2.42, faster on 908/998;
+values agree to within 8.6e-09; the slowest proposed instance, over all 1,000 pairs, takes 2.04 s.
+Total-time ratio 37.5x, but it rests on a few instances measured once: the slowest baseline instance is
+34.5 % of the baseline total and the 4 slowest are 86 %; without the slowest the ratio is 25.0x, and without
+the 10 slowest the per-instance means are 150.0 vs 55.2 ms (2.72x). The same 10 slow instances took 0.75-1.27x
+their r3 baseline time in the invalidated first run, whose total ratio was 32.9x. Read the total ratio as indicative only;
+the per-instance statistics are stable (geometric mean 2.37 in the first run, 2.47 here).
+candidate5_noslack (same predicates without the exact filter): 50.1 ms per instance, 2,841.1 calls.
+Peak RSS over the 998 pairs: baseline 31 MB, proposed 29 MB.
 
-## Table E - Decision problem in the format of the paper's Table 2: same-characters, all-characters, Sigspatial (user PC, WSL2, r2)
+## Table E - Decision problem in the format of the paper's Table 2: same-characters, all-characters, Sigspatial (user PC, WSL2, r3)
 
-The authors' 23 x 1,000 decider instances per benchmark, each measured once; baseline and proposed on separate cores of the
-same machine (`paper_bench/run_sig.sh`-style loops, binaries with the four stage timers of the authors' `updateProfileDec`:
-`FUT_PREPROCESSING1`, `FUT_BLACKBOX1`, `FUT_DISCSELECTION1`, `FUT_ARRANGEMENT1` = `FUT_N6_ARR` + `FUT_N6_FRECHET`). Both arms
-answer every instance correctly and agree on all of them. The 4^l sets follow the paper's text; the 2^l sets are the authors'
-shipped files (their own outputs for those are in `experiments/`, see `REPRO_check.md`). Stage sums are 98-99 % of the totals;
-the remainder is untimed harness overhead. Raw rows: `raw_characters_uci_decider_r2.tar.gz`, `raw_sigspatial_decider_r2.tar.gz`.
+The authors' 23 x 1,000 decider instances per benchmark, each measured once; `run_wsl_paired.sh`: steady_clock, both arms on the
+same vCPU, alternating per query file. Stage timers are the authors' `updateProfileDec` ones (`FUT_PREPROCESSING1`, `FUT_BLACKBOX1`,
+`FUT_DISCSELECTION1`, `FUT_ARRANGEMENT1` with sub-timers `FUT_N6_ARR` and `FUT_N6_FRECHET`; the sub-rows omit the untimed rest of the
+stage). The 4^l sets follow the paper's text (its instance files
+are not shipped, so the pair sample may differ from the paper's); the 2^l sets are the authors' shipped files (their own outputs for
+those are in `experiments/`, see `REPRO_check.md`). Paper rows are the authors' machine and are shown for the stage shares only.
+The proposed arm is candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0, as in Tables C and D. Table A (container) ran the
+default candidate5 (band filter, caller slack); its call counts differ from these on 3 of 92,000 Characters instances, so Tables A
+and E differ in both machine and proposed configuration.
 
 ### 4^l (the paper's protocol)
 
-#### same-characters, factors (1 +- 4^l) as in the paper text (23 x 1,000 instances)
+#### same-characters (23 x 1,000 instances; both arms 0 wrong answers)
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
 | *LMF as reported in [BKN20], Table 2 (authors' machine)* | *429,623 ms* (18.7 ms per instance) | *26,661,524* (1,159.20 per instance) |
 | *- Preprocessing / Black-box calls (Lipschitz) / Arrangement estimation* | *5 / 44,312 / 157,780 ms* | |
 | *- Arrangement algorithm (Construction, Black-box calls)* | *226,469 ms (148,898, 60,156)* | |
-| **LMF, baseline** | **354,679 ms** (15.42 ms per instance) | **22,931,233** (997.01 per instance) |
-| - Preprocessing | 26 ms | |
-| - Black-box calls (Lipschitz) | 37,948 ms | |
-| - Arrangement estimation | 128,649 ms | |
-| - Arrangement algorithm | 186,962 ms | |
-| &nbsp;&nbsp;\* Construction | 141,420 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 32,688 ms | |
-| **LMF, proposed** | **185,686 ms** (8.07 ms per instance) | **5,676,400** (246.80 per instance) |
-| - Preprocessing | 23 ms | |
-| - Black-box calls (Lipschitz) | 36,801 ms | |
-| - Arrangement estimation | 139,566 ms | |
-| - Arrangement algorithm | 8,492 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 4,606 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 3,730 ms | |
+| **LMF, baseline** | **266,604 ms** (11.59 ms per instance) | **22,931,233** (997.01 per instance) |
+| - Preprocessing | 15 ms | |
+| - Black-box calls (Lipschitz) | 29,214 ms | |
+| - Arrangement estimation | 99,242 ms | |
+| - Arrangement algorithm | 137,350 ms | |
+| &nbsp;&nbsp;\* Construction | 104,070 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 24,316 ms | |
+| **LMF, proposed** | **135,597 ms** (5.90 ms per instance) | **5,676,400** (246.80 per instance) |
+| - Preprocessing | 15 ms | |
+| - Black-box calls (Lipschitz) | 28,542 ms | |
+| - Arrangement estimation | 100,605 ms | |
+| - Arrangement algorithm | 5,863 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 3,171 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 2,599 ms | |
 
-#### all-characters, factors (1 +- 4^l) as in the paper text (23 x 1,000 instances)
+#### all-characters (23 x 1,000 instances; both arms 0 wrong answers)
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
 | *LMF as reported in [BKN20], Table 2 (authors' machine)* | *628,043 ms* (27.3 ms per instance) | *42,781,931* (1,860.08 per instance) |
 | *- Preprocessing / Black-box calls (Lipschitz) / Arrangement estimation* | *5 / 50,462 / 191,177 ms* | |
 | *- Arrangement algorithm (Construction, Black-box calls)* | *385,145 ms (237,043, 120,149)* | |
-| **LMF, baseline** | **524,282 ms** (22.79 ms per instance) | **37,175,347** (1,616.32 per instance) |
-| - Preprocessing | 24 ms | |
-| - Black-box calls (Lipschitz) | 42,066 ms | |
-| - Arrangement estimation | 168,624 ms | |
-| - Arrangement algorithm | 312,196 ms | |
-| &nbsp;&nbsp;\* Construction | 232,292 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 56,816 ms | |
-| **LMF, proposed** | **221,195 ms** (9.62 ms per instance) | **8,875,271** (385.88 per instance) |
-| - Preprocessing | 22 ms | |
-| - Black-box calls (Lipschitz) | 39,911 ms | |
-| - Arrangement estimation | 168,281 ms | |
-| - Arrangement algorithm | 11,863 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 6,670 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 4,998 ms | |
+| **LMF, baseline** | **446,469 ms** (19.41 ms per instance) | **37,175,347** (1,616.32 per instance) |
+| - Preprocessing | 20 ms | |
+| - Black-box calls (Lipschitz) | 38,223 ms | |
+| - Arrangement estimation | 148,961 ms | |
+| - Arrangement algorithm | 258,060 ms | |
+| &nbsp;&nbsp;\* Construction | 191,560 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 49,595 ms | |
+| **LMF, proposed** | **200,385 ms** (8.71 ms per instance) | **8,875,271** (385.88 per instance) |
+| - Preprocessing | 23 ms | |
+| - Black-box calls (Lipschitz) | 37,603 ms | |
+| - Arrangement estimation | 151,624 ms | |
+| - Arrangement algorithm | 10,078 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 5,629 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 4,291 ms | |
 
-#### sigspatial, factors (1 +- 4^l) as in the paper text (23 x 1,000 instances)
+#### sigspatial (23 x 1,000 instances; both arms 0 wrong answers)
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
 | *LMF as reported in [BKN20], Table 2 (authors' machine)* | *1,207,560 ms* (52.5 ms per instance) | *31,420,517* (1,366.11 per instance) |
 | *- Preprocessing / Black-box calls (Lipschitz) / Arrangement estimation* | *5 / 43,861 / 913,266 ms* | |
 | *- Arrangement algorithm (Construction, Black-box calls)* | *249,268 ms (155,332, 73,934)* | |
-| **LMF, baseline** | **1,008,547 ms** (43.85 ms per instance) | **26,366,095** (1,146.35 per instance) |
-| - Preprocessing | 23 ms | |
-| - Black-box calls (Lipschitz) | 40,421 ms | |
-| - Arrangement estimation | 767,700 ms | |
-| - Arrangement algorithm | 199,749 ms | |
-| &nbsp;&nbsp;\* Construction | 149,010 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 35,816 ms | |
-| **LMF, proposed** | **838,140 ms** (36.44 ms per instance) | **6,748,661** (293.42 per instance) |
-| - Preprocessing | 23 ms | |
-| - Black-box calls (Lipschitz) | 40,792 ms | |
-| - Arrangement estimation | 787,104 ms | |
-| - Arrangement algorithm | 8,848 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 4,937 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 3,653 ms | |
+| **LMF, baseline** | **890,144 ms** (38.70 ms per instance) | **26,366,095** (1,146.35 per instance) |
+| - Preprocessing | 19 ms | |
+| - Black-box calls (Lipschitz) | 34,786 ms | |
+| - Arrangement estimation | 685,321 ms | |
+| - Arrangement algorithm | 168,714 ms | |
+| &nbsp;&nbsp;\* Construction | 124,904 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 31,550 ms | |
+| **LMF, proposed** | **705,065 ms** (30.65 ms per instance) | **6,748,661** (293.42 per instance) |
+| - Preprocessing | 19 ms | |
+| - Black-box calls (Lipschitz) | 34,216 ms | |
+| - Arrangement estimation | 662,544 ms | |
+| - Arrangement algorithm | 7,162 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 4,027 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 2,954 ms | |
 
 ### 2^l (the authors' shipped query files)
 
-#### same-characters, the authors 2^l query files (23 x 1,000 instances)
+#### same-characters (23 x 1,000 instances; both arms 0 wrong answers)
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
-| **LMF, baseline** | **26,064 ms** (1.13 ms per instance) | **1,590,691** (69.16 per instance) |
+| **LMF, baseline** | **19,713 ms** (0.86 ms per instance) | **1,590,691** (69.16 per instance) |
+| - Preprocessing | 15 ms | |
+| - Black-box calls (Lipschitz) | 8,307 ms | |
+| - Arrangement estimation | 8,091 ms | |
+| - Arrangement algorithm | 3,135 ms | |
+| &nbsp;&nbsp;\* Construction | 2,372 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 567 ms | |
+| **LMF, proposed** | **16,447 ms** (0.72 ms per instance) | **1,229,988** (53.48 per instance) |
+| - Preprocessing | 15 ms | |
+| - Black-box calls (Lipschitz) | 8,128 ms | |
+| - Arrangement estimation | 8,008 ms | |
+| - Arrangement algorithm | 138 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 73 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 62 ms | |
+
+#### all-characters (23 x 1,000 instances; both arms 0 wrong answers)
+
+| Algorithm | Time | Black-Box Calls |
+|---|--:|--:|
+| **LMF, baseline** | **12,619 ms** (0.55 ms per instance) | **1,412,302** (61.40 per instance) |
 | - Preprocessing | 18 ms | |
-| - Black-box calls (Lipschitz) | 10,540 ms | |
-| - Arrangement estimation | 11,014 ms | |
-| - Arrangement algorithm | 4,294 ms | |
-| &nbsp;&nbsp;\* Construction | 3,241 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 755 ms | |
-| **LMF, proposed** | **22,055 ms** (0.96 ms per instance) | **1,229,988** (53.48 per instance) |
+| - Black-box calls (Lipschitz) | 6,661 ms | |
+| - Arrangement estimation | 5,009 ms | |
+| - Arrangement algorithm | 761 ms | |
+| &nbsp;&nbsp;\* Construction | 566 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 149 ms | |
+| **LMF, proposed** | **11,926 ms** (0.52 ms per instance) | **1,332,718** (57.94 per instance) |
 | - Preprocessing | 18 ms | |
-| - Black-box calls (Lipschitz) | 10,566 ms | |
-| - Arrangement estimation | 11,083 ms | |
-| - Arrangement algorithm | 190 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 99 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 87 ms | |
+| - Black-box calls (Lipschitz) | 6,673 ms | |
+| - Arrangement estimation | 5,032 ms | |
+| - Arrangement algorithm | 35 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 18 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 16 ms | |
 
-#### all-characters, the authors 2^l query files (23 x 1,000 instances)
-
-| Algorithm | Time | Black-Box Calls |
-|---|--:|--:|
-| **LMF, baseline** | **14,268 ms** (0.62 ms per instance) | **1,412,302** (61.40 per instance) |
-| - Preprocessing | 25 ms | |
-| - Black-box calls (Lipschitz) | 7,396 ms | |
-| - Arrangement estimation | 5,629 ms | |
-| - Arrangement algorithm | 1,022 ms | |
-| &nbsp;&nbsp;\* Construction | 749 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 208 ms | |
-| **LMF, proposed** | **13,981 ms** (0.61 ms per instance) | **1,332,718** (57.94 per instance) |
-| - Preprocessing | 27 ms | |
-| - Black-box calls (Lipschitz) | 8,066 ms | |
-| - Arrangement estimation | 5,644 ms | |
-| - Arrangement algorithm | 42 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 22 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 19 ms | |
-
-#### sigspatial, the authors 2^l query files (23 x 1,000 instances)
+#### sigspatial (23 x 1,000 instances; both arms 0 wrong answers)
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|
-| **LMF, baseline** | **8,734 ms** (0.38 ms per instance) | **557,540** (24.24 per instance) |
-| - Preprocessing | 21 ms | |
-| - Black-box calls (Lipschitz) | 3,224 ms | |
-| - Arrangement estimation | 5,056 ms | |
-| - Arrangement algorithm | 329 ms | |
-| &nbsp;&nbsp;\* Construction | 286 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 17 ms | |
-| **LMF, proposed** | **8,448 ms** (0.37 ms per instance) | **523,550** (22.76 per instance) |
-| - Preprocessing | 22 ms | |
-| - Black-box calls (Lipschitz) | 3,235 ms | |
-| - Arrangement estimation | 5,071 ms | |
-| - Arrangement algorithm | 13 ms | |
-| &nbsp;&nbsp;\* Maximal-set enumeration | 11 ms | |
-| &nbsp;&nbsp;\* Black-box calls | 2 ms | |
+| **LMF, baseline** | **6,327 ms** (0.28 ms per instance) | **557,540** (24.24 per instance) |
+| - Preprocessing | 11 ms | |
+| - Black-box calls (Lipschitz) | 2,311 ms | |
+| - Arrangement estimation | 3,723 ms | |
+| - Arrangement algorithm | 210 ms | |
+| &nbsp;&nbsp;\* Construction | 181 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 11 ms | |
+| **LMF, proposed** | **6,120 ms** (0.27 ms per instance) | **523,550** (22.76 per instance) |
+| - Preprocessing | 12 ms | |
+| - Black-box calls (Lipschitz) | 2,306 ms | |
+| - Arrangement estimation | 3,723 ms | |
+| - Arrangement algorithm | 7 ms | |
+| &nbsp;&nbsp;\* Maximal-set enumeration | 6 ms | |
+| &nbsp;&nbsp;\* Black-box calls | 1 ms | |
+
+### Summary
+
+| set | benchmark | ms/instance baseline -> proposed | speed-up | calls/instance | arrangement algorithm (ms) | its share of the baseline |
+|---|---|---|--:|---|---|--:|
+| 4^l | same-characters | 11.59 -> 5.90 | 1.97x | 997 -> 247 | 137,350 -> 5,863 | 51.5 % |
+| 4^l | all-characters | 19.41 -> 8.71 | 2.23x | 1,616 -> 386 | 258,060 -> 10,078 | 57.8 % |
+| 4^l | sigspatial | 38.70 -> 30.65 | 1.26x | 1,146 -> 293 | 168,714 -> 7,162 | 19.0 % |
+| 2^l | same-characters | 0.86 -> 0.72 | 1.20x | 69 -> 53 | 3,135 -> 138 | 15.9 % |
+| 2^l | all-characters | 0.55 -> 0.52 | 1.06x | 61 -> 58 | 761 -> 35 | 6.0 % |
+| 2^l | sigspatial | 0.28 -> 0.27 | 1.03x | 24 -> 23 | 210 -> 7 | 3.3 % |
 

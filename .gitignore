@@ -20,3 +20,5 @@ core
 
 # Sigspatial: 20,199 extracted curves (207 MB); regenerate with paper_data/convert_sigspatial.py from the committed shortest-sf.tgz
 paper_data/sigspatial/data/
+
+__pycache__/

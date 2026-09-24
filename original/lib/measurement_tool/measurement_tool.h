@@ -53,7 +53,9 @@ public:
 		using Times = std::vector<Time>;
 		using Counter = uint64_t;
 
-		using hrc = std::chrono::high_resolution_clock;
+		// steady_clock (monotonic): libstdc++ high_resolution_clock is system_clock, which WSL2
+		// steps by ~0.6 s at Hyper-V time syncs (paper_bench: negative instance times). Measurement only.
+		using hrc = std::chrono::steady_clock;
 		using time_point = hrc::time_point;
 		using ns = std::chrono::nanoseconds;
 

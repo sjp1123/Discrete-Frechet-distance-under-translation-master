@@ -193,9 +193,9 @@ candidate2에 계측 3줄 추가(`degen`, `npts`, `queries`) 후 측정.
 
 *(candidate2 소스에 계측 3줄 `// INSTRUMENTATION` 추가 상태 — 되돌리기 대기 중)*
 
-## 6. 논문 데이터 재현 실험 — `paper_bench/` (2026-09-16 ~ 09-21)
+## 6. 논문 데이터 재현 실험 — `paper_bench/` (2026-09-16 ~ 09-25)
 
-이 브랜치에는 초록이 인용하는 6.6~6.8만 담았다. 거울 데이터(characters/, sigspatial_subset/)와 임의 1,000쌍 실험(6.1~6.5, 그림 스크립트)은 전체 브랜치 `claude/loving-ramanujan-ge8xd7`에 있다. 절 번호는 전체 브랜치와 같게 두어 표·결과 파일의 참조(§6.6, §6.8)가 그대로 맞는다.
+이 브랜치에는 초록과 논문 초안이 인용하는 6.6~6.12만 담았다. 거울 데이터(characters/, sigspatial_subset/)와 임의 1,000쌍 실험(6.1~6.5, 그림 스크립트)은 전체 브랜치 `claude/loving-ramanujan-ge8xd7`에 있다. 절 번호는 전체 브랜치와 같게 두어 표·결과 파일의 참조(§6.6, §6.8)가 그대로 맞는다.
 
 ### 6.6 저자와 동일한 데이터: UCI 원본 파일 + 저자 인스턴스 파일 — `paper_bench/run_uci.sh`
 
@@ -226,9 +226,9 @@ candidate2에 계측 3줄 추가(`degen`, `npts`, `queries`) 후 측정.
   호출 61 / 69로 논문 Table 2의 1/50 → 논문 수치는 본문대로 4^ℓ 인스턴스에서 나온 것. 표·그림은 4^ℓ(`paperq4`).
 - 저자 all-characters 목록에 중복 쌍 2개(712–2493, 432–266)가 있어 행 인덱스로 대응시켰다.
 - 결론은 무작위 1,000쌍(6.2~6.5)과 같다: LMF 4.2× (이전 4.0×), 결정 2.25× / 1.85× (이전 2.22× / 1.91×).
-- Sigspatial 전체 세트(`shortest-sf.tgz`)는 원 서버가 내려가 보류.
+- Sigspatial 전체 세트(`shortest-sf.tgz`)는 원 서버가 내려가 보류. (→ 2026-09-24 사용자가 파일을 확보해 해결, §6.9·§6.12)
 - 원시 결과: `results/raw_characters_uci_{lmf,decider}.tar.gz`, 요약: `results/RESULTS_uci.md`,
-  그림: `figures/fig_breakdown_uci.*`, `figures/fig_decider_bars_uci.*`.
+  그림: `figures/fig_breakdown_uci.*`, `figures/fig_decider_bars_uci.*` (전체 브랜치에만 있음).
 
 ### 6.7 술어의 정확 모드(MAXREGION_EXACT=1)와 재측정 — `candidate5/lib/cgal_disk_arrangements/maximal_regions.cpp`
 
@@ -252,7 +252,7 @@ candidate5_exact 세 arm을 같은 인스턴스에서 코어 2 단독으로 연�
 - 재계산 횟수: P2 0 / 197,226,956, P3 74 / 289,116,753 (r0·r2 두 실행에서 동일, 결정적).
 - 단계별(exact): 전처리 82,581 / Lipschitz 호출 282,761 / 배열 추정 162,130 / 배열 알고리즘 77,596
   (구성 42,777 + 호출 33,978) ms; 기존 87,237 / 289,267 / 190,210 / 2,233,926 (1,708,959 + 367,421).
-- 표·그림(`TABLES_uci.md` 표 B·C, `fig_breakdown_uci`)은 r2·exact로 교체. 결정 문제(표 A)는 이전
+- 표·그림(`TABLES_uci.md` 표 B·C, `fig_breakdown_uci`, 전체 브랜치에만 있음)은 r2·exact로 교체. 결정 문제(표 A)는 이전
   인스턴스의 r1 값 그대로이며 절대 시간은 표 간 비교 불가.
 - 원시: `results/raw_characters_uci_lmf_r2.tar.gz`(r2 세 arm + exact r0), 요약 `results/RESULTS_uci_r2.md`.
 
@@ -279,6 +279,8 @@ candidate5_exact 세 arm을 같은 인스턴스에서 코어 2 단독으로 연�
 - 원시: `results/raw_characters_uci_fpsens.tar.gz` (쌍 목록 + 두 CSV).
 
 ### 6.9 Sigspatial 전체 집합(20,199곡선)에서의 재현 — `paper_bench/run_sig.sh` (2026-09-24, 사용자 PC WSL)
+
+> **주의 (2026-09-25)**: 이 절의 시간 수치(WSL, r1/r2)는 시계 점프와 가상 CPU 배치 문제로 무효이며 §6.12의 r3로 대체한다. 호출 수·정답·거리 값은 유효하다(r3와 동일).
 
 **데이터**: 사용자가 확보한 저자의 `shortest-sf.tgz`(54.6 MB, SHA-256 `33d3262ef389e543…`, `paper_data/sigspatial/`에 커밋)를
 `paper_data/convert_sigspatial.py`(저자 `fetch_and_convert_data.py`의 `tail -n +2`와 동일)로 변환 → 20,199곡선, 평균 247.9정점
@@ -331,16 +333,21 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 
 ### 6.10 original arm이 선행 연구를 재현하는지 — `paper_bench/results/REPRO_check.md`
 
+> **주의 (2026-09-25)**: 이 절의 Sigspatial 시간비는 §6.12의 r3(×1.37)로 갱신했다. 이전 WSL r1 값(×1.84)은 시계 점프와 가상 CPU 배치 문제로 무효이다. 호출 수·거리 값은 유효하다.
+
 세 층위로 대조했다. (1) 저자가 저장소에 함께 배포한 자기들 측정 출력(`experiments/*.txt`, 2^ℓ 질의 파일의 세트별 평균)과 같은 파일에서
-돌린 우리 original: 호출 수가 의미 있는 세트 대부분에서 2 % 이내(대부분 0.2 % 이내)로 일치하고, 차이는 δ*에 가장 가까운 NO 세트
-(ℓ = −8…−10 minus)에만 몰려 있다(same-characters ℓ=−10 minus 275 vs 569회). 총합은 +6 % / +30 % / +6 %, 시간은 기계 차이로
-×1.15(컨테이너) / ×1.84(이 PC WSL). (2) 논문 Table 2(4^ℓ)와 우리 4^ℓ 세트: 호출 수 −13~−16 %(논문의 4^ℓ 인스턴스 파일은
-배포되지 않아 표본이 다를 수 있음), 단계 비중은 일치(배열 알고리즘 61/53/21 % vs 54/46/18 %). (3) 논문 Table 4와 Characters LMF r2:
+돌린 우리 original: 호출 수가 의미 있는 세트 대부분에서 2 % 이내(대부분 0.2 % 이내)로 일치하고, 차이는 대부분 δ*에 가장 가까운 세트에
+몰려 있다(2 % 밖 8세트 중 7개가 ℓ = −8…−10 minus, 나머지 하나는 same-characters ℓ=−10 plus +3 %; 가장 큰 차이는 same-characters ℓ=−10 minus
+275 vs 569회). 총합은 +6 % / +30 % / +6 %, 시간은 기계 차이와 (same-characters는) 호출 수 차이로
+×1.15·×1.47(all-/same-characters, 컨테이너) / ×1.37(Sigspatial, 이 PC WSL2 r3; 이전 r1 값 ×1.84는 §6.12에 따라 무효). (2) 논문 Table 2(4^ℓ)와 우리 4^ℓ 세트: 호출 수 −13~−16 %(논문의 4^ℓ 인스턴스 파일은
+배포되지 않아 표본이 다를 수 있음), 단계 비중은 일치(배열 구성 + 그 안의 블랙박스 호출 57/49/19 % vs 54/46/18 %; 양쪽 모두 N6_ARR + N6_FRECHET 기준). (3) 논문 Table 4와 Characters LMF r2:
 호출 수 −1.1 %, 시간비 0.97, 구성 비중 52 % vs 60 %. 저자가 배포한 같은 벤치마크의 다른 실행(`experiments/characters_valcomp_full_total_table.tex`)은
 논문보다 33 % 적은 8,358회/인스턴스라, 호출 수는 저자 스스로도 실행마다 달라지는 양이다. 결론: original은 저자 코드·저자 인스턴스·저자
 데이터 위에서 돌며 거리는 10⁻⁸ 수준, 호출 수는 동일 파일에서 세트별 2 % 이내로 저자 출력을 재현한다.
 
 ### 6.11 결정 문제를 논문 Table 2 형식으로 — 세 벤치마크, 단계별 타이머 (r2, 이 PC WSL2) — `TABLES_uci.md` 표 E
+
+> **주의 (2026-09-25)**: 이 절의 시간 수치(WSL, r1/r2)는 시계 점프와 가상 CPU 배치 문제로 무효이며 §6.12의 r3로 대체한다. 호출 수·정답·거리 값은 유효하다(r3와 동일).
 
 하네스의 decider 모드에 저자 `updateProfileDec`가 쓰는 네 타이머(`FUT_PREPROCESSING1`, `FUT_BLACKBOX1`, `FUT_DISCSELECTION1`,
 `FUT_ARRANGEMENT1`)를 기록하도록 열을 추가하고(`pre1_ms, bb1_ms, disc1_ms, arr1_ms`), 세 벤치마크(same-/all-characters, Sigspatial)의
@@ -356,4 +363,70 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 - 단계 비중이 논문과 같다: all-characters 배열 알고리즘 61 %(논문) vs 60 %(baseline), Sigspatial은 배열 추정이 76 % vs 76 %로 지배적.
   결정 문제의 이득 상한은 배열 알고리즘 비중 자체이므로, Characters에서 2.4배, Sigspatial에서 1.2배에 그친다.
 - 원시: `results/raw_characters_uci_decider_r2.tar.gz`(184 CSV), `results/raw_sigspatial_decider_r2.tar.gz`(92 CSV). r1(첫 실행, 단계 타이머
-  없음)은 그대로 두었고 REPRO_check·RESULTS_*의 세트별 표는 r1 기준이다.
+  없음)은 그대로 두었다. 현재 RESULTS_uci.md와 REPRO_check의 Characters 열은 컨테이너 r1, RESULTS_sig.md와 REPRO_check의 Sigspatial 열은 r3(§6.12)이다.
+
+### 6.12 WSL 측정 오류(시계 점프·가상 CPU 배치)와 r3 재측정 — `paper_bench/run_wsl_paired.sh` (2026-09-25)
+
+**발견**: Sigspatial 산점도(그림 6 형식)를 그리다 음수 인스턴스 시간을 발견했다(`raw_sigspatial_lmf.tar.gz` original 3행, noslack 1행).
+원인 두 가지.
+1. **시계**: 하네스와 저자의 MEASUREMENT 라이브러리(`lib/measurement_tool/measurement_tool.h`)가 `std::chrono::high_resolution_clock`을 쓰는데,
+   libstdc++에서 이는 `system_clock`(벽시계)이다. WSL2는 Hyper-V 시각 동기화(`hv_utils: TimeSync`) 때 벽시계를 수백 ms에서 1 s 가까이 옮긴다(아래 관측 −643.7 ms; 옛 파일의 음수는 −958.6 ms까지).
+   WSL에서 90 s 동안 벽시계와 단조 시계를 비교하자 −643.7 ms 점프 1회가 관측됐다. 점프 순간 측정 중이던 인스턴스의 시간이 그만큼 틀린다
+   (음수로 드러나는 것은 짧은 인스턴스뿐이고, 나머지는 드러나지 않는다).
+2. **가상 CPU**: 이 PC는 Core Ultra 5 125H(성능 코어 4 + 효율 코어 10, 18스레드). WSL2 가상 CPU는 물리 코어에 고정되지 않아 같은 파이썬
+   루프가 vCPU마다 189~237 ms(±12 %)로 흔들렸다. r1/r2에서는 baseline과 proposed를 서로 다른 vCPU에서 동시에 돌렸으므로 비교가 공정하지 않다.
+
+**영향 범위** (음수 총시간 / 음수 단계시간 행 수): WSL에서 잰 `raw_sigspatial_lmf.tar.gz` 4/5 (2,998행), `raw_sigspatial_decider.tar.gz` 21/3 (92,000),
+`raw_sigspatial_decider_r2.tar.gz` 32/37 (92,000), `raw_characters_uci_decider_r2.tar.gz` 39/41 (184,000). 컨테이너에서 잰 모든 결과
+(`raw_characters_uci_lmf*.tar.gz`, `raw_characters_uci_decider.tar.gz`, `raw_characters_uci_fpsens.tar.gz`, 합 331,600행)는 0/0 — 1 ms 미만 질의가 많은
+결정 문제 184,000행에서 음수가 하나도 없으므로 컨테이너에서는 시계 점프가 없었다. 컨테이너 CPU(서버 Xeon)는 코어 종류가 하나이고 두 arm을 같은
+코어에서 차례로 쟀다. **따라서 초록 표 1(Characters 값 계산), 표 C, Characters 결정 문제(§6.6), §6.8은 영향이 없다.** 단, 부호 검사는
+뒤로 가는 점프만 잡는다. 앞으로 가는 점프도 확인하려고 컨테이너에서 두 번 잰 exact arm(r0, r2) 21,000 인스턴스를 비교했다: 중앙값 비율
+1.005로 맞춘 뒤의 잔차가 300 ms를 넘는 인스턴스가 없다(최대 165 ms). 0.6 s 급 점프가 있었다면 그 이상으로 드러났을 것이다. 컨테이너 결정 문제(r1)에는
+반복 측정이 없어 같은 방식으로 확인하지 못했다는 잔여 위험은 남는다. 호출 수·정답·거리 값은
+시계와 무관하며, r3에서 r1과 모든 인스턴스가 동일했다(Sigspatial 값 계산 세 arm 2,998행: 호출 수 일치, 값 차이 0).
+
+**수정**: 측정 코드만 바꿨다(알고리즘 불변). `paper_bench.cpp`와 두 arm의 `measurement_tool.h`(두 arm에서 동일)의 시계를 `std::chrono::steady_clock`으로.
+재측정 r3는 `run_wsl_paired.sh`: 값 계산은 쌍마다 세 arm을 같은 vCPU에서 별도 프로세스로 차례로(순서는 쌍 번호의 홀짝으로 교대, 최대 RSS 기록), 결정 문제는
+세트 파일마다 두 arm을 같은 vCPU에서 교대로. 동시 스트림은 최대 3개였다. taskset은 가상 CPU에 고정할 뿐 물리 코어(성능/효율)를
+고정하지 못하므로, 코어 종류의 영향은 두 arm을 같은 vCPU에서 번갈아 재는 것으로만 상쇄된다. 값 계산의 두 스트림은 쌍 번호의 홀짝으로
+나뉘어 각 스트림 안에서는 순서가 고정이고, 순서의 균형은 두 스트림 사이에서만 맞는다(홀수 499쌍, 짝수 499쌍). 결정 문제의 proposed arm은
+candidate5 `MAXREGION_EXACT=1 MAXREGION_SLACK=0`으로, 컨테이너 표 A(기본 candidate5)와 설정이 다르다(Characters 92,000 인스턴스 중 3개만 호출 수가 다름). 결과 병합은 `merge_wsl_r3.py`. r3 278,998행에서 음수 0.
+
+**r3 결과 — Sigspatial 값 계산 (998쌍, `TABLES_uci.md` 표 D)**
+
+| arm | ms/인스턴스 | 호출/인스턴스 | 구성(열거) | vs baseline (기하평균 [95 % CI] / 중앙값 / 빠른 쌍 / 합) |
+|---|--:|--:|--:|---|
+| baseline | 2,461.3 | 12,579 | 2,365,749 ms (96.3 %) | — |
+| proposed (exact) | 65.7 | 3,569 | 2,371 ms | **2.47× [2.36, 2.59] / 2.42× / 908/998** / 37.5× (꼬리 의존) |
+| noslack | 50.1 | 2,841 | — | 3.21× / 2.64× / 912/998 / 49.2× |
+
+- 가장 느린 baseline 10쌍을 빼면 150.0 → 55.2 ms(2.72×). baseline이 12 GB를 넘는 2쌍은 proposed가 0.52 s, 1.85 s.
+- 최대 RSS(그 2쌍 제외): baseline 31 MB, proposed 29 MB.
+- r1 대비(공통 998쌍): 호출 수·값 동일. 시간은 proposed가 줄었다(합 70.5→65.6 s, −7.1 %; 인스턴스별 r3/r1 기하평균 0.939; noslack −9.7 %).
+  baseline은 인스턴스별 기하평균으로 −2.2 %(0.978)지만 합은 2,318.4→2,456.4 s로 오히려 +6.0 %다. 합은 소수의 장시간 쌍이 좌우한다
+  (file-018917/file-009777 638.4→848.0 s, file-018549/file-006616 795.1→624.6 s; r1 기준 가장 느린 10쌍을 빼면 +2.5 %).
+  그래서 가속비는 올랐다: 합 32.9×→37.5×, 기하평균 2.37×→2.47×, 중앙값 2.27×→2.42×. 재측정 도중(약 460쌍 시점)에 보고한
+  'baseline 약 14 % 단축, 가속비 하락 가능'은 부분 표본에서 나온 것으로, 전체 결과와 반대 방향이다.
+- 합 37.5×는 한 번씩 잰 소수 쌍에 달려 있다: 가장 느린 baseline 쌍 하나가 baseline 합의 34.5 %, 4쌍이 86 %이고, 그 한 쌍을 빼면 25.0×다.
+  논문·초록에는 인스턴스별 통계(기하평균 2.47× [2.36, 2.59], 중앙값 2.42×)를 앞세우고 합은 참고로만 쓴다.
+- 논문 본문용 문장(r3): "Sigspatial 1,000쌍 중 두 방법 모두 측정된 998쌍에서 인스턴스당 기하평균 2.47배, 중앙값 2.42배 빨랐고, baseline이 12 GB를 넘겨 실패한 2쌍을
+  포함해 모든 쌍을 2.1 s 이내에 같은 답으로 계산했다." (§6.9 결론의 r1 문장을 대체한다.)
+- baseline이 메모리로 실패한 두 쌍의 x 위치(311.7 s, 203.3 s)는 r3가 아니라 §6.9의 12 GB 재측정(옛 시계)에서 잰 종료 시각이며,
+  `raw_sigspatial_lmf_r3.tar.gz`의 `sigspatial_lmf_original_oom_12gb.txt`에 보관했다. 러닝타임의 대략적인 하한으로만 쓴다.
+
+**r3 결과 — 결정 문제 (23×1,000, 두 arm 오답 0, `TABLES_uci.md` 표 E)**
+
+| 세트 | 벤치마크 | ms/인스턴스 baseline → proposed | 가속 | 호출/인스턴스 | baseline의 배열 알고리즘 비중 |
+|---|---|---|--:|---|--:|
+| 4^ℓ | same-characters | 11.59 → 5.90 | 1.97× | 997 → 247 | 51.5 % |
+| 4^ℓ | all-characters | 19.41 → 8.71 | 2.23× | 1,616 → 386 | 57.8 % |
+| 4^ℓ | Sigspatial | 38.70 → 30.65 | 1.26× | 1,146 → 293 | 19.0 % |
+| 2^ℓ | same-characters | 0.86 → 0.72 | 1.20× | 69 → 53 | 15.9 % |
+| 2^ℓ | all-characters | 0.55 → 0.52 | 1.06× | 61 → 58 | 6.0 % |
+| 2^ℓ | Sigspatial | 0.28 → 0.27 | 1.03× | 24 → 23 | 3.3 % |
+
+- Characters 4^ℓ 가속은 컨테이너 r1(2.25× / 1.85×)과 같은 수준이다(2.23× / 1.97×).
+- REPRO_check(§6.10)는 Sigspatial을 r3로 다시 만들었다: 2^ℓ 세트별 호출 수 56/64세트 2 % 이내(원시 CSV에서 계산; 반올림된 보고서에서 읽던 이전 판은 55/64로 잘못 셌다), 시간비 x1.37(이 PC).
+- 무효가 된 r1/r2 WSL 원시 파일은 추적을 위해 그대로 두되, 표·그림·요약은 모두 r3만 쓴다(위의 두 종료 시각만 예외).
+- 그림: `paper_bench/figures/plot_scatter.py` → `fig_scatter*.{pdf,png}` (논문 그림 6 형식; Characters는 컨테이너 r2, Sigspatial은 r3).

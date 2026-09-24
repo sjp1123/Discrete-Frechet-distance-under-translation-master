@@ -20,11 +20,12 @@ import sys; sys.stdout.reconfigure(encoding="utf-8")   # Windows console default
 here = os.path.dirname(os.path.abspath(__file__)); R = os.path.join(here, "results")
 EPS = 1e-7
 LMF_REP = os.environ.get("LMF_REP", "r1")   # r1: first instance; r2: re-measurement of all arms back-to-back
+DEC_REP = os.environ.get("DEC_REP", "r1")   # decider repetition (r3: WSL re-measurement with steady_clock)
 # DATASET=characters_uci (default): characters_uci_<all|same>_... files, LMF grouped by letter sets.
 # DATASET=sigspatial: run_sig.sh output, sigspatial_<tag>_... files, LMF on the 1,000 decider pairs.
 DATASET = os.environ.get("DATASET", "characters_uci")
 if DATASET == "sigspatial":
-    TITLE = "Sigspatial, the full 20,199-curve set, the authors' decider instances (one measurement each)"
+    TITLE = f"Sigspatial, the full 20,199-curve set, the authors' decider instances (one measurement each; LMF {LMF_REP}, decider {DEC_REP})"
     DS = [("", "Sigspatial")]; PREFIX = "sigspatial"; TAR_GLOB = "raw_sigspatial_*.tar.gz"
     PAPER_LMF = None; PAPER_DEC = {"": (None, None)}
     LMF_TITLE = "## Value computation (LMF, `calcDistance2`) on the 1,000 pairs of the authors' Sigspatial decider set\n"
@@ -104,6 +105,10 @@ if "original" in arms:
                 g, lo, hi = geomean_ci(ratios)
                 cmp = f"{sum(T0.values()) / sum(t):.2f}, {g:.2f} [{lo:.2f}, {hi:.2f}], {statistics.median(ratios):.2f}, {sum(r > 1 for r in ratios)}/{len(common)}"
             out.append(f"| {a} | {sum(t)/len(t):.2f} | {sum(t)/1000:.1f} | {calls:,.0f} | {100*arr/sum(t):.1f} | {100*fre/sum(t):.1f} | {diff} | {over} | {cmp} |")
+        top4 = sum(sorted(T0.values(), reverse=True)[:4]) / sum(T0.values())
+        if top4 > 0.5:
+            out.append(f"\nThe sum ratio is tail-driven: the 4 slowest baseline instances are {100*top4:.0f} % of the baseline total; "
+                       "read the geometric mean and median (see `TABLES_uci.md` Table D).")
         out.append("")
 
 # ---------------- decider ----------------
@@ -112,7 +117,7 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
     for ds, name in DS:
         table = []; tot = {"original": [0, 0, 0], "candidate5": [0, 0, 0]}; wrong_t = [0, 0]; dis_t = 0
         for l, sign, exp in LS:
-            d = {a: keyed(rows(os.path.join(R, f"{dsname(ds)}_{tag}_{l}_{sign}_{a}_r1.csv"))) for a in tot}
+            d = {a: keyed(rows(os.path.join(R, f"{dsname(ds)}_{tag}_{l}_{sign}_{a}_{DEC_REP}.csv"))) for a in tot}
             common = [k for k in d["original"] if k in d["candidate5"]]
             if not common: continue
             t = {a: sum(float(d[a][k]["time_ms"]) for k in common) for a in tot}
@@ -125,6 +130,8 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
         if not table: continue
         n = tot["original"][1]
         out.append(f"## Decision problem, {name}, {desc}\n")
+        if DATASET == "sigspatial" and DEC_REP == "r3":
+            out.append("candidate5 = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0 (run_wsl_paired.sh, r3); in RESULTS_uci.md it is the default configuration.\n")
         if PAPER_DEC[ds][0] is not None: out.append(f"Paper Table 2 ({name}, authors' machine): {PAPER_DEC[ds][0]} ms and {PAPER_DEC[ds][1]:,} black-box calls per instance.\n")
         out.append("| set | expected | n | original ms/instance | candidate5 ms/instance | ratio | bb calls orig | bb calls c5 | wrong (orig / c5) | arms disagree |")
         out.append("|---|---|--:|--:|--:|--:|--:|--:|--:|--:|")
