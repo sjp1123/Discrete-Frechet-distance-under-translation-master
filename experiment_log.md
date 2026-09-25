@@ -412,7 +412,7 @@ candidate5 `MAXREGION_EXACT=1 MAXREGION_SLACK=0`으로, 컨테이너 표 A(기�
   논문·초록에는 인스턴스별 통계(기하평균 2.47× [2.36, 2.59], 중앙값 2.42×)를 앞세우고 합은 참고로만 쓴다.
 - 논문 본문용 문장(r3): "Sigspatial 1,000쌍 중 두 방법 모두 측정된 998쌍에서 인스턴스당 기하평균 2.47배, 중앙값 2.42배 빨랐고, baseline이 12 GB를 넘겨 실패한 2쌍을
   포함해 모든 쌍을 2.1 s 이내에 같은 답으로 계산했다." (§6.9 결론의 r1 문장을 대체한다.)
-- baseline이 메모리로 실패한 두 쌍의 x 위치(311.7 s, 203.3 s)는 r3가 아니라 §6.9의 12 GB 재측정(옛 시계)에서 잰 종료 시각이며,
+- baseline이 메모리로 실패한 두 쌍의 종료 시각(311.7 s, 203.3 s)은 r3가 아니라 §6.9의 12 GB 재측정(옛 시계)에서 잰 종료 시각이며,
   `raw_sigspatial_lmf_r3.tar.gz`의 `sigspatial_lmf_original_oom_12gb.txt`에 보관했다. 러닝타임의 대략적인 하한으로만 쓴다.
 
 **r3 결과 — 결정 문제 (23×1,000, 두 arm 오답 0, `TABLES_uci.md` 표 E)**
@@ -429,4 +429,4 @@ candidate5 `MAXREGION_EXACT=1 MAXREGION_SLACK=0`으로, 컨테이너 표 A(기�
 - Characters 4^ℓ 가속은 컨테이너 r1(2.25× / 1.85×)과 같은 수준이다(2.23× / 1.97×).
 - REPRO_check(§6.10)는 Sigspatial을 r3로 다시 만들었다: 2^ℓ 세트별 호출 수 56/64세트 2 % 이내(원시 CSV에서 계산; 반올림된 보고서에서 읽던 이전 판은 55/64로 잘못 셌다), 시간비 x1.37(이 PC).
 - 무효가 된 r1/r2 WSL 원시 파일은 추적을 위해 그대로 두되, 표·그림·요약은 모두 r3만 쓴다(위의 두 종료 시각만 예외).
-- 그림: `paper_bench/figures/plot_scatter.py` → `fig_scatter*.{pdf,png}` (논문 그림 6 형식; Characters는 컨테이너 r2, Sigspatial은 r3).
+- 그림: `paper_bench/figures/plot_scatter.py` → `fig_scatter*.{pdf,png}` (논문 그림 6 형식: 축·점·y = x 점선만; Characters는 컨테이너 r2, Sigspatial은 r3의 998쌍이며 메모리 초과 2쌍은 그리지 않음).
