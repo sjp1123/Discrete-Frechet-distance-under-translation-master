@@ -1,0 +1,18 @@
+\textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Time}} &  \textbf{Black-Box Calls}  \\
+\midrule
+LMF & \multicolumn{2}{c}{1e+05 ms} & 9131677 \\
+& \multicolumn{2}{c}{(1e+02 ms per instance)} & (9e+03 per instance)  \\
+\cmidrule(r){2-3} 
+& - Preprocessing & 4e+03 ms  \\
+\cmidrule(r){2-3}
+& - Black-box calls (Lipschitz) & 3e+04 ms  \\
+\cmidrule(r){2-3}& - Arrangement estimation &1e+04 ms  \\
+\cmidrule(r){2-3}
+& - Arrangement algorithm & 6e+04 ms  \\
+& \hphantom{bla} * Construction & 4e+04 ms \\
+& \hphantom{bla} * Black-box calls & 1e+04 ms \\
+\midrule 
+Binary Search & \multicolumn{2}{c}{3e+05 ms} & 25120185\\
+& \multicolumn{2}{c}{( 3e+02 ms per instance)} &  (2e+04 per instance) \\
+Lipschitz-only & \multicolumn{2}{c}{4e+06 ms s} & 820468224\\
+& \multicolumn{2}{c}{( 4e+03 ms per instance)} &  (8e+05 per instance) \\
