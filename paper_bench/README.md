@@ -72,3 +72,19 @@ mirror-order data sets and the random-pair runs live in the full branch.
   `sigspatial_lmf_original_oom_12gb.txt` (the baseline's kill times on the two pairs above 12 GB).
 * `results/TABLES_uci.md` — paper-format tables (A-C container, D-E WSL r3); `RESULTS_uci.md`, `RESULTS_uci_r2.md`,
   `RESULTS_sig.md` — per-set summaries; `REPRO_check.md`, `VERIFY_uci.md` — reproduction and data-identity checks.
+
+## candidate7 (candidate6 with the audit fixes; `../candidate7/README.candidate7.md`)
+
+```
+ARMS="original candidate5 candidate7" bash paper_bench/build.sh           # ~/b_pb_<arm>
+python3 paper_bench/plan_wsl_c7.py <plan_dir> 8                           # jobs + a cost-balanced split over 8 streams
+bash paper_bench/run_wsl_c7.sh <plan_dir> ~/wsl_c7                         # 3 arms back-to-back per job on one pinned vCPU
+(cd ~/wsl_c7 && tar czf <repo>/paper_bench/results/raw_c7_timing.tar.gz lmf_chars lmf_sig decider rss rc.txt log.txt)
+python3 paper_bench/analyze_c7.py                                          # -> results/C7_timing.md
+bash paper_bench/c7_verify/verify.sh                                       # verification -> results/C7_report.md
+```
+
+* `results/C7_report.md` — the audit's reproducers, exact-reference fuzzing and near-threshold real data on candidate7.
+* `results/C7_timing.md` — every answer and value plus paired timings (original, candidate7, candidate5) on the full
+  Characters LMF (21,000), Sigspatial LMF (1,000) and paperq4 decider sets (3 × 23,000); raw rows in `raw_c7_timing.tar.gz`.
+* `results/PAPER_tables_c7.md` — the main paper's tables (Korean captions) built from `C7_timing.md`.
