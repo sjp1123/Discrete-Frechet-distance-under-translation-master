@@ -946,14 +946,19 @@ Result enumerate_box(Discs const& discs, BoundingBox const& box, double r, doubl
 	double const four_r2 = 4.0 * r2 * (1.0 + band);
 	// Witness acceptance: |w − c| ≤ r + witness_tol for every member, certified in
 	// double (|err(|w−c|²)| ≤ 6u·|w−c|²), else recomputed exactly and rounded.
-	double const rdec    = r + witness_tol;
+	// witness_tol may be negative (FIX candidate7 follow-up: the caller subtracts a bound on the
+	// decider's own rounding, which exceeds the slack once raw coordinates reach ~4e7).
+	double const rdec    = std::max(0.0, r + witness_tol);
 	double const rdec2_c = rdec * rdec * (1.0 - 8.0 * U);
 	// FIX (candidate7): a double witness is accepted only when certified within r itself.
 	// The decider tests |p_i − fl(q_j + w)| ≤ r + slack on raw coordinates, whose rounding
 	// (~1e-9 at |x| ~ 1.4e7) needs the slack; a witness allowed up to r + witness_tol left
 	// none and could be rejected (wrong NO, and LMF values 2.7% high on constructed input).
 	// Otherwise the exact optimum (≤ r, the set is feasible) is rounded: excess ~ulp(|w|).
-	double const racc2_c = r * r * (1.0 - 8.0 * U);
+	// FIX (candidate7 follow-up): within min(r, r + witness_tol), so a negative tolerance applies
+	// to the double witness as well.  With witness_tol ≥ 0 (every paper input) this is r.
+	double const racc    = std::min(r, rdec);
+	double const racc2_c = racc * racc * (1.0 - 8.0 * U);
 	std::size_t dp_limit = params.dp_limit;
 	if (dp_limit < 1)  dp_limit = 1;
 	if (dp_limit > 24) dp_limit = 24;
@@ -1039,7 +1044,18 @@ Result enumerate_box(Discs const& discs, BoundingBox const& box, double r, doubl
 			// Not certified in double: recompute the optimum exactly, round, recheck.
 			++S.wit_exact;
 			if (minimax_box_exact(pts, box, wx, wy)) v = far2(pts, wx, wy);
-			if (!(v * (1.0 + 8.0 * U) <= rdec2_c)) ++S.mec_fail;
+			if (!(v * (1.0 + 8.0 * U) <= rdec2_c)) {
+				// FIX (candidate7 follow-up): the rounded exact optimum does not clear the slack
+				// left after the decider's own rounding (in the tests only once raw coordinates
+				// reach ~6e7).  candidate7 only counted this.  The region keeps its witness, and its
+				// discs also go to the box-arrangement fallback, as an oversized component does, so
+				// the decider also sees the original's candidates for this set.
+				++S.mec_fail;
+				std::vector<std::size_t> globals;
+				for (std::size_t k = 0; k < n; ++k)
+					if (reg.mask[k / 64] & (1ULL << (k & 63))) globals.push_back(k);
+				out.overflow.push_back(std::move(globals));
+			}
 		}
 		S.mec_ns += std::chrono::duration_cast<ns>(clk::now() - tm0).count();
 		{ double e = std::sqrt(v) - r; if (e > S.max_excess) S.max_excess = e; if (r > S.max_r) S.max_r = r; }

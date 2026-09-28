@@ -45,3 +45,45 @@ ARMS="original candidate7" bash paper_bench/build.sh   # paper_bench per arm
   `original` and `candidate5`. It covers every answer and value, plus the timings in the format of
   the paper's Tables 2 and 4. Raw data are in `raw_c7_timing.tar.gz`. Plan, runner and analysis:
   `paper_bench/plan_wsl_c7.py`, `run_wsl_c7.sh` and `analyze_c7.py`.
+
+## 5. Follow-up after the merge
+
+Two fixes on top of the merged candidate7, marked `FIX (candidate7 follow-up)`, and the regression
+tests of the candidate6 audit fixes ported to `tests/`.
+
+| id | issue | where | fix |
+|---|---|---|---|
+| A′ | Fix A kept a rounded exact witness if it cleared r + 9e-9, the whole slack, so nothing was left for the decider's own rounding. When even that check failed, the code only counted it (`mec_fail`) and emitted the witness. The double witness was accepted within r, however large the coordinates. | `maximal_regions.cpp` `enumerate_box`, `disc_arrangement_traversal.cpp`, `fut_n6_algorithm.{h,cpp}` | N6 passes a bound on the decider's rounding at a box point, 2u(max\|p\| + R) + 6uR (p from curve 1, R = δ + slack), and the witness tolerance becomes slack − bound, which can be negative. Both acceptance tests use it: the double witness within min(r, r + tol), the rounded exact one within r + tol. A region that fails keeps its witness, and its discs also go to the box-arrangement fallback, so the decider also tests the original's candidates for that set. |
+| E′ | The E fix pushed the point of a point box but still built the arrangement of the component's circles (601 candidates on the test's 24 discs). | `disc_arrangement_traversal.cpp` | A point box yields only itself. The arrangement code moved into `append_box_arrangement_vertices`, shared by both fallback causes. |
+
+The tolerance stays ≥ 0 while max|p| + R stays below about 4e7 (9e-9 / 2u). Then both tests are
+the merged ones, bit for bit. Sigspatial has max|p| ≈ 1.4e7.
+
+Evidence (commands in `tests/CMakeLists.txt` and the file headers):
+
+- Paper subsets (Characters LMF 1,000 pairs, Sigspatial LMF 200, Characters decider 2,300 queries,
+  Sigspatial decider 920): values, answers and `bbcalls` are identical to the merged candidate7,
+  and the times agree within noise.
+- `paper_bench/c7_verify/verify.sh` (QUICK=1): every job passes. The reproducers of A/B/C/H give
+  the merged answers and values.
+- `test_witness_margin` (20,000 three-disc cases per setting): the replayed decider rejects 0
+  witnesses, for the merged build and the follow-up alike. The fallback fires only when both curves
+  sit at 6e7 or 1.2e8 (20,000 of 20,000 with the optimum inside the box, 253 and 1,021 with it on an
+  edge) and never at 1.36e7 or 3e7.
+- `test_large_values` 1e8: identical. At 1e9 the fallback fires in 46 regions and 8 of 300 values
+  move by 1 ulp; the largest relative error to the exact MEC radius stays 1.2e-15.
+- `test_tangency_windows` at raw-coordinate scale 1, 3, 8 (far 0/1, 3,102 queries each): 0 NO.
+- `test_degenerate_box`: point box 601 → 1 candidate; the other boxes are unchanged.
+- `test_box_predicates`, `test_single_point_family` (decider and LMF), `test_clustered_family`,
+  `test_depth_limit` (−8, −13, 8): identical output apart from timings.
+
+No test found a witness the merged candidate7 emits and the decider rejects, so A′ is a guard for
+coordinates beyond the paper data, not a fix of an observed failure.
+
+| test | covers | run |
+|---|---|---|
+| `test_depth_limit` | B, C | `test_depth_limit 1 200 -13` (m < 0: cluster-major order; `TEST_ALARM` overrides the 5 s alarm per query) |
+| `test_large_values` | D | `test_large_values 1 300 1e8` → `S seed value exact_MEC rel_err` |
+| `test_degenerate_box` | E, E′ | no arguments |
+| `test_tangency_windows` | A | `test_tangency_windows 1 150 [far] [scale]` |
+| `test_witness_margin` | A′ | `test_witness_margin <count> [edge] [offset] [same_city]`; `_nofix` passes the whole slack |

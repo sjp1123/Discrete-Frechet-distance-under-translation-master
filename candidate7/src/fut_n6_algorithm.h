@@ -85,6 +85,7 @@ private:
 	std::vector<cgal_disk_arrangements::Point> block_hull;
 	void ensureBlock();
 	bool witnessInBlock(Point const& w, distance_t r) const;
+	double deciderRoundingBound(Curve const& curve1, distance_t radius) const;
 
 	Point min_translation;
 	DiscreteFrechetQueries frechet;

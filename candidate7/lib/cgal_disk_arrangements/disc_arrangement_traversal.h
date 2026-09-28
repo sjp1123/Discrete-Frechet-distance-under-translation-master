@@ -49,7 +49,11 @@ public:
 	ArrangementTraversal(Discs const& discs, std::vector<Point> const& block, double radius,
 	                     double predicate_slack);
 	// FIX (box family): maximal sets that meet `box`, witnesses inside `box`.
-	ArrangementTraversal(Discs const& discs, BoundingBox const& box, double predicate_slack);
+	// `decider_err` (FIX candidate7 follow-up): a bound on the caller's decider rounding at a box
+	// point; a rounded exact witness that does not clear the slack by that much sends its region to
+	// the box-arrangement fallback.
+	ArrangementTraversal(Discs const& discs, BoundingBox const& box, double predicate_slack,
+	                     double decider_err = 0.0);
 	bool hadOverflow() const;
 	~ArrangementTraversal();
 

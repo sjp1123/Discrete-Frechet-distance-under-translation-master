@@ -280,57 +280,64 @@ CGALData* build_candidates_block(Discs const& discs, std::vector<Point> const& b
 	return data;
 }
 
-CGALData* build_candidates_box(Discs const& discs, BoundingBox const& box, double caller_slack)
+// Arrangement of the discs' circles clipped to the box (original radii), vertices appended to `out`.
+// A face containing a box point is then clipped to the box, so its vertices are box points and
+// dominate that point's disc set.
+// FIX (candidate7): a box of zero width or height (the midpoint split rounds to an end once a side
+// is 1 ulp) gave CGAL zero-length and overlapping segments (SIGSEGV).  Insert only the
+// non-degenerate sides; a segment box is one segment whose arrangement edges end at box points.
+// FIX (candidate7 follow-up): a point box is its own and only witness; the circles' arrangement
+// (which the first version still built, about 600 unused vertices on a 24-disc component) is skipped.
+void append_box_arrangement_vertices(Discs const& discs, BoundingBox const& box, std::vector<Point>& out)
+{
+	bool const wide = box.min.x < box.max.x, tall = box.min.y < box.max.y;
+	if (!wide && !tall) { out.push_back(Point{box.min.x, box.min.y}); return; }
+	std::vector<Curve_2> to_insert;
+	for (auto const& d: discs)
+		to_insert.push_back(Curve_2(Circle_2(Point_2(d.center.x, d.center.y), d.radius*d.radius)));
+	if (wide && tall) {
+		to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.min.x, box.max.y});
+		to_insert.emplace_back(Point_2{box.min.x, box.max.y}, Point_2{box.max.x, box.max.y});
+		to_insert.emplace_back(Point_2{box.max.x, box.max.y}, Point_2{box.max.x, box.min.y});
+		to_insert.emplace_back(Point_2{box.max.x, box.min.y}, Point_2{box.min.x, box.min.y});
+	}
+	else if (wide) {
+		to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.max.x, box.min.y});
+	}
+	else {
+		to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.min.x, box.max.y});
+	}
+	Arrangement_2 arr;
+	CGAL::insert(arr, to_insert.begin(), to_insert.end());
+	for (auto v = arr.vertices_begin(); v != arr.vertices_end(); ++v)
+		out.push_back(Point{CGAL::to_double(v->point().x()), CGAL::to_double(v->point().y())});
+}
+
+CGALData* build_candidates_box(Discs const& discs, BoundingBox const& box, double caller_slack, double decider_err)
 {
 	CGALData* data = new CGALData();
 	data->use_points = true;
 	if (discs.empty()) return data;
 	double const slack = region_slack(caller_slack);
 	double const r_in = discs[0].radius + (slack > 0.0 ? slack : 0.0);
-	// The decider accepts radius + caller_slack; whatever of that the pipeline
-	// radius does not already use is the witness tolerance.
-	double const tol = std::max(0.0, caller_slack - (slack > 0.0 ? slack : 0.0));
+	// The decider accepts radius + caller_slack; whatever of that the pipeline radius does not
+	// already use, minus a bound on the decider's own rounding at a box point (FIX candidate7
+	// follow-up; 0 when the caller does not supply one), is the witness tolerance.  A witness that
+	// does not clear it stays, and its region's discs also go to the fallback below.
+	double const tol = std::max(0.0, caller_slack - (slack > 0.0 ? slack : 0.0)) - decider_err;
 	Discs in = discs;
 	for (auto& d: in) d.radius = r_in;
 	maxregion::Result res =
 		maxregion::enumerate_box(in, box, r_in, tol, region_params(), &maxregion::global_stats());
 	data->points.reserve(res.regions.size());
 	for (auto const& reg: res.regions) data->points.push_back(reg.witness);
-	// Oversized component: arrangement of its circles plus the box edges (original
-	// radii).  A face containing a box point is then clipped to the box, so its
-	// vertices are box points and dominate that point's disc set.
+	// Oversized components, and regions whose witness could not be certified.
 	if (!res.overflow.empty()) {
 		data->overflow = true;
 		for (auto const& comp: res.overflow) {
-			std::vector<Curve_2> to_insert;
-			for (std::size_t k: comp) {
-				auto const& d = discs[k];
-				to_insert.push_back(Curve_2(Circle_2(Point_2(d.center.x, d.center.y), d.radius*d.radius)));
-			}
-			// FIX (candidate7): a box of zero width or height (the midpoint split rounds to an end
-			// once a side is 1 ulp) gave CGAL zero-length and overlapping segments (SIGSEGV).  Insert
-			// only the non-degenerate sides; a segment box is one segment whose arrangement edges end
-			// at box points, and a point box is its own witness.
-			bool const wide = box.min.x < box.max.x, tall = box.min.y < box.max.y;
-			if (wide && tall) {
-				to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.min.x, box.max.y});
-				to_insert.emplace_back(Point_2{box.min.x, box.max.y}, Point_2{box.max.x, box.max.y});
-				to_insert.emplace_back(Point_2{box.max.x, box.max.y}, Point_2{box.max.x, box.min.y});
-				to_insert.emplace_back(Point_2{box.max.x, box.min.y}, Point_2{box.min.x, box.min.y});
-			}
-			else if (wide) {
-				to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.max.x, box.min.y});
-			}
-			else if (tall) {
-				to_insert.emplace_back(Point_2{box.min.x, box.min.y}, Point_2{box.min.x, box.max.y});
-			}
-			else {
-				data->points.push_back(Point{box.min.x, box.min.y});
-			}
-			Arrangement_2 arr;
-			CGAL::insert(arr, to_insert.begin(), to_insert.end());
-			for (auto v = arr.vertices_begin(); v != arr.vertices_end(); ++v)
-				data->points.push_back(Point{CGAL::to_double(v->point().x()), CGAL::to_double(v->point().y())});
+			Discs sub;
+			for (std::size_t k: comp) sub.push_back(discs[k]);
+			append_box_arrangement_vertices(sub, box, data->points);
 		}
 	}
 	return data;
@@ -338,9 +345,10 @@ CGALData* build_candidates_box(Discs const& discs, BoundingBox const& box, doubl
 
 } // end anonymous namespace
 
-ArrangementTraversal::ArrangementTraversal(Discs const& discs, BoundingBox const& box, double predicate_slack)
+ArrangementTraversal::ArrangementTraversal(Discs const& discs, BoundingBox const& box, double predicate_slack,
+                                           double decider_err)
 {
-	data = build_candidates_box(discs, box, predicate_slack);
+	data = build_candidates_box(discs, box, predicate_slack, decider_err);
 	size = data->points.size();
 }
 

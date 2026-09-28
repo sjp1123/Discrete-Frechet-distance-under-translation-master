@@ -1,5 +1,9 @@
 #include "fut_n6_algorithm.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 N6Alg::N6Alg()
 	: N6Alg(1e-7)
 {
@@ -86,6 +90,18 @@ void N6Alg::ensureBlock()
 	block_hull = cgal_disk_arrangements::hull_vertices(std::move(pts));
 }
 
+// FIX (candidate7 follow-up): the decider evaluates |p_i − fl(q_j + t)| in the curves' own
+// coordinates.  fl(q + t) is off by at most u·|q + t| per coordinate, and wherever the test can
+// matter |q + t| ≤ |p| + R (p from curve 1, R the decider radius); the distance and threshold
+// arithmetic add a few u of R.  An absolute bound for any translation t.
+double N6Alg::deciderRoundingBound(Curve const& curve1, distance_t radius) const
+{
+	double const u = std::numeric_limits<double>::epsilon() / 2.0;
+	auto const ep = curve1.getExtremePoints();
+	double const M = std::max(std::max(std::abs(ep.min_x), std::abs(ep.max_x)), std::max(std::abs(ep.min_y), std::abs(ep.max_y)));
+	return 2.0 * u * (M + radius) + 6.0 * u * radius;
+}
+
 bool N6Alg::witnessInBlock(Point const& w, distance_t r) const
 {
 	double const r2 = r * r * (1.0 + 1e-12);
@@ -154,7 +170,7 @@ bool N6Alg::lessThan(distance_t distance, Curve const& curve1, Curve const& curv
 		MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
 		if (r) return true;
 		MEASUREMENT::start(EXP::FUT_N6_ARR);
-		ArrangementTraversal tr(discs, box_, epsilon_slack);
+		ArrangementTraversal tr(discs, box_, epsilon_slack, deciderRoundingBound(curve1, distance + epsilon_slack));
 		MEASUREMENT::stop(EXP::FUT_N6_ARR);
 		MEASUREMENT::start(EXP::FUT_N6_FRECHET);
 		r = test(tr, nullptr);
@@ -163,7 +179,7 @@ bool N6Alg::lessThan(distance_t distance, Curve const& curve1, Curve const& curv
 	}
 	if (fix == 4) {                      // box family: sets meeting the box, witnesses in the box
 		MEASUREMENT::start(EXP::FUT_N6_ARR);
-		ArrangementTraversal tr(discs, box_, epsilon_slack);
+		ArrangementTraversal tr(discs, box_, epsilon_slack, deciderRoundingBound(curve1, distance + epsilon_slack));
 		MEASUREMENT::stop(EXP::FUT_N6_ARR);
 		MEASUREMENT::start(EXP::FUT_N6_FRECHET);
 		bool r = test(tr, nullptr);
