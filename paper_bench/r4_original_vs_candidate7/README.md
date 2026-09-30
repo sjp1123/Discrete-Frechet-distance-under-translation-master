@@ -1,10 +1,11 @@
-# r4 — 기존 구현(original) 대 candidate7, 값 계산(LMF) 재측정
+# r4 — 기존 구현(original) 대 candidate7, 값 계산(LMF)과 결정 문제 재측정
 
 기존 구현(`original`, [BKN20] 저자 코드)과 제안 방법 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서
-**같은 서버 컨테이너·같은 방식**으로 잰 결과(2026-09-30). 표는 [BKN20] Table 4 형식이고, 그림은 그 논문의 Figure 6 형식이다.
-자세한 표·검증·해석은 [`RESULTS.md`](RESULTS.md)에 있다.
+**같은 서버 컨테이너·같은 방식**으로 잰 결과(2026-09-30 ~ 10-01). 값 계산 표는 [BKN20] Table 4 형식, 결정 문제 표는 Table 2 형식이고,
+그림은 그 논문의 Figure 6 형식이다. 자세한 표·검증·해석은 [`RESULTS.md`](RESULTS.md)(값 계산)와
+[`RESULTS_decider.md`](RESULTS_decider.md)(결정 문제)에 있다.
 
-## 요약
+## 요약 — 값 계산 (LMF)
 
 | 벤치마크 | 인스턴스 | 기존 (ms/inst.) | candidate7 (ms/inst.) | 총 시간 비 | 인스턴스별 기하평균 [95 % CI] | 중앙값 | 블랙박스 호출/inst. |
 |---|--:|--:|--:|--:|--:|--:|---|
@@ -16,6 +17,20 @@
 - 거리 값은 모든 쌍에서 10⁻⁷ 안에서 같다(최대 차이: Characters 9.3×10⁻⁹, Sigspatial 8.5×10⁻⁹).
 - 값과 블랙박스 호출 수는 이전 WSL 측정(`../results/raw_c7_timing.tar.gz`)과 두 벤치마크의 모든 쌍에서 비트 단위로 같다.
 - 초록의 Characters 4.41×(candidate5, r2)와 다른 이유는 두 가지다. 측정 기계가 다르고, candidate5에서 candidate7로 오면서 `union` 모드가 들어갔다. candidate7의 호출 수가 candidate5보다 3.97 % 많은 이유도 이 모드다. 분해 결과는 `RESULTS.md` §6–7에 있다.
+
+## 요약 — 결정 문제 ([BKN20] Table 2 형식, 계수 1 ± 4^ℓ, 벤치마크마다 1,000쌍 × 23세트)
+
+| 벤치마크 | 질의 | 기존 (ms/inst.) | candidate7 (ms/inst.) | 총 시간 비 | 인스턴스별 기하평균 [95 % CI] | 블랙박스 호출/inst. | 배열 알고리즘 단계 |
+|---|--:|--:|--:|--:|--:|---|--:|
+| same-characters | 23,000 | 14.35 | 7.79 | **1.84×** | 1.19× [1.19, 1.20] | 997.0 → 272.7 | 11.9× |
+| all-characters | 23,000 | 21.26 | 9.77 | **2.18×** | 1.14× [1.13, 1.15] | 1,616.3 → 423.3 | 13.1× |
+| Sigspatial | 23,000 | 41.32 | 34.63 | **1.19×** | 1.06× [1.05, 1.06] | 1,146.4 → 319.1 | 11.6× |
+
+- 두 방법 모두 오답 0, 서로 답이 다른 질의 0 (138,000질의씩, 2^ℓ 세트 포함).
+- 제안 방법이 바꾸는 것은 배열 알고리즘 단계뿐이고, 이 단계는 세 벤치마크에서 11.6–13.1배 줄었다. 총 시간 비는 바꾸지 않은 배열 추정 단계의 비중(Characters 33–39 %, Sigspatial 78 %)에 막힌다.
+- 이득은 δ*에 가까운 NO 세트에 몰린다: 1 − 4^ℓ (ℓ ≤ −6)에서 Characters 1.9–2.7×, Sigspatial 1.1–1.3×. 나머지 세트는 1× 안팎이라 인스턴스별 기하평균은 1에 가깝다.
+- 저자가 배포한 2^ℓ 파일은 질의가 쉬워(질의당 0.35–1 ms) 1.13× / 1.02× / 0.98×다.
+- 답과 호출 수는 이전 WSL candidate7 측정과 69,000질의 모두 같고, 총 시간 비도 그때(1.87× / 2.08× / 1.19×)와 같은 수준이다.
 
 ## 그림
 
@@ -39,19 +54,22 @@ which the original implementation exceeded 12 GB of memory. Both panels were mea
 - 서버 컨테이너: Intel Xeon @ 2.10 GHz, 2 vCPU, 7.8 GB, Ubuntu 24.04, g++ 13.3, CMake 3.28, CGAL 5.6(GMPXX 백엔드), Boost 1.83, GMP 6.3 / MPFR 4.2.
 - `paper_bench`를 arm별 소스로 빌드했다(`RelWithDebInfo`, `../build.sh`와 같은 플래그). candidate7은 기본 설정(`MAXREGION_EXACT=1 MAXREGION_SLACK=0`)으로 실행했다.
 - 두 arm을 같은 코어(CPU 1)에서 별도 프로세스로 연달아 실행했고, 순서는 묶음·쌍 번호의 홀짝으로 번갈아 바꿨다. 다른 코어는 비워 두었다. Characters는 100쌍 묶음 단위로, Sigspatial은 쌍 단위로 프로세스를 띄웠다. 시계는 `steady_clock`이다.
-- 실행 시간: Characters 49분(15:38–16:27 KST), Sigspatial 40분(19:08–19:49 KST). 프로세스 2,418개가 모두 정상 종료했다.
+- 결정 문제는 질의 파일(1,000질의) 하나마다 두 arm을 연달아 실행했고, 순서는 파일 번호의 홀짝으로 바꿨다.
+- 실행 시간: Characters 49분(09-30 15:38–16:27 KST), Sigspatial 40분(19:08–19:49), 결정 문제 52분(09-30 23:55 – 10-01 00:47). 프로세스 2,694개가 모두 정상 종료했다.
 
 ## 파일
 
 | 경로 | 내용 |
 |---|---|
-| `RESULTS.md` | 전체 결과: Table 4 형식 표(Characters, Sigspatial), 인스턴스별 가속비, 정확성, 초록·[BKN20]과의 대조, 호출 수 분해, LaTeX |
+| `RESULTS.md` | 값 계산: Table 4 형식 표(Characters, Sigspatial), 인스턴스별 가속비, 정확성, 초록·[BKN20]과의 대조, 호출 수 분해, LaTeX |
+| `RESULTS_decider.md` | 결정 문제: Table 2 형식 표(세 벤치마크 × 4^ℓ·2^ℓ), 세트별 가속비, 이전 측정과의 비교, LaTeX |
 | `raw/raw_characters_lmf_r4.tar.gz` | Characters 원시 CSV (`original/`, `candidate7/`에 묶음 `c000`–`c209`, 묶음당 100행), `rc.txt`, `log.txt` |
 | `raw/raw_sigspatial_lmf_r4.tar.gz` | Sigspatial 원시 CSV (쌍 `s0001`–`s1000`, original은 998개), `rc.txt`, `log.txt` |
+| `raw/raw_decider_r4.tar.gz` | 결정 문제 원시 CSV (`original/`, `candidate7/`에 질의 파일 138개, 파일당 1,000행), `rc.txt`, `log.txt` |
 | `raw/raw_characters_bbcalls_split.tar.gz` | 블랙박스 호출 분해 실행 5개(A–E)의 CSV, 21,000행씩 |
 | `scripts/build.sh` | 두 arm의 `paper_bench` 빌드 |
-| `scripts/run_characters.sh`, `scripts/run_sigspatial.sh` | 측정 |
-| `scripts/analyze.py` | `raw/` → `RESULTS.md` |
+| `scripts/run_characters.sh`, `scripts/run_sigspatial.sh`, `scripts/run_decider.sh` | 측정 |
+| `scripts/analyze.py`, `scripts/analyze_decider.py` | `raw/` → `RESULTS.md`, `RESULTS_decider.md` |
 | `scripts/plot_scatter.py` | `raw/` → `fig_scatter*.{pdf,png}` |
 | `scripts/bbcalls_split/` | 카운터를 넣은 스크래치 사본을 만드는 계측 스크립트(`patch.py`, `inst_counters.h`)와 실행 스크립트(`run.sh`). 저장소 소스는 바꾸지 않는다 |
 
@@ -62,8 +80,10 @@ bash paper_bench/r4_original_vs_candidate7/scripts/build.sh                 # ~/
 bash paper_bench/r4_original_vs_candidate7/scripts/run_characters.sh        # ~/r4     (약 50분)
 python3 paper_data/convert_sigspatial.py                                    # paper_data/sigspatial/data (git-ignored)
 bash paper_bench/r4_original_vs_candidate7/scripts/run_sigspatial.sh        # ~/r4sig  (약 40분)
+bash paper_bench/r4_original_vs_candidate7/scripts/run_decider.sh          # ~/r4dec  (약 55분)
 bash paper_bench/r4_original_vs_candidate7/scripts/bbcalls_split/run.sh     # ~/inst/out (2코어에서 약 30분)
 # 각 작업 디렉터리를 raw/의 tar.gz로 묶은 뒤:
 python3 paper_bench/r4_original_vs_candidate7/scripts/analyze.py
+python3 paper_bench/r4_original_vs_candidate7/scripts/analyze_decider.py
 python3 paper_bench/r4_original_vs_candidate7/scripts/plot_scatter.py
 ```
