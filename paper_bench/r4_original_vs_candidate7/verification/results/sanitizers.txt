@@ -1,0 +1,51 @@
+ASan+UBSan builds of paper_bench (RelWithDebInfo + -fsanitize=address,undefined), both arms, same inputs:
+   chars_lmf candidate7 rc=0 149s
+   chars_dec candidate7 rc=0 159s
+   sig_lmf candidate7 rc=0 33s
+   sig_dec candidate7 rc=0 290s
+   uniform_lmf candidate7 rc=0 3s
+   uniform_dec candidate7 rc=0 3s
+   grid_lmf candidate7 rc=0 8s
+   grid_dec candidate7 rc=0 5s
+   collinear_lmf candidate7 rc=0 1s
+   collinear_dec candidate7 rc=0 2s
+   copy_lmf candidate7 rc=0 0s
+   copy_dec candidate7 rc=0 1s
+   real_sig_lmf candidate7 rc=0 1s
+   real_sig_dec candidate7 rc=0 1s
+   real_chars_lmf candidate7 rc=0 2s
+   real_chars_dec candidate7 rc=0 1s
+   offset_sig_lmf candidate7 rc=0 2s
+   offset_sig_dec candidate7 rc=0 2s
+   medium_real_chars_lmf candidate7 rc=0 1s
+   medium_real_chars_dec candidate7 rc=0 0s
+   chars_lmf original rc=1 1739s
+   chars_dec original rc=1 988s
+   sig_lmf original rc=1 249s
+   sig_dec original rc=1 443s
+   uniform_lmf original rc=1 427s
+   medium_real_chars_lmf original rc=1 74s (cpu1)
+   uniform_dec original rc=1 174s
+   medium_real_chars_dec original rc=1 37s (cpu1)
+   grid_lmf original rc=1 228s
+   grid_dec original rc=1 82s
+   offset_sig_lmf original rc=1 347s (cpu1)
+   offset_sig_dec original rc=1 122s (cpu1)
+   collinear_lmf original rc=1 223s
+   collinear_dec original rc=1 86s
+   real_chars_lmf original rc=1 319s (cpu1)
+   real_chars_dec original rc=1 100s (cpu1)
+   real_sig_lmf original rc=1 220s (cpu1)
+   real_sig_dec original rc=1 42s (cpu1)
+   copy_lmf original rc=1 9s (cpu1)
+   copy_dec original rc=1 10s (cpu1)
+
+candidate7: 30191 instances/queries processed; UBSan runtime errors 0 (0 outside CGAL headers)
+
+original: 30191 instances/queries processed; UBSan runtime errors 520 (0 outside CGAL headers)
+    260 /opt/deps/src/CGAL-5.6/include/CGAL/Surface_sweep_2/Arr_construction_ss_visitor.h
+    180 /opt/deps/src/CGAL-5.6/include/CGAL/Arrangement_2/Arrangement_2_iterators.h
+     80 /opt/deps/src/CGAL-5.6/include/CGAL/Arrangement_2/Arrangement_on_surface_2_impl.h
+
+sanitizer log files: 20 -> {'ERROR: LeakSanitizer: detected memory leaks': 20}; all leak stacks go through UBSan's diagnostic rendering (__cxa_demangle in ubsan_diag): True
+AddressSanitizer memory errors (heap/stack overflow, use-after-free, ...): 0 in both arms

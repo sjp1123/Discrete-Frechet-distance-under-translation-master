@@ -32,6 +32,13 @@
 - 저자가 배포한 2^ℓ 파일은 질의가 쉬워(질의당 0.35–1 ms) 1.13× / 1.02× / 0.98×다.
 - 답과 호출 수는 이전 WSL candidate7 측정과 69,000질의 모두 같고, 총 시간 비도 그때(1.87× / 2.08× / 1.19×)와 같은 수준이다.
 
+## 정확성 검증 (`verification/`)
+
+두 구현을 새로 짠 독립 정확 오라클(17,553 인스턴스, 결정 질의 241,434), 실제 데이터 앵커(저자 δ*·번역 인증서, 5,100쌍),
+임계값 근처 질의 44,000, ASan/UBSan, 기존 감사 키트, 회귀·단위 테스트, 독립 코드 리뷰로 검증했다. candidate7은 측정 경로에서 오류 0,
+original은 무작위 입력에서 무한 루프·틀린 값·assert가 재현된다(논문 수치에는 영향 없음). 자세한 내용은
+[`verification/REPORT.md`](verification/REPORT.md).
+
 ## 그림
 
 | 파일 | 내용 |
@@ -71,6 +78,7 @@ which the original implementation exceeded 12 GB of memory. Both panels were mea
 | `scripts/run_characters.sh`, `scripts/run_sigspatial.sh`, `scripts/run_decider.sh` | 측정 |
 | `scripts/analyze.py`, `scripts/analyze_decider.py` | `raw/` → `RESULTS.md`, `RESULTS_decider.md` |
 | `scripts/plot_scatter.py` | `raw/` → `fig_scatter*.{pdf,png}` |
+| `verification/` | 정확성 검증: 보고서(`REPORT.md`), 오라클·생성기·실행·판정 스크립트(`scripts/`), 결과 표(`results/`), 원시 데이터(`raw/`) |
 | `scripts/bbcalls_split/` | 카운터를 넣은 스크래치 사본을 만드는 계측 스크립트(`patch.py`, `inst_counters.h`)와 실행 스크립트(`run.sh`). 저장소 소스는 바꾸지 않는다 |
 
 ## 재현

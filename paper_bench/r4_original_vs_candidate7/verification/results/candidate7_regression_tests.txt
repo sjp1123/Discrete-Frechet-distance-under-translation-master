@@ -1,0 +1,47 @@
+== box_predicates
+cases=300000 near_tangent=289160 mismatches=0 q2_calls=165351 q2_rational=26868 p2_rational=581169
+#rc=0 secs=35
+== clustered
+#rc=0 secs=27
+== degenerate_box
+DONE
+#rc=0 secs=0
+== depth_8
+DONE fails=0 of 200
+#rc=0 secs=0
+== depth_m13
+DONE fails=0 of 200
+#rc=0 secs=0
+== depth_m8
+DONE fails=0 of 200
+#rc=0 secs=1
+== large_values_1e8
+DONE
+#rc=0 secs=0
+== large_values_1e9
+DONE
+#rc=0 secs=0
+== single_point_dec
+DONE fails=0 of 20000
+#rc=0 secs=0
+== single_point_lmf
+DONE fails=0 of 20000
+#rc=0 secs=8
+== tangency_s1
+DONE queries=3102 no=0
+#rc=0 secs=0
+== tangency_s3
+DONE queries=3102 no=0
+#rc=0 secs=0
+== tangency_s8
+DONE queries=3102 no=0
+#rc=0 secs=1
+== witness_margin
+cases=20000 three-disc_witnesses=20000 rejected_by_decider=0 sent_to_fallback=0
+#rc=0 secs=5
+== witness_margin_edge
+cases=20000 three-disc_witnesses=18345 rejected_by_decider=0 sent_to_fallback=0
+#rc=0 secs=0
+== clustered: lines 20000 zero answers 0
+== large_values_1e8.txt: lines 300 max rel err vs exact MEC 8e-16
+== large_values_1e9.txt: lines 300 max rel err vs exact MEC 1.18e-15

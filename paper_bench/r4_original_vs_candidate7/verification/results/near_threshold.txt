@@ -1,0 +1,10 @@
+| arm | data | side (truth) | queries | answered | wrong | not finished (120 s per query) |
+|---|---|---|--:|--:|--:|--:|
+| candidate7 | Characters | v+1e-6 (YES) | 21,000 | 21,000 | 0 | 0 |
+| candidate7 | Characters | v−1e-6 (NO) | 21,000 | 21,000 | 0 | 0 |
+| candidate7 | Sigspatial | v+1e-6 (YES) | 1,000 | 1,000 | 0 | 0 |
+| candidate7 | Sigspatial | v−1e-6 (NO) | 1,000 | 1,000 | 0 | 0 |
+| original | Characters | v+1e-6 (YES) | 21,000 | 21,000 | 0 | 0 |
+| original | Characters | v−1e-6 (NO) | 21,000 | 21,000 | 0 | 0 |
+| original | Sigspatial | v+1e-6 (YES) | 1,000 | 994 | 0 | 6 |
+| original | Sigspatial | v−1e-6 (NO) | 1,000 | 990 | 0 | 10 |

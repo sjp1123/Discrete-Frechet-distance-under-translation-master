@@ -1,0 +1,77 @@
+a_g1_dec | #rc=0 secs=.010393429 | 
+a_g1_lmf | #rc=0 secs=.040948429 | 
+a_r3_dec | #rc=0 secs=.011000337 | 
+b_g4_f01 | #rc=0 secs=.011588235 | 
+c_g4_f03 | #rc=124 secs=600.011268126 | 
+circ_g3 | #rc=0 secs=120.023933232 | TIMEOUT(120s) circ D=16777216 phi=5.9999999999999995e-08 K=16 inst: 1 0 0 16 -16777216 -0 -15500126.47492088 -6420362.6044105021 -11863283.203031445 -11863283.203031443 -6420362.6044105031 -15500126.47492088 -1.027308193650188e-09 -16777216 6420362.6044105012 -15500126.47492088 11863283.203031443 -11863283.203031445 15500126.47492088 -6420362.604410504 15500126
+circ_g3b | #rc=0 secs=120.027928344 | TIMEOUT(120s) circ D=16777216 phi=1.1999999999999999e-07 K=16 inst: 1 0 0 16 -16777216 -0 -15500126.47492088 -6420362.6044105021 -11863283.203031445 -11863283.203031443 -6420362.6044105031 -15500126.47492088 -1.027308193650188e-09 -16777216 6420362.6044105012 -15500126.47492088 11863283.203031443 -11863283.203031445 15500126.47492088 -6420362.604410504 1550012
+cl | #rc=0 secs=38.173549267 | lines=2000 zero_answers=0
+diag | #rc=0 secs=.011520942 |   lt(0.17677669529663687) = 0   lt(0.17677669529663689) = 1 
+e2e_f09 | #rc=0 secs=10.558787733 | calcDistance2 = 5524.9999999897718  err = -1.02282e-08
+exact_f1 | #rc=0 secs=4.309498224 | DONE fam=1 count=300 valerr=0 dyes=0 dno=0 witbad=0 dqueries=3588 max|v-ref|=8.6673548338467299e-09
+exact_f2 | #rc=0 secs=7.691339234 | DONE fam=2 count=300 valerr=2 dyes=0 dno=0 witbad=0 dqueries=3586 max|v-ref|=0.4346563666596755
+exact_f3 | #rc=0 secs=9.939706595 | DONE fam=3 count=300 valerr=0 dyes=0 dno=0 witbad=0 dqueries=3506 max|v-ref|=8.7018406369487877e-09
+exact_f4 | #rc=0 secs=6.608846543 | DONE fam=4 count=300 valerr=0 dyes=0 dno=0 witbad=0 dqueries=3492 max|v-ref|=1.0581677090115704e-08
+exact_f5a | #rc=0 secs=129.403807564 | DONE fam=5 count=500 valerr=1 dyes=0 dno=0 witbad=0 dqueries=5812 max|v-ref|=1.093054985407127e-05
+exact_f5b | #rc=124 secs=600.019953811 | 
+far_27 | #rc=0 secs=1.987921742 | DONE K=16 mode=1 scale=100 count=20 lmferr=0 failY(paper,nocut)=0,0 failN=0,0 q=240
+far_m1 | #rc=0 secs=8.453688813 | DONE K=16 mode=1 scale=1 count=100 lmferr=0 failY(paper,nocut)=0,0 failN=0,0 q=1200
+far_m2 | #rc=0 secs=9.827454803 | DONE K=16 mode=2 scale=1 count=100 lmferr=0 failY(paper,nocut)=0,0 failN=0,0 q=1200
+fz_amp_def | #rc=0 secs=214.487396702 | DONE gen=amp inst=200 dec=1432 FN=0 FP=0 val=199 valerr=0 maxvalerr=1.1204974725842476e-08@141 exc=0 timeout=1 crash=0 check=0 checkbad=0 oracle_exact bad_lines=1
+fz_cluster_def | #rc=0 secs=14.624267311 | DONE gen=cluster inst=200 dec=1238 FN=0 FP=0 val=200 valerr=0 maxvalerr=7.8546096085596595e-09@34 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_ex bad_lines=0
+fz_dup_3_2 | #rc=0 secs=32.230594342 | DONE gen=dup inst=200 dec=1436 FN=141 FP=0 val=199 valerr=0 maxvalerr=1.0485186718867112e-08@136 exc=0 timeout=1 crash=0 check=0 checkbad=0 oracle_exa bad_lines=142
+fz_dup_40_3 | #rc=0 secs=123.459140363 | DONE gen=dup inst=200 dec=1437 FN=0 FP=0 val=199 valerr=3 maxvalerr=0.00036078631070646239@89 exc=0 timeout=1 crash=0 check=0 checkbad=0 oracle_exact_ bad_lines=4
+fz_dup_6_3 | #rc=0 secs=61.978080316 | DONE gen=dup inst=200 dec=1429 FN=83 FP=0 val=198 valerr=0 maxvalerr=1.0485186718867112e-08@136 exc=0 timeout=2 crash=0 check=0 checkbad=0 oracle_exac bad_lines=85
+fz_dup_def | #rc=0 secs=12.437556179 | DONE gen=dup inst=200 dec=1444 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.0485186718867112e-08@136 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exact bad_lines=0
+fz_dup_dp2 | #rc=0 secs=12.858041022 | DONE gen=dup inst=200 dec=1444 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.0485186718867112e-08@136 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exact bad_lines=0
+fz_grid_3_2 | #rc=0 secs=34.993366826 | DONE gen=grid inst=200 dec=1574 FN=76 FP=0 val=199 valerr=0 maxvalerr=1.0604917166645578e-08@168 exc=0 timeout=1 crash=0 check=0 checkbad=0 oracle_exa bad_lines=77
+fz_grid_40_3 | #rc=0 secs=2.863214189 | DONE gen=grid inst=200 dec=1582 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.0604917166645578e-08@168 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exac bad_lines=0
+fz_grid_6_3 | #rc=0 secs=32.079000508 | DONE gen=grid inst=200 dec=1574 FN=5 FP=0 val=199 valerr=0 maxvalerr=1.0604917166645578e-08@168 exc=0 timeout=1 crash=0 check=0 checkbad=0 oracle_exac bad_lines=6
+fz_grid_def | #rc=0 secs=3.114771901 | DONE gen=grid inst=200 dec=1582 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.0604917166645578e-08@168 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exac bad_lines=0
+fz_grid_dp2 | #rc=0 secs=3.185294826 | DONE gen=grid inst=200 dec=1582 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.0604917166645578e-08@168 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exac bad_lines=0
+fz_hdup_def | #rc=0 secs=420.078329841 | DONE gen=hdup inst=200 dec=1306 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.1271188649075725e-08@151 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exac bad_lines=0
+fz_offset_def | #rc=0 secs=7.790085862 | DONE gen=offset inst=200 dec=1404 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.1790928233779141e-08@114 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_ex bad_lines=0
+fz_revisit_def | #rc=0 secs=65.281916861 | DONE gen=revisit inst=200 dec=1598 FN=0 FP=0 val=200 valerr=0 maxvalerr=1.1239796204876029e-08@150 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_e bad_lines=0
+fz_scale_def | #rc=0 secs=10.157477598 | DONE gen=scale inst=200 dec=1260 FN=0 FP=0 val=200 valerr=0 maxvalerr=9.0085146564611307e-09@83 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exac bad_lines=0
+fz_single_def | #rc=0 secs=2.223911764 | DONE gen=single inst=200 dec=1278 FN=0 FP=0 val=200 valerr=0 maxvalerr=8.7744709276194044e-09@139 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_ex bad_lines=0
+fz_swap_def | #rc=0 secs=10.585400857 | DONE gen=swap inst=200 dec=1368 FN=0 FP=0 val=200 valerr=0 maxvalerr=9.764197450579104e-09@78 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_exact_ bad_lines=0
+fz_uniform_3_2 | #rc=0 secs=13.858415273 | DONE gen=uniform inst=200 dec=1388 FN=143 FP=0 val=200 valerr=0 maxvalerr=8.2308444504519684e-09@103 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle bad_lines=143
+fz_uniform_40_3 | #rc=0 secs=1.619832109 | DONE gen=uniform inst=200 dec=1388 FN=0 FP=0 val=200 valerr=0 maxvalerr=8.2308444504519684e-09@103 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_e bad_lines=0
+fz_uniform_6_3 | #rc=0 secs=6.213583666 | DONE gen=uniform inst=200 dec=1388 FN=15 FP=0 val=200 valerr=0 maxvalerr=8.2308444504519684e-09@103 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_ bad_lines=15
+fz_uniform_def | #rc=0 secs=7.037271740 | DONE gen=uniform inst=200 dec=1388 FN=0 FP=0 val=200 valerr=0 maxvalerr=8.2308444504519684e-09@103 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_e bad_lines=0
+fz_uniform_dp2 | #rc=0 secs=7.262118227 | DONE gen=uniform inst=200 dec=1388 FN=0 FP=0 val=200 valerr=0 maxvalerr=8.2308444504519684e-09@103 exc=0 timeout=0 crash=0 check=0 checkbad=0 oracle_e bad_lines=0
+h_g4_assert | #rc=134 secs=.052237704 | 
+hang_1e8 | #rc=0 secs=60.009930454 | TIMEOUT(60s) hang S=1e8 inst: 3 0 0 100000000 30000000 20000000 90000000 2 0 0 10000000 50000000
+hang_1e9 | #rc=0 secs=60.009270745 | TIMEOUT(60s) hang S=1e9 inst: 3 0 0 1000000000 300000000 200000000 900000000 2 0 0 100000000 500000000
+hang_672e5 | #rc=0 secs=60.011574873 | TIMEOUT(60s) hang S=6.72e7 inst: 3 0 0 67200000 20160000 13440000 60480000 2 0 0 6720000 33600000
+light | #rc=0 secs=.020612508 | DONE queries=7605 false_yes=0 false_no=0
+one_4697 | #rc=134 secs=.029800334 | test_one: /home/claude/Discrete-Frechet-distance-under-translation-master/original/src/frechet_under_translation.cpp:156: distance_t FrechetUnderTranslation::calcDistance2(const Curve&, const Curve&): Assertion `!init_search_box.empty()' failed. 
+sp_dec | #rc=0 secs=.331085087 | DONE fails=0 of 2000
+sp_dec_12 | #rc=0 secs=.340001082 | DONE fails=0 of 2000
+sp_dec_ext | #rc=0 secs=.448928741 | DONE fails=0 of 3000
+sp_lmf | #rc=0 secs=23.759447275 | DONE fails=10 of 2000
+--- reproducers through paper_bench (file1,file2,distance|value,answer|...)
+== r3_dec
+file1,file2,distance,answer,time_ms
+S45000_pi.txt,S45000_sigma.txt,45000,1,0.49074000000000000954
+S45000_pi.txt,S45000_sigma.txt,44955,1,0.29510799999999998144
+S30000_pi.txt,S30000_sigma.txt,30000,1,0.23582600000000000784
+S30000_pi.txt,S30000_sigma.txt,29970,1,0.29707099999999997397
+S20000_pi.txt,S20000_sigma.txt,20000,1,0.24022499999999999409
+S20000_pi.txt,S20000_sigma.txt,19980,1,0.22914799999999999058
+== g1_lmf
+file1,file2,n1,n2,value
+H2_pi.txt,H2_sigma.txt,2,3,43807.656897459164611
+H30_pi.txt,H30_sigma.txt,2,3,29205.104598319147044
+== g1_dec
+file1,file2,distance,answer,time_ms
+H2_pi.txt,H2_sigma.txt,45000,1,0.50808500000000000885
+H30_pi.txt,H30_sigma.txt,30000,1,0.25060300000000002019
+H2_pi.txt,H2_sigma.txt,44000,1,0.20856800000000000339
+H30_pi.txt,H30_sigma.txt,29300,1,0.20330899999999998973
+== g4_f01
+file1,file2,distance,answer,time_ms
+000008_TA_Q3_2_a.dat,000008_TA_Q3_2_b.dat,1.1779806069050677841,1,1.9004559999999999231
+== g4_f03
+== g4_assert
+--- near-threshold real data (truth: plus YES, minus NO)

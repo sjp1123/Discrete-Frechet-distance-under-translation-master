@@ -1,0 +1,8 @@
+== original (authors' testFrechetUnderTranslation, 20 Sigspatial curves = 210 pairs, grid 101x101)
+TEST_FAILED count: 0
+Finished Fréchet under translation test.
+rc=0
+== candidate7 (authors' testFrechetUnderTranslation, 20 Sigspatial curves = 210 pairs, grid 101x101)
+TEST_FAILED count: 0
+Finished Fréchet under translation test.
+rc=0

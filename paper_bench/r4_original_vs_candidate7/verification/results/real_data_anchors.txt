@@ -1,0 +1,17 @@
+| list | arm | pairs | max \|v − δ*(authors)\| | > 1e-7 | cert: max DFD(t) − v | cert: DFD(t) > v + 1e-7 | cert min DFD(t) − v |
+|---|---|--:|--:|--:|--:|--:|--:|
+| chars_all_pairs | original | 1,000 | 1.21e-08 (1000) | 0 | 1.38e-08 | 0 | 7.26e-12 |
+| chars_all_pairs | candidate7 | 1,000 | 1.31e-08 (1000) | 0 | 9.04e-09 | 0 | 1.25e-13 |
+| chars_same_pairs | original | 1,000 | 1.33e-08 (1000) | 0 | 1.33e-08 | 0 | 9.58e-11 |
+| chars_same_pairs | candidate7 | 1,000 | 1.33e-08 (1000) | 0 | 1.06e-08 | 0 | 4.84e-13 |
+| chars_full_sub | original | 2,100 | - | - | 1.38e-08 | 0 | 7.23e-12 |
+| chars_full_sub | candidate7 | 2,100 | - | - | 4.84e-09 | 0 | 6.54e-13 |
+| sig_pairs_998 | original | 998 | 1.33e-08 (998) | 0 | 1.37e-08 | 0 | 3.80e-12 |
+| sig_pairs_1000 | candidate7 | 1,000 | 1.25e-08 (1000) | 0 | 4.97e-09 | 0 | 3.80e-12 |
+
+chars_all_pairs: max |c7 − orig| = 8.51e-09, > 1e-7: 0
+chars_same_pairs: max |c7 − orig| = 8.38e-09, > 1e-7: 0
+chars_full_sub: max |c7 − orig| = 8.61e-09, > 1e-7: 0
+sig: max |c7 − orig| = 8.46e-09 over 998, > 1e-7: 0
+chars_full_sub original: identical to r4 (value, bbcalls) 2100/2100
+chars_full_sub candidate7: identical to r4 (value, bbcalls) 2100/2100
