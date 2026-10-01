@@ -1,0 +1,76 @@
+| family | inst | arm | LMF fail | LMF max abs err | LMF hang/crash | decider queries | wrong NO (δ ≥ δ* + resolution) | wrong YES (δ < δ*−band) | tie/below-resolution: NO/YES | either (YES/NO) | dec hang/crash |
+|---|--:|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| uniform | 1,500 | original | 0 | 9.00e-09 | 0 | 20,886 | 0 | 0 | 180/1415 | 846/635 | 0 |
+| uniform | 1,500 | candidate7 | 0 | 1.06e-08 | 0 | 20,886 | 0 | 0 | 187/1408 | 97/1384 | 0 |
+| grid | 1,500 | original | 0 | 1.55e-08 | 0 | 20,790 | 0 | 0 | 291/1384 | 922/543 | 0 |
+| grid | 1,500 | candidate7 | 0 | 1.55e-08 | 0 | 20,790 | 0 | 0 | 291/1384 | 24/1441 | 0 |
+| cluster | 1,200 | original | 0 | 2.28e-08 | 0 | 16,477 | 7 | 0 | 78/1182 | 1336/1054 | 38 |
+| cluster | 1,200 | candidate7 | 0 | 2.28e-08 | 0 | 16,477 | 0 | 0 | 53/1209 | 939/1458 | 0 |
+| collinear | 1,200 | original | 0 | 9.07e-09 | 0 | 16,704 | 0 | 0 | 242/1038 | 418/766 | 0 |
+| collinear | 1,200 | candidate7 | 0 | 1.10e-08 | 0 | 16,704 | 0 | 0 | 242/1038 | 116/1068 | 0 |
+| copy | 1,200 | original | 0 | 2.20e-08 | 0 | 14,375 | 0 | 0 | 2690/1610 | 1552/2946 | 0 |
+| copy | 1,200 | candidate7 | 0 | 2.20e-08 | 0 | 14,375 | 0 | 0 | 2746/1554 | 1237/3261 | 0 |
+| singleton | 600 | original | 0 | 8.69e-09 | 0 | 7,908 | 0 | 0 | 513/497 | 264/254 | 0 |
+| singleton | 600 | candidate7 | 0 | 4.83e-09 | 0 | 7,908 | 0 | 0 | 510/500 | 34/484 | 0 |
+| revisit | 1,000 | original | 9 | 3.04e+00 | 2 | 13,880 | 0 | 0 | 165/934 | 306/646 | 48 |
+| revisit | 1,000 | candidate7 | 0 | 1.35e-08 | 0 | 13,880 | 0 | 0 | 149/951 | 161/819 | 0 |
+| offset_sig | 1,200 | original | 0 | 8.92e-09 | 0 | 16,686 | 0 | 0 | 149/3546 | 671/510 | 0 |
+| offset_sig | 1,200 | candidate7 | 0 | 1.07e-08 | 0 | 16,686 | 0 | 0 | 118/3577 | 31/1150 | 0 |
+| big | 1,000 | original | 0 | 9.26e-09 | 0 | 13,940 | 0 | 0 | 128/932 | 591/399 | 0 |
+| big | 1,000 | candidate7 | 0 | 4.95e-09 | 0 | 13,940 | 0 | 0 | 145/915 | 81/909 | 0 |
+| tiny | 1,000 | original | 0 | 8.71e-09 | 0 | 13,904 | 0 | 0 | 142/938 | 1085/885 | 0 |
+| tiny | 1,000 | candidate7 | 0 | 4.84e-09 | 0 | 13,904 | 0 | 0 | 153/927 | 84/1886 | 0 |
+| real_chars | 1,500 | original | 0 | 8.61e-09 | 0 | 20,994 | 0 | 0 | 159/1346 | 499/1000 | 0 |
+| real_chars | 1,500 | candidate7 | 0 | 4.95e-09 | 0 | 20,994 | 0 | 0 | 173/1332 | 201/1298 | 0 |
+| real_sig | 1,500 | original | 0 | 8.97e-09 | 0 | 21,000 | 0 | 0 | 58/4400 | 310/1190 | 0 |
+| real_sig | 1,500 | candidate7 | 0 | 5.04e-09 | 0 | 21,000 | 0 | 0 | 9/4449 | 127/1373 | 0 |
+| medium_uniform | 250 | original | 0 | 8.69e-09 | 0 | 3,500 | 0 | 0 | 7/243 | 188/62 | 0 |
+| medium_uniform | 250 | candidate7 | 0 | 4.43e-09 | 0 | 3,500 | 0 | 0 | 10/240 | 7/243 | 0 |
+| medium_real_chars | 250 | original | 0 | 9.05e-09 | 0 | 3,500 | 0 | 0 | 18/232 | 102/148 | 0 |
+| medium_real_chars | 250 | candidate7 | 0 | 4.61e-09 | 0 | 3,500 | 0 | 0 | 24/226 | 44/206 | 0 |
+| medium_real_sig | 250 | original | 0 | 8.09e-09 | 0 | 3,500 | 0 | 0 | 11/721 | 58/192 | 0 |
+| medium_real_sig | 250 | candidate7 | 0 | 4.53e-09 | 0 | 3,500 | 0 | 0 | 0/732 | 35/215 | 0 |
+| **total** | 15,150 | original | 9 | | 2 | 208,044 | 7 | 0 | 4831/20418 | | 86 |
+| **total** | 15,150 | candidate7 | 0 | | 0 | 208,044 | 0 | 0 | 4810/20442 | | 0 |
+
+104 failure lines -> res/failures.txt
+original DEC HANG cluster/00074 delta=2.464762165946825 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00075 delta=3.164493079162221 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00075 delta=3.164492929162221 truth=NO kind=m2e-7abs
+original DEC HANG cluster/00106 delta=2.282680184971714 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00106 delta=2.282680034971714 truth=NO kind=m2e-7abs
+original DEC HANG cluster/00163 delta=3.4527560572445952 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00196 delta=3.8639963505803565 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00233 delta=2.8327560351645173 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00233 delta=2.8327558851645174 truth=NO kind=m2e-7abs
+original DEC HANG cluster/00233 delta=2.832756085164517 truth=EITHER kind=tie_dn
+original DEC wrongNO cluster/00236 delta=3.933285515582486 opt=3.933285515578553 kind=tie_up+
+original DEC HANG cluster/00305 delta=2.4595026956091144 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00305 delta=2.4595025456091144 truth=NO kind=m2e-7abs
+original DEC HANG cluster/00305 delta=2.4595027456091145 truth=EITHER kind=tie_dn
+original DEC HANG cluster/00364 delta=3.5376479172827557 truth=NO kind=m5e-8abs
+original DEC wrongNO cluster/00411 delta=1.206070602342557 opt=1.2060706023413508 kind=tie_up+
+original DEC wrongNO cluster/00480 delta=1.975767782587653 opt=1.975767782585677 kind=tie_up+
+original DEC wrongNO cluster/00480 delta=1.975767802585677 opt=1.975767782585677 kind=p2e-8abs
+original DEC HANG cluster/00569 delta=1.1265377729400787 truth=NO kind=m5e-8abs
+original DEC wrongNO cluster/00580 delta=3.7013607467750615 opt=3.70136074677136 kind=tie_up+
+original DEC HANG cluster/00584 delta=3.204368914964981 truth=YES kind=tie_up
+original DEC HANG cluster/00584 delta=3.2043689149681858 truth=YES kind=tie_up+
+original DEC HANG cluster/00584 delta=3.204368864964981 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00584 delta=3.2043689149649808 truth=EITHER kind=tie_dn
+original DEC HANG cluster/00669 delta=1.6963151271478647 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00669 delta=1.6963149771478647 truth=NO kind=m2e-7abs
+original DEC wrongNO cluster/00758 delta=2.4665594233823382 opt=2.4665594233798713 kind=tie_up+
+original DEC HANG cluster/00837 delta=4.5939262565248855 truth=NO kind=m5e-8abs
+original DEC wrongNO cluster/00870 delta=4.9609035589282335 opt=4.960903558923273 kind=tie_up+
+original DEC HANG cluster/00891 delta=1.4984327150621266 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00891 delta=1.4984327650621265 truth=EITHER kind=tie_dn
+original DEC HANG cluster/00972 delta=1.8513124672426815 truth=NO kind=m5e-8abs
+original DEC HANG cluster/00972 delta=1.8513123172426815 truth=NO kind=m2e-7abs
+original DEC HANG cluster/00972 delta=1.8513125172426812 truth=EITHER kind=tie_dn
+original DEC HANG cluster/01015 delta=0.9189671769445402 truth=NO kind=m5e-8abs
+original DEC HANG cluster/01035 delta=4.567356141720191 truth=NO kind=m5e-8abs
+original DEC HANG cluster/01035 delta=4.567355991720191 truth=NO kind=m2e-7abs
+original DEC HANG cluster/01035 delta=4.567356191720191 truth=EITHER kind=tie_dn
+original DEC HANG cluster/01097 delta=3.8020286810804254 truth=YES kind=tie_up
+original DEC HANG cluster/01097 delta=3.802028681084227 truth=YES kind=tie_up+
