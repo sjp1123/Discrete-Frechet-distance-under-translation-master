@@ -1,9 +1,11 @@
 # r4: 기존 구현(original) 대 candidate7 — 값 계산(LMF), 한 컨테이너에서 측정
 
+> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+
 기존 구현(`original`, [BKN20] 저자 코드)과 제안 방법의 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서 같은 기계·같은 방식으로 쟀다. 인스턴스당 1회 측정. 표는 [BKN20] Table 4 형식이다. 이 파일은 `scripts/analyze.py`가 `raw/`에서 만든다.
 
 - **Characters**: `characters_full` 21,000쌍 (`paper_bench/queries/characters_uci_lmf_pairs.txt`, 210파일 × 100쌍, 하네스 순서).
-- **Sigspatial**: 저자의 결정 문제 1,000쌍 (`paper_bench/queries/sigspatial_pairs.txt`, 전체 20,199곡선). 기존 구현은 12 GB를 넘는 2쌍(125·432번째, experiment_log §6.9)을 건너뛰었다. 표는 두 방법 모두 잰 998쌍이다.
+- **Sigspatial**: 저자의 결정 문제 1,000쌍 (`paper_bench/queries/sigspatial_pairs.txt`, 전체 20,199곡선). 기존 구현은 12 GB를 넘는 2쌍(125·432번째, experiment_log §6.9)을 건너뛰었다. (정정: 수정판의 문제다. 저자 코드는 이 두 쌍을 5 GB 안에서 497.5 s, 338.0 s에 정답으로 끝낸다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2) 표는 두 방법 모두 잰 998쌍이다.
 
 **측정 환경** — 서버 컨테이너: Intel Xeon @ 2.10 GHz, 2 vCPU, 7.8 GB, Ubuntu 24.04, g++ 13.3, CMake 3.28, CGAL 5.6 (header-only, GMPXX 백엔드), Boost 1.83, 시스템 GMP 6.3 / MPFR 4.2. `paper_bench`를 arm별 소스로 빌드(`RelWithDebInfo`, `-include cstdint -include array -include cstddef`). 시계 `steady_clock`.
 
@@ -33,7 +35,7 @@
 
 ## 2. Sigspatial — [BKN20] Table 4 형식 (Table 4에는 없는 벤치마크)
 
-998개 인스턴스 합. 괄호 안은 인스턴스당 평균. 비 = 기존 ÷ 제안. 기존 구현이 12 GB를 넘는 2쌍은 제외했다.
+998개 인스턴스 합. 괄호 안은 인스턴스당 평균. 비 = 기존 ÷ 제안. 기존 구현이 12 GB를 넘는 2쌍은 제외했다. (정정: 수정판의 문제다. 저자 코드는 이 두 쌍을 5 GB 안에서 497.5 s, 338.0 s에 정답으로 끝낸다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2)
 
 | Algorithm | 기존 (original) | 제안 (candidate7) | 비 |
 |---|--:|--:|--:|

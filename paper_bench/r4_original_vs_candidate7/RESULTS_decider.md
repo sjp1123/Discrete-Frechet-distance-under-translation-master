@@ -1,5 +1,7 @@
 # r4: 결정 문제 — 기존 구현(original) 대 candidate7, [BKN20] Table 2 형식
 
+> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+
 값 계산 r4(`RESULTS.md`)와 같은 서버 컨테이너·같은 방식으로 잰 결정 문제 결과다. 이 파일은 `scripts/analyze_decider.py`가 `raw/raw_decider_r4.tar.gz`에서 만든다.
 
 - **인스턴스**: 벤치마크마다 저자의 곡선 쌍 1,000개 × 23세트. YES 세트는 δ = (δ*+ε)(1+b^ℓ), ℓ = −10…2이고 NO 세트는 δ = (δ*−ε)(1−b^ℓ), ℓ = −10…−1이다. 계수 밑 b는 두 가지다. b = 4(`paperq4`)는 논문 본문의 계수로, 저자가 인스턴스 파일을 배포하지 않아 같은 쌍에 이 저장소에서 만든 것이다. b = 2(`paperq`)는 저자가 배포한 파일 그대로다.
