@@ -1,0 +1,234 @@
+--- gitlab/CMakeLists.txt
++++ original/CMakeLists.txt
+@@ -11,7 +11,7 @@
+ 
+ 
+ # OBJECT library requires 2.8.8
+-cmake_minimum_required(VERSION 2.8.8 FATAL_ERROR)
++cmake_minimum_required(VERSION 3.5)
+ project(frechet CXX)
+ 
+ enable_testing()
+@@ -33,7 +33,7 @@
+ 	set(EXTRA_EXE_LINKER_FLAGS "" CACHE STRING "Extra flags used by the linker.")
+ endif()
+ 
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS} -std=c++11 -fopenmp -fno-omit-frame-pointer")
++set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS} -std=c++14 -fopenmp -fno-omit-frame-pointer")
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_EXE_LINKER_FLAGS} -fopenmp -fno-omit-frame-pointer")
+ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_EXE_LINKER_FLAGS_RELEASE}")
+ set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} ${EXTRA_EXE_LINKER_FLAGS_RELWITHDEBINFO}")
+--- gitlab/lib/cgal_disk_arrangements/CMakeLists.txt
++++ original/lib/cgal_disk_arrangements/CMakeLists.txt
+@@ -1,12 +1,13 @@
+-find_package(CGAL QUIET COMPONENTS Core)
++find_package(CGAL REQUIRED COMPONENTS Core)
+ 
+-if (CGAL_FOUND)
+-	add_library(disc_arrangement_traversal SHARED
+-		disc_arrangement_traversal.cpp
+-		${CGAL_LIBRARIES}
+-		${CGAL_3RD_PARTY_LIBRARIES}
+-	)
+-	TARGET_LINK_LIBRARIES(disc_arrangement_traversal CGAL gmp mpfr measurement_tool)
+-else()
+-	message(STATUS "This program requires the CGAL library, and will not be compiled.")
+-endif()
++add_library(disc_arrangement_traversal SHARED
++    disc_arrangement_traversal.cpp
++)
++
++target_link_libraries(disc_arrangement_traversal
++    CGAL::CGAL
++    CGAL::CGAL_Core
++    gmp
++    mpfr
++    measurement_tool
++)
+--- gitlab/lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp
++++ original/lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp
+@@ -1,14 +1,27 @@
+ #include "disc_arrangement_traversal.h"
+ 
+ #include <CGAL/Iso_rectangle_2.h>
+-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
++// X2 kernel contrast (experiment_design_X1_X2.md §3.1): compile-time switch
++// between Epeck (exact constructions, default = A-arms) and Epick (double
++// constructions, = B-arms). Only the kernel changes; the DCEL arrangement code,
++// the traits template, and the no-maximal vertex enumeration are identical, so
++// A0 vs B0 isolates the kernel-construction effect (contrast K_0).
++#if defined(USE_EPICK)
++  #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
++#else
++  #include <CGAL/Exact_predicates_exact_constructions_kernel.h>
++#endif
+ #include <CGAL/Arr_circle_segment_traits_2.h>
+ #include <CGAL/Arrangement_2.h>
+ 
+ namespace cgal_disk_arrangements
+ {
+ 
+-using Kernel = CGAL::Epeck;
++#if defined(USE_EPICK)
++using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;  // B-arms
++#else
++using Kernel = CGAL::Epeck;                                          // A-arms
++#endif
+ using Traits_2 = CGAL::Arr_circle_segment_traits_2<Kernel>;
+ using Point_2 = Kernel::Point_2;
+ using Iso_rectangle_2 = Kernel::Iso_rectangle_2;
+--- gitlab/lib/measurement_tool/measurement_tool.h
++++ original/lib/measurement_tool/measurement_tool.h
+@@ -53,7 +53,9 @@
+ 		using Times = std::vector<Time>;
+ 		using Counter = uint64_t;
+ 
+-		using hrc = std::chrono::high_resolution_clock;
++		// steady_clock (monotonic): libstdc++ high_resolution_clock is system_clock, which WSL2
++		// steps by ~0.6 s at Hyper-V time syncs (paper_bench: negative instance times). Measurement only.
++		using hrc = std::chrono::steady_clock;
+ 		using time_point = hrc::time_point;
+ 		using ns = std::chrono::nanoseconds;
+ 
+--- gitlab/src/calc_frechet_distance_under_translation.cpp
++++ original/src/calc_frechet_distance_under_translation.cpp
+@@ -37,7 +37,7 @@
+ 	distance_t distance;
+ 	if (alg == "n6") {
+ 		N6Alg n6_alg;
+-		distance = n6_alg.calcDistance(curve1, curve2);
++		distance = n6_alg.calcDistance(curve1, curve2); std::cout << "The Fréchet distance for N6 is: " << std::setprecision(20) << distance << "\n";
+ 		MEASUREMENT::print();
+ 	}
+ 	else if (alg == "fut" || alg == "fut_binary" || alg == "fut_lmf" || alg == "fut_lipschitz") {
+--- gitlab/src/frechet_under_translation.cpp
++++ original/src/frechet_under_translation.cpp
+@@ -190,10 +190,9 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT2);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+ 				// only calculate the actual distance of this box if it improves max
+-				if (n6_alg.lessThan(max, curve1, curve2, bounding_box)) {
+-					max = n6_alg.calcDistance(curve1, curve2, bounding_box);
++				if (n6_alg.lessThan(max, curve1, curve2)) {
++					max = n6_alg.calcDistance(curve1, curve2);
+ 					min_translation = n6_alg.getTranslation();
+ 				}
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT2);
+@@ -255,10 +254,9 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT2);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+ 				// only calculate the actual distance of this box if it improves max
+-				if (n6_alg.lessThan(max, curve1, curve2, bounding_box)) {
+-					max = n6_alg.calcDistance(curve1, curve2, bounding_box);
++				if (n6_alg.lessThan(max, curve1, curve2)) {
++					max = n6_alg.calcDistance(curve1, curve2);
+ 					min_translation = n6_alg.getTranslation();
+ 				}
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT2);
+@@ -481,8 +479,7 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT1);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+-				bool less = n6_alg.lessThan(distance, curve1, curve2, bounding_box);
++				bool less = n6_alg.lessThan(distance, curve1, curve2);
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT1);
+ 				if (less) {
+ 					updateRestrictedSearchBox(search_boxes);
+@@ -512,8 +509,7 @@
+ 					MEASUREMENT::start(EXP::FUT_ARRANGEMENT1);
+ 					N6Alg n6_alg(epsilon_sub);
+ 					n6_alg.setCandidateCenters(cut_centers);
+-					auto bounding_box = n6_alg.toBoundingBox(search_box);
+-					bool less = n6_alg.lessThan(distance, curve1, curve2, bounding_box);
++					bool less = n6_alg.lessThan(distance, curve1, curve2);
+ 					MEASUREMENT::stop(EXP::FUT_ARRANGEMENT1);
+ 					if (less) {
+ 						updateRestrictedSearchBox(search_boxes);
+--- gitlab/src/fut_n6_algorithm.cpp
++++ original/src/fut_n6_algorithm.cpp
+@@ -16,8 +16,26 @@
+ {
+ 	assert(!curve1.empty() && !curve2.empty());
+ 
+-	auto box = getBoundingBox(curve1.getUpperBoundDistance(curve2), curve1, curve2);
+-	return calcDistance(curve1, curve2, box);
++	auto center = curve1.front() - curve2.front();
++	curve2.translate(center);
++	MEASUREMENT::start(EXP::FUT_N6_FRECHET);
++	distance_t max = frechet.evaluationFixedTranslation(curve1, curve2);
++	MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
++	distance_t min = 0.;
++	min_translation = center;
++	curve2.resetTranslation();
++
++	while (max - min >= epsilon/2.) {
++		auto split = (max + min)/2.;
++		if (lessThan(split, curve1, curve2)) {
++			max = split;
++		}
++		else {
++			min = split;
++		}
++	}
++
++	return min;
+ }
+ 
+ distance_t N6Alg::calcDistance(Curve const& curve1, Curve const& curve2, BoundingBox box)
+@@ -53,8 +71,49 @@
+ {
+ 	assert(!curve1.empty() && !curve2.empty());
+ 
+-	auto box = getBoundingBox(distance, curve1, curve2);
+-	return lessThan(distance, curve1, curve2, box);
++	if (curve1.size() == 1 && curve2.size() == 1) {
++		min_translation = curve1.front() - curve2.front();
++		return true;
++	}
++
++	ArrDiscs discs;
++	if (candidate_centers.empty()) {
++		for (std::size_t i = 0; i < curve1.size(); ++i) {
++			for (std::size_t j = 0; j < curve2.size(); ++j) {
++				auto center = curve1[i] - curve2[j];
++				discs.push_back({{center.x, center.y}, distance});
++			}
++		}
++	}
++	else {
++		for (auto const& candidate_center: candidate_centers) {
++			discs.push_back({{candidate_center.x, candidate_center.y}, distance});
++		}
++	}
++
++	MEASUREMENT::start(EXP::FUT_N6_ARR);
++	ArrangementTraversal arr_traversal(discs);
++	MEASUREMENT::stop(EXP::FUT_N6_ARR);
++
++	if (!arr_traversal.hasNext()) {
++		return false;
++	}
++
++	MEASUREMENT::start(EXP::FUT_N6_FRECHET);
++	while (arr_traversal.hasNext()) {
++		auto t = arr_traversal.getNext();
++		curve2.translate({t.x, t.y});
++		auto less = frechet.lessThanFixedTranslation(distance+epsilon_slack, curve1, curve2);
++		curve2.resetTranslation();
++		if (less) {
++			MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
++			min_translation = {t.x, t.y};
++			return true;
++		}
++	}
++
++	MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
++	return false;
+ }
+ 
+ bool N6Alg::lessThan(distance_t distance, Curve const& curve1, Curve const& curve2, BoundingBox box)

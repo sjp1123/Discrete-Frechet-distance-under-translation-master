@@ -1,0 +1,48 @@
+--- gitlab/src/frechet_under_translation.cpp
++++ repo-root/src/frechet_under_translation.cpp
+@@ -190,10 +190,9 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT2);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+ 				// only calculate the actual distance of this box if it improves max
+-				if (n6_alg.lessThan(max, curve1, curve2, bounding_box)) {
+-					max = n6_alg.calcDistance(curve1, curve2, bounding_box);
++				if (n6_alg.lessThan(max, curve1, curve2)) {
++					max = n6_alg.calcDistance(curve1, curve2);
+ 					min_translation = n6_alg.getTranslation();
+ 				}
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT2);
+@@ -255,10 +254,9 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT2);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+ 				// only calculate the actual distance of this box if it improves max
+-				if (n6_alg.lessThan(max, curve1, curve2, bounding_box)) {
+-					max = n6_alg.calcDistance(curve1, curve2, bounding_box);
++				if (n6_alg.lessThan(max, curve1, curve2)) {
++					max = n6_alg.calcDistance(curve1, curve2);
+ 					min_translation = n6_alg.getTranslation();
+ 				}
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT2);
+@@ -481,8 +479,7 @@
+ 				MEASUREMENT::start(EXP::FUT_ARRANGEMENT1);
+ 				N6Alg n6_alg(epsilon_sub);
+ 				n6_alg.setCandidateCenters(cut_centers);
+-				auto bounding_box = n6_alg.toBoundingBox(search_box);
+-				bool less = n6_alg.lessThan(distance, curve1, curve2, bounding_box);
++				bool less = n6_alg.lessThan(distance, curve1, curve2);
+ 				MEASUREMENT::stop(EXP::FUT_ARRANGEMENT1);
+ 				if (less) {
+ 					updateRestrictedSearchBox(search_boxes);
+@@ -512,8 +509,7 @@
+ 					MEASUREMENT::start(EXP::FUT_ARRANGEMENT1);
+ 					N6Alg n6_alg(epsilon_sub);
+ 					n6_alg.setCandidateCenters(cut_centers);
+-					auto bounding_box = n6_alg.toBoundingBox(search_box);
+-					bool less = n6_alg.lessThan(distance, curve1, curve2, bounding_box);
++					bool less = n6_alg.lessThan(distance, curve1, curve2);
+ 					MEASUREMENT::stop(EXP::FUT_ARRANGEMENT1);
+ 					if (less) {
+ 						updateRestrictedSearchBox(search_boxes);
