@@ -10,6 +10,8 @@
 //
 //   paper_bench lmf     <pairs.txt>   <curve_dir> <out.csv>
 //        value computation, calcDistance2 (LMF), one row per pair
+//   paper_bench binsearch <pairs.txt> <curve_dir> <out.csv>
+//        value computation, calcDistance (the authors' Binary Search baseline of Figure 6), one row per pair
 //   paper_bench decider <queries.txt> <curve_dir> <out.csv>
 //        decision problem, lessThan(distance), one row per query
 //   paper_bench gen     <pairs.txt>   <curve_dir> <out_prefix>
@@ -63,7 +65,7 @@ std::size_t counter(EXP id)
 
 void usage()
 {
-	std::cerr << "Usage: paper_bench <lmf|decider|gen> <query_file> <curve_dir> <out>\n";
+	std::cerr << "Usage: paper_bench <lmf|binsearch|decider|gen> <query_file> <curve_dir> <out>\n";
 	std::exit(1);
 }
 
@@ -106,6 +108,39 @@ int main(int argc, char* argv[])
 			if (++q % 200 == 0) { std::cerr << "  " << q << " queries\n"; }
 		}
 		std::cerr << "lmf: " << q << " queries -> " << out << "\n";
+	}
+	else if (mode == "binsearch") {
+		// The authors' Binary Search baseline ([BKN20] Figure 6): calcDistance instead of calcDistance2,
+		// timed and counted like "lmf".  Note: the authors' calcDistance has a kd-tree lower-bound defect
+		// (authors_check/REPORT.md P10): a negative lower bound distance - d_B/2 loses its sign when squared,
+		// so cut discs near the box centre can be missed and a value can come out too large.
+		std::ofstream csv(out);
+		csv << "file1,file2,n1,n2,value,time_ms,bbcalls,n6_arr_ms,n6_fre_ms,pre1_ms,bb1_ms,disc1_ms,arr1_ms\n";
+		csv << std::setprecision(20);
+		std::string f1, f2;
+		std::string line;
+		std::size_t q = 0;
+		while (std::getline(in, line)) {
+			std::istringstream ls(line);
+			if (!(ls >> f1 >> f2)) { continue; }
+			auto const& c1 = getCurve(curve_dir, f1);
+			auto const& c2 = getCurve(curve_dir, f2);
+
+			MEASUREMENT::reset();
+			auto start = hrc::now();
+			FrechetUnderTranslation frechet;
+			auto val = frechet.calcDistance(c1, c2);
+			auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(hrc::now() - start).count();
+
+			csv << f1 << "," << f2 << "," << c1.size() << "," << c2.size() << ","
+			    << val << "," << ns / 1000000. << "," << counter(EXP::BBCALLS_COUNTER) << ","
+			    << timerMs(EXP::FUT_N6_ARR) << "," << timerMs(EXP::FUT_N6_FRECHET) << ","
+			    << timerMs(EXP::FUT_PREPROCESSING1) << "," << timerMs(EXP::FUT_BLACKBOX1) << ","
+			    << timerMs(EXP::FUT_DISCSELECTION1) << "," << timerMs(EXP::FUT_ARRANGEMENT1) << "\n";
+			csv.flush();   // keep the row if the process is killed later
+			if (++q % 200 == 0) { std::cerr << "  " << q << " queries\n"; }
+		}
+		std::cerr << "binsearch: " << q << " queries -> " << out << "\n";
 	}
 	else if (mode == "decider") {
 		std::ofstream csv(out);
