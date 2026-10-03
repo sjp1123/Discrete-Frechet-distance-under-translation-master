@@ -62,6 +62,12 @@ A = {n: authors(n) for n, _, _, _ in sets}
 O = {n: ours(*src) for n, src, _, _ in sets}
 
 L = ["# Does the `original` arm reproduce the ESA 2020 experiments? Three cross-checks", "",
+     # correction notice (2026-10-03): original/ is a modified copy of the authors' code (authors_check/REPORT.md)
+     "**Correction (2026-10-03):** `original/` is not the authors' unmodified code; its base case drops the search box "
+     "(src/frechet_under_translation.cpp, src/fut_n6_algorithm.cpp). The authors' GitLab code (`authors_gitlab/`, 3bbb305) "
+     "reproduces Table 4's 260,128,449 black-box calls exactly and Table 2 within 2.1 %. The −1.1 % (Table 4) and −13 to −16 % "
+     "(Table 2) below come from that modification, not from floating point or sampling. "
+     "See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md).", "",
      "`original` is the authors' code (Bringmann, Kuennemann, Nusser, *When Lipschitz walks your dog*, ESA 2020; this repository's",
      "`original/`), built with their CMake flags (RelWithDebInfo, `-fopenmp`) and driven by `paper_bench/paper_bench.cpp`, which reads",
      "the same `MEASUREMENT` timers and counters as their `src/fut_paper_experiments.cpp` around `FrechetUnderTranslation` with the",

@@ -13,6 +13,11 @@ FOLDER = os.path.dirname(HERE)
 RAW = os.path.join(FOLDER, "raw")
 RES = os.path.normpath(os.path.join(FOLDER, "..", "results"))
 OUT = os.path.join(FOLDER, "RESULTS_decider.md")
+# correction notice (2026-10-03): original/ is a modified copy of the authors' code (authors_check/REPORT.md)
+CORRECTION = ("> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. "
+              "`original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. "
+              "저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 "
+              "[`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.\n")
 O, P = "original", "candidate7"
 SETS = OrderedDict([("characters_uci_same", "same-characters"), ("characters_uci_all", "all-characters"), ("sigspatial", "Sigspatial")])
 TAGS = OrderedDict([("paperq4", "4^ℓ (논문 본문의 계수, 주 결과)"), ("paperq", "2^ℓ (저자가 배포한 질의 파일)")])
@@ -73,6 +78,7 @@ def main():
     L = []
     w = L.append
     w("# r4: 결정 문제 — 기존 구현(original) 대 candidate7, [BKN20] Table 2 형식\n")
+    w(CORRECTION)
     w("값 계산 r4(`RESULTS.md`)와 같은 서버 컨테이너·같은 방식으로 잰 결정 문제 결과다. 이 파일은 `scripts/analyze_decider.py`가 "
       "`raw/raw_decider_r4.tar.gz`에서 만든다.\n")
     w("- **인스턴스**: 벤치마크마다 저자의 곡선 쌍 1,000개 × 23세트. YES 세트는 δ = (δ*+ε)(1+b^ℓ), ℓ = −10…2이고 NO 세트는 "

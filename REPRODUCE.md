@@ -82,3 +82,11 @@ bash reproduce.sh
   noise. Multi-machine / bare-metal re-run is the outstanding external step.
 - Headline speedups are for geolife_100 / `fut_lmf` / `cut_limit=12`. The global
   `n6` path and larger `cut_limit` are parity / unimplemented (candidate4 §7).
+
+## Baseline build (2026-10-03)
+
+The paper baseline is built from `authors_gitlab/`, the [BKN20] authors' GitLab code
+(commit 3bbb305; algorithm sources unchanged, only the CMake/CGAL 5 port and `steady_clock`):
+`ARMS=authors_gitlab bash paper_bench/r4_original_vs_candidate7/scripts/build.sh` → `~/b_pb_authors_gitlab/paper_bench`.
+`original/` (A0 above) is a modified copy whose base case drops the search box; see
+[`BASELINE_NOTICE.md`](BASELINE_NOTICE.md) and `paper_bench/authors_check/REPORT.md`.

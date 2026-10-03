@@ -13,6 +13,13 @@ FOLDER = os.path.dirname(HERE)
 RAW = os.path.join(FOLDER, "raw")
 RES = os.path.normpath(os.path.join(FOLDER, "..", "results"))
 OUT = os.path.join(FOLDER, "RESULTS.md")
+# correction notice (2026-10-03): original/ is a modified copy of the authors' code (authors_check/REPORT.md)
+CORRECTION = ("> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. "
+              "`original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. "
+              "저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 "
+              "[`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.\n")
+SIG_CORRECTION = ("(정정: 수정판의 문제다. 저자 코드는 이 두 쌍을 5 GB 안에서 497.5 s, 338.0 s에 정답으로 끝낸다 — "
+                  "[`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2)")
 EPS = 1e-7
 O, P = "original", "candidate7"
 STAGES = [("Preprocessing", "pre2_ms"), ("Black-box calls (Lipschitz)", "bb2_ms"),
@@ -150,11 +157,12 @@ def main():
     logs = [("Characters", tar_text(ch_tar, "log.txt")), ("Sigspatial", tar_text(sg_tar, "log.txt"))]
 
     w("# r4: 기존 구현(original) 대 candidate7 — 값 계산(LMF), 한 컨테이너에서 측정\n")
+    w(CORRECTION)
     w("기존 구현(`original`, [BKN20] 저자 코드)과 제안 방법의 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서 같은 기계·같은 방식으로 쟀다. "
       "인스턴스당 1회 측정. 표는 [BKN20] Table 4 형식이다. 이 파일은 `scripts/analyze.py`가 `raw/`에서 만든다.\n")
     w("- **Characters**: `characters_full` 21,000쌍 (`paper_bench/queries/characters_uci_lmf_pairs.txt`, 210파일 × 100쌍, 하네스 순서).")
     w("- **Sigspatial**: 저자의 결정 문제 1,000쌍 (`paper_bench/queries/sigspatial_pairs.txt`, 전체 20,199곡선). 기존 구현은 12 GB를 넘는 "
-      "2쌍(125·432번째, experiment_log §6.9)을 건너뛰었다. 표는 두 방법 모두 잰 998쌍이다.\n")
+      "2쌍(125·432번째, experiment_log §6.9)을 건너뛰었다. " + SIG_CORRECTION + " 표는 두 방법 모두 잰 998쌍이다.\n")
     w("**측정 환경** — 서버 컨테이너: Intel Xeon @ 2.10 GHz, 2 vCPU, 7.8 GB, Ubuntu 24.04, g++ 13.3, CMake 3.28, CGAL 5.6 "
       "(header-only, GMPXX 백엔드), Boost 1.83, 시스템 GMP 6.3 / MPFR 4.2. `paper_bench`를 arm별 소스로 빌드(`RelWithDebInfo`, "
       "`-include cstdint -include array -include cstddef`). 시계 `steady_clock`.\n")
@@ -180,7 +188,7 @@ def main():
 
     # ---------------- Sigspatial table
     w("## 2. Sigspatial — [BKN20] Table 4 형식 (Table 4에는 없는 벤치마크)\n")
-    ts = table4(w, SG, sg_keys, " 기존 구현이 12 GB를 넘는 2쌍은 제외했다.")
+    ts = table4(w, SG, sg_keys, " 기존 구현이 12 GB를 넘는 2쌍은 제외했다. " + SIG_CORRECTION)
     arr_so = ts["S"](O, "arr2_ms") / ts["to"] * 100; arr_sp = ts["S"](P, "arr2_ms") / ts["tp"] * 100
     w(f"- Arrangement algorithm 단계 비중: 기존 {arr_so:.1f} % → 제안 {arr_sp:.1f} %.")
     tso = {k: float(SG[O][k]["time_ms"]) for k in sg_keys}

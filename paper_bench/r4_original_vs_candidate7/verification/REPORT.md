@@ -1,5 +1,7 @@
 # candidate7과 original의 정확성 검증 보고서
 
+> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+
 2026-10-01, r4와 같은 서버 컨테이너(Xeon 2.1 GHz, 2 vCPU, Ubuntu 24.04, g++ 13.3, CGAL 5.6, Boost 1.83). 검증한 바이너리는 r4 측정에 쓴 것과 같은 빌드(`RelWithDebInfo`)이고, candidate7은 논문 설정(`MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=0`, 기본값)으로 돌렸다. 코드는 고치지 않고 결과만 보고한다.
 
 ## 0. 결론
@@ -180,6 +182,8 @@ original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candi
 | 7 | 양쪽 | 동률(δ = δ*)이나 좌표 해상도 이하 간격에서 NO (리뷰 #5) | `review/00001`, `00002`, 오라클 가족의 동률 질의 | 없음 |
 | 8 | 양쪽 | 근-퇴화 군집에서 매우 느림 (n, m ≤ 8에서 값 계산 최대 55 s / 50 s) | `cluster/00584`, `00163` (`hang/`) | 없음 (성능) |
 | 9 | candidate7 | A′ 상한에서 중심 반올림 누락, 상자 없는 N6 경로 (리뷰 #6, #7) | 해상도 밖에서는 재현 안 됨 | 없음 |
+
+정정: #2의 revisit 큰 값 오답 7개와 Sigspatial 12 GB 실패는 `original/` 수정 때문이며 저자 코드에는 없다(계측: original은 같은 쌍에서 전역 상한을 42–2,491번 올리고 저자 코드는 0번). 0 근처 값 2개, assert(F), 무한 루프(C), 원 잘림(B), 1e8 평행이동의 큰 값은 저자 코드에도 있다([`authors_check/REPORT.md`](../../authors_check/REPORT.md) 4.5).
 
 ## 4. 재현
 

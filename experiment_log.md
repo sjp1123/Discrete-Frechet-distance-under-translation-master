@@ -36,6 +36,8 @@
 - `original→candidate` = **극대화 효과** 격리 (둘 다 CGAL).
 - `candidate→candidate2` = **부동소수점 효과** 격리 (둘 다 극대 필터).
 
+> 정정 (2026-10-03): 위 표의 original "박스 사용"은 틀렸다. original은 배열 알고리즘의 기저 사례에서 탐색 상자를 쓰지 않는다. `original/src/frechet_under_translation.cpp`·`original/src/fut_n6_algorithm.cpp` 두 파일이 저자 원본(GitLab 3bbb305)에서 상자를 빼도록 수정되어 있다. 원본은 `authors_gitlab/`이다([`BASELINE_NOTICE.md`](BASELINE_NOTICE.md), [`paper_bench/authors_check/REPORT.md`](paper_bench/authors_check/REPORT.md) 2–3절).
+
 ### 1.4 데이터
 - **실측**: Geolife Trajectories 1.3.
   - `geolife_small` 매니페스트: 100쌍, n∈[10,200].
@@ -278,6 +280,8 @@ candidate5_exact 세 arm을 같은 인스턴스에서 코어 2 단독으로 연�
   논문 실행 당시 γ 기본값이 달랐을 가능성도 남는다(논문 본문은 γ 값을 밝히지 않음).
 - 원시: `results/raw_characters_uci_fpsens.tar.gz` (쌍 목록 + 두 CSV).
 
+> 정정 (2026-10-03): 1.1 % 차이의 원인은 부동소수점 경로가 아니라 `original/` 수정(기저 사례에서 탐색 상자를 뺌)이다. 저자 코드(`authors_gitlab/`, GitLab 3bbb305)는 Characters 21,000쌍에서 260,128,449회(12,387.1/쌍)로 논문 Table 4와 같다. 위의 -O2/-O3 호출 수 변동 측정 자체는 유효하다([`paper_bench/authors_check/REPORT.md`](paper_bench/authors_check/REPORT.md) 4.1).
+
 ### 6.9 Sigspatial 전체 집합(20,199곡선)에서의 재현 — `paper_bench/run_sig.sh` (2026-09-24, 사용자 PC WSL)
 
 > **주의 (2026-09-25)**: 이 절의 시간 수치(WSL, r1/r2)는 시계 점프와 가상 CPU 배치 문제로 무효이며 §6.12의 r3로 대체한다. 호출 수·정답·거리 값은 유효하다(r3와 동일).
@@ -331,6 +335,8 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 중앙값 2.4×, original이 메모리 부족으로 실패한 2쌍 포함 전부 성공"이 본문에 넣을 수 있는 결과다.
 원시: `results/raw_sigspatial_lmf.tar.gz`, `results/raw_sigspatial_decider.tar.gz`; 요약 `results/RESULTS_sig.md`; 표 `results/TABLES_uci.md` 표 D.
 
+> 정정 (2026-10-03): 12 GB 실패는 수정판(`original/`)의 문제다. 저자 코드는 이 두 쌍(`file-003586`/`file-002157`, `file-002502`/`file-016674`)을 5 GB 안에서 497.5 s, 338.0 s에 정답으로 끝낸다([`paper_bench/authors_check/REPORT.md`](paper_bench/authors_check/REPORT.md) 4.2).
+
 ### 6.10 original arm이 선행 연구를 재현하는지 — `paper_bench/results/REPRO_check.md`
 
 > **주의 (2026-09-25)**: 이 절의 Sigspatial 시간비는 §6.12의 r3(×1.37)로 갱신했다. 이전 WSL r1 값(×1.84)은 시계 점프와 가상 CPU 배치 문제로 무효이다. 호출 수·거리 값은 유효하다.
@@ -344,6 +350,8 @@ OOM으로 죽어 쓸 수 없었음). **동일성**: 세 arm 모두 1,000쌍(orig
 호출 수 −1.1 %, 시간비 0.97, 구성 비중 52 % vs 60 %. 저자가 배포한 같은 벤치마크의 다른 실행(`experiments/characters_valcomp_full_total_table.tex`)은
 논문보다 33 % 적은 8,358회/인스턴스라, 호출 수는 저자 스스로도 실행마다 달라지는 양이다. 결론: original은 저자 코드·저자 인스턴스·저자
 데이터 위에서 돌며 거리는 10⁻⁸ 수준, 호출 수는 동일 파일에서 세트별 2 % 이내로 저자 출력을 재현한다.
+
+> 정정 (2026-10-03): 논문 Table 2와의 호출 수 −13~−16 %는 표본 차이가 아니라 `original/` 수정 탓이다. 저자 코드는 같은 4^ℓ 질의에서 −2.1~+1.6 %다. "original은 저자 코드"라는 결론도 틀렸다(기저 사례 두 파일이 수정됨). 2^ℓ 배포 출력 대조는 저자 코드도 배포 출력과 다르므로 재현 근거가 약하다([`paper_bench/authors_check/REPORT.md`](paper_bench/authors_check/REPORT.md) 4.3–4.4).
 
 ### 6.11 결정 문제를 논문 Table 2 형식으로 — 세 벤치마크, 단계별 타이머 (r2, 이 PC WSL2) — `TABLES_uci.md` 표 E
 
@@ -430,3 +438,11 @@ candidate5 `MAXREGION_EXACT=1 MAXREGION_SLACK=0`으로, 컨테이너 표 A(기�
 - REPRO_check(§6.10)는 Sigspatial을 r3로 다시 만들었다: 2^ℓ 세트별 호출 수 56/64세트 2 % 이내(원시 CSV에서 계산; 반올림된 보고서에서 읽던 이전 판은 55/64로 잘못 셌다), 시간비 x1.37(이 PC).
 - 무효가 된 r1/r2 WSL 원시 파일은 추적을 위해 그대로 두되, 표·그림·요약은 모두 r3만 쓴다(위의 두 종료 시각만 예외).
 - 그림: `paper_bench/figures/plot_scatter.py` → `fig_scatter*.{pdf,png}` (논문 그림 6 형식: 축·점·y = x 점선만; Characters는 컨테이너 r2, Sigspatial은 r3의 998쌍이며 메모리 초과 2쌍은 그리지 않음).
+
+### 6.13 저자 원본(GitLab)과의 대조 — `paper_bench/authors_check/` (2026-10-03)
+
+- 저자 원본(GitLab `anusser/frechet_distance_under_translation`, master `3bbb305`)을 `authors_gitlab/`에 넣었다. Characters 21,000쌍에서 블랙박스 호출 260,128,449회로 논문 Table 4와 같고, 결정 문제 4^ℓ 호출 수도 Table 2와 −2.1~+1.6 % 안이다.
+- `original/`은 7개 파일이 다르고, 그중 2개가 기저 사례에서 탐색 상자를 빼고 LMF 기저 사례를 [0, f(τ_start)]에서 이분 탐색한다. 최상위 `src/`도 원본이 아니다.
+- 이 수정 때문에 `original`은 결정 문제 호출이 14–15 % 적고, Sigspatial LMF에서 2쌍이 12 GB를 넘겨 실패하며(저자 코드는 5 GB 안에서 끝냄), 전역 상한을 올려 큰 값 오답을 낸다.
+- 저자 코드 기준 candidate7 가속: Characters LMF 기하평균 3.67×(총 3.66×), Sigspatial LMF 기하평균 2.82×(1,000쌍 총 30.1×), 결정 문제 4^ℓ 1.95× / 2.27× / 1.20×. 제안 방법이 빠르다는 결론은 그대로이고, 논문 기준선은 GitLab 코드로 바꾼다.
+- 자세한 내용: [`paper_bench/authors_check/REPORT.md`](paper_bench/authors_check/REPORT.md), [`BASELINE_NOTICE.md`](BASELINE_NOTICE.md).
