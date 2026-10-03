@@ -305,16 +305,20 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
 
 ## 8. 재현
 
+스크립트는 저장소 위치를 스스로 찾는다. 바이너리는 환경 변수 `GITLAB`(기본 `~/b_pb_authors_gitlab/paper_bench`), `ORIG`(기본 `~/b_pb_original/paper_bench`), `C7`(기본 `~/b_pb_candidate7/paper_bench`)로, 작업 폴더는 `W`로 바꿀 수 있다. 세 방식 스크립트는 `ARMS`로 방식을 고른다(기본 `"gitlab original candidate7"`, 예: `ARMS="gitlab candidate7"`). 순서는 방식 수 k에 맞춰 2k가지로 돌리며, 세 방식일 때는 이 보고서의 측정과 같은 6가지 순서다.
+
 ```
-ZIP=<frechet_distance_under_translation-master.zip> DEPS=/opt/deps bash paper_bench/authors_check/scripts/build_gitlab_arm.sh   # ~/b_pb_gitlab
-bash paper_bench/authors_check/scripts/run_lmf3.sh        # Characters 21,000쌍, 세 방식, CPU 1 (약 1시간 40분)
-CPU=0 bash paper_bench/authors_check/scripts/run_sig3.sh  # Sigspatial 1,000쌍, 세 방식 (약 1시간 40분)
-CPU=1 bash paper_bench/authors_check/scripts/run_dec3.sh  # 결정 문제 4^ℓ 69 파일, 세 방식 (약 1시간 50분)
-bash paper_bench/authors_check/scripts/run_dec_gitlab.sh paperq   # 결정 문제 2^ℓ, 저자 코드 (약 2분)
-python3 paper_bench/authors_check/scripts/cmp_dec.py paperq        # 4.4 표
-# 정확성: verification/의 인스턴스로  python3 scripts/runner.py gitlab lmf|decider <list> <dir> <out.csv> 600 <cpu>,
-#         판정은 scripts/check_lmf.py, scripts/check_dec.py
-python3 paper_bench/authors_check/scripts/plot_scatter.py ~/arms/gitlab
+ARMS="authors_gitlab original candidate7" bash paper_bench/r4_original_vs_candidate7/scripts/build.sh   # ~/b_pb_<arm>/paper_bench
+#   (또는 bash paper_bench/authors_check/scripts/build_gitlab_arm.sh : authors_gitlab/이 있으면 zip 없이 빌드, ZIP=<zip>이면 zip에서)
+bash paper_bench/authors_check/scripts/run_lmf3.sh            # Characters 21,000쌍, CPU 1, W=~/lmf3 (세 방식 약 1시간 40분)
+CPU=0 bash paper_bench/authors_check/scripts/run_sig3.sh      # Sigspatial 1,000쌍, W=~/sig3 (약 1시간 40분)
+CPU=1 bash paper_bench/authors_check/scripts/run_dec3.sh      # 결정 문제 4^ℓ 69 파일, W=~/dec3 (약 1시간 50분)
+bash paper_bench/authors_check/scripts/run_dec_gitlab.sh paperq   # 결정 문제 2^ℓ, 저자 코드, W=~/gitdec (약 2분)
+python3 paper_bench/authors_check/scripts/cmp_dec.py paperq        # 4.4 표 (ORIGDEC=~/r4dec/original, GITDEC=~/gitdec/gitlab)
+# 정확성 (4.5): r4 검증 인스턴스를 풀고 방식 하나씩
+mkdir -p ~/verif && tar xzf paper_bench/r4_original_vs_candidate7/verification/raw/oracle_instances.tar.gz -C ~/verif   # inst/, inst2/
+bash paper_bench/authors_check/scripts/run_verif.sh ~/verif gitlab    # runner.py + check_lmf.py/check_dec.py, W=~/verif_gitlab
+python3 paper_bench/authors_check/scripts/plot_scatter.py              # 그림 (저자 배포 시간은 authors_gitlab/experiments에서)
 ```
 
 | 파일 | 내용 |

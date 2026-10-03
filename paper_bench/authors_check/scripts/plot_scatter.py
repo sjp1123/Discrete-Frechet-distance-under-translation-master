@@ -10,7 +10,7 @@ instance, dashed y = x, both axes share one range).
       authors shipped in experiments/characters_valcomp_full_scatter_{lmf,binsearch}.dat (their machine;
       this is the run of their characters_valcomp_full_total_table.tex, not necessarily the paper's run).
 
-    python3 paper_bench/authors_check/scripts/plot_scatter.py [path to the GitLab tree, default ~/arms/gitlab]
+    python3 paper_bench/authors_check/scripts/plot_scatter.py [path to the GitLab tree, default <repo>/authors_gitlab]
 """
 import csv, io, os, sys, tarfile
 import matplotlib
@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__)); FOLDER = os.path.dirname(HERE); RAW = os.path.join(FOLDER, "raw")
-GITLAB = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/arms/gitlab")
+GITLAB = sys.argv[1] if len(sys.argv) > 1 else os.path.normpath(os.path.join(FOLDER, "..", "..", "authors_gitlab"))
 DOT, DIAGONAL, INK, INK_2 = "#2a78d6", "#7f7f7f", "#0b0b0b", "#52514e"
 plt.rcParams.update({"font.size": 8, "axes.labelsize": 8, "xtick.labelsize": 7, "ytick.labelsize": 7,
                      "axes.edgecolor": INK_2, "axes.labelcolor": INK, "xtick.color": INK_2, "ytick.color": INK_2,
