@@ -21,7 +21,7 @@ is marked `FIX (candidate7)` in the source.
 
 Not changed: the Lipschitz search, disc selection, the kd-tree, the enumeration and predicates of
 candidate6 (their exactness was confirmed: 117,600 family comparisons and about 4 million predicate
-cases, 0 mismatches), the `CUT_LIMIT`/`DEPTH_LIMIT` constructor parameters and `-std=c++14`. CGAL ≥ 6
+cases, 0 mismatches), the `depth_limit`/`arrangement_cut_limit` constructor parameters (defaults 40, 12) and `-std=c++14`. CGAL ≥ 6
 needs `-std=c++17`, as for every arm. The Vim swap file `src/.swp` of the authors' tree is not copied.
 
 ## 2. Configuration

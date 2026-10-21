@@ -14,7 +14,7 @@
 | OS | Windows 11 Home 10.0.26200 → **WSL2 Ubuntu 24.04**, kernel 6.6.87.2-microsoft-standard-WSL2 |
 | 컴파일러 | g++ (Ubuntu 13.3.0) · CMake 3.28.3 |
 | 기하/수치 | CGAL 5.6 (header-only) · GMP/MPFR (system) · Boost 1.83 (`cpp_rational`) |
-| 빌드 | out-of-source, `RelWithDebInfo`, 전 팔 동일 플래그 (`-include cstdint array cstddef`) |
+| 빌드 | out-of-source, `RelWithDebInfo`, 전 팔 동일 플래그 (`-include cstdint -include array -include cstddef`) |
 
 **⚠️ 통제 못 한 것 (정직 고지):** WSL2에서는 CPU 주파수 governor가 노출되지 않는다 (`scaling_governor` 접근 불가). 즉 **turbo/주파수 스케일링을 고정할 수 없다.** 아래 §2의 잔여 노이즈(~4%)의 주 원인으로 추정되며, 이것이 **bare-metal + 다중 CPU 재실행(체크리스트 #5)이 선택이 아닌 이유**다.
 
@@ -28,7 +28,7 @@
 | 프로세스 시작 바닥 | **≈ 9–11 ms** (자명쌍 min wall) | 팔-불변(동일 호출 방식) → **비율에서 상쇄**. `~/geodata` 네이티브 FS라 E-log의 옛 `/mnt/c` ~1.4 s 오버헤드는 해당 없음 |
 | C4 노이즈 < D1 노이즈 | C4 CV ~3% vs D1 ~6% | C4가 build·작업이 적어 더 안정 |
 
-**주의 (지표 정의):** 위 표의 "internal"(MEASUREMENT arr+fre)은 **배열-잎 루프만** 포착하며 D&C 드라이버·Lipschitz 바운드는 포함하지 않는다. 따라서 벽시계의 88–100%가 "internal 밖"으로 보이는 것은 대부분 **알고리즘의 나머지(D&C+바운드)**이지 프로세스 시작이 아니다(시작 바닥은 ~10 ms). 요인표가 **벽시계와 internal 두 지표를 병기**하는 이유이며, internal 지표는 프로세스-시작 면역이다.
+**주의 (지표 정의):** `_noise.sh` 출력의 "internal"(MEASUREMENT arr+fre)은 **배열-잎 루프만** 포착하며 D&C 드라이버·Lipschitz 바운드는 포함하지 않는다. 따라서 벽시계의 88–100%가 "internal 밖"으로 보이는 것은 대부분 **알고리즘의 나머지(D&C+바운드)**이지 프로세스 시작이 아니다(시작 바닥은 ~10 ms). 요인표가 **벽시계와 internal 두 지표를 병기**하는 이유이며, internal 지표는 프로세스-시작 면역이다.
 
 **신뢰 판정:** 팔-불변 시작 오버헤드가 상쇄되고 rep CV가 ~4%이며 보고 CI가 그보다 넓으므로, **비율(배속) 주장은 이 단일 머신에서 방어 가능**하다. 남은 위험은 governor 미통제(주파수 변동)이며, 이는 다중 머신 재실행으로만 완전히 닫힌다.
 

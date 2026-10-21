@@ -9,7 +9,7 @@
 
 ## 0. 요약
 
-1. **저자 원본 = 논문을 낸 코드다.** GitLab 코드로 Characters 21,000쌍(논문 Table 4)을 돌리면 블랙박스 호출 수가 **260,128,449회(12,387.1/쌍)로 논문 Table 4와 한 자리까지 같다.** 결정 문제 4^ℓ 세트(Table 2)의 호출 수도 논문과 2 % 안이다(−2.1~+1.6 %).
+1. **저자 원본 = 논문을 낸 코드다.** GitLab 코드로 Characters 21,000쌍(논문 Table 4)을 돌리면 블랙박스 호출 수가 **260,128,449회(12,387.1/쌍)로 논문 Table 4와 한 자리까지 같다.** 결정 문제 4^ℓ 세트(Table 2)의 호출 수도 논문과 2.1 % 안이다(−2.1~+1.6 %).
 2. **`original/`은 저자 원본이 아니다.** 7개 파일이 다르다.
    - 5개는 빌드·측정용이라 영향이 없다: CMake 2개, 측정 시계, EPICK 스위치, CLI 출력.
    - 2개(`frechet_under_translation.cpp`, `fut_n6_algorithm.cpp`)는 **배열 알고리즘의 기저 사례를 바꾼다.** 저자 코드는 탐색 상자 B를 넘겨 B의 네 변을 배열에 넣고, LMF 기저 사례를 [f(τ_B) − d_B/2, f(τ_B)]에서 이분 탐색한다. `original/`은 상자를 빼고 [0, f(τ_start)]에서 이분 탐색한다.
@@ -72,12 +72,12 @@
 | **`src/fut_n6_algorithm.cpp`** | 상자 없는 `calcDistance`·`lessThan`을 새로 짬. 원래 판이 `fut_n6_algorithm.cpp.bak`로 남아 있음(GitLab과 같음) | **알고리즘** | 3절 |
 
 **파일 구성의 차이.**
-- `original/`에만 있는 것: `divide_and_conquer.svg`(실행 산출물), 두 `.bak` 파일.
+- `original/`에만 있는 것: `divide_and_conquer.svg`(실행 산출물), 두 `.bak` 파일. (2026-10-21: 이 보고서 뒤에 문서 `original/MODIFIED_FROM_AUTHORS.md`가 추가됐다, 53e0bb4.)
 - GitLab에만 있는 것: `tools/CMakeCache.txt`·`tools/CMakeFiles`(저자 빌드 찌꺼기), `test_data/benchmark`.
 
 **저장소 최상위 `src/`·`lib/`도 원본이 아니다.** GitLab과 비교하면 `src/frechet_under_translation.cpp` 하나가 다르다. `original/`과 같은 호출부 수정이다(`reporoot_vs_gitlab.diff`). `fut_n6_algorithm.cpp`는 GitLab 그대로라서, 최상위 사본은 상자 없는 호출이 저자의 "전역 상자" 판을 부르는 세 번째 변형이 된다.
 
-**언제 바뀌었나.** 저장소의 첫 커밋(`3516e55`, 2026-09-07 "Snapshot")에 이미 이 상태로 들어 있다. 그 뒤 `original/`에서 바뀐 것은 측정 시계 하나다. 그런데 다음 문서들은 `original/`이 수정되지 않았다고 적고 있어 실제 코드와 맞지 않는다.
+**언제 바뀌었나.** 저장소의 첫 커밋(`3516e55`, 2026-09-07 "Snapshot")에 이미 이 상태로 들어 있다. 그 뒤 `original/`에서 바뀐 것은 측정 시계 하나다(2026-10-21: 이후 문서 `original/MODIFIED_FROM_AUTHORS.md` 추가, 53e0bb4). 그런데 다음 문서들은 `original/`이 수정되지 않았다고 적고 있어 실제 코드와 맞지 않는다.
 - `experiment_log.md` 1.3절: "박스 사용"
 - `_x1_results/ENVIRONMENT.md`: "알고리즘 수정 없음"
 - `paper_bench/results/REPRO_check.md`: "The algorithm is unmodified"
@@ -137,6 +137,7 @@ f(τ_start)는 초기 상한 수준의 고정값이다. 탐색이 진행되어 �
 | &nbsp;&nbsp;∗ Construction | 1,338,859 ms | 1,398,637 ms | 67,826 ms | 19.74 | 20.62 | 0.957 |
 | &nbsp;&nbsp;∗ Black-box calls | 355,015 ms | 318,370 ms | 43,319 ms | 8.20 | 7.35 | 1.115 |
 
+- (2026-10-21) Time과 네 단계 합의 차이 36,260 / 36,526 / 36,345 ms(GitLab / `original` / candidate7)는 대부분 Lipschitz 단계 타이머 결함 때문이다. 버려지는 상자에서 `FUT_BLACKBOX2`가 멈추지 않아 그 호출 시간이 어느 단계에도 들어가지 않는다([r5 README, 측정 주의](../r5_authors_vs_candidate7/README.md#측정-주의--lipschitz-단계-타이머-2026-10-21)).
 - **논문 Table 4는 260,128,449회(12,387.1/쌍)이고, 저자 코드가 이 값을 정확히 다시 냈다.**
   - 논문의 시간 140.0 ms/쌍과 여기 111.6 ms/쌍의 차이는 기계 차이다.
   - experiment_log 6.8은 `original`이 1.1 % 적은 이유를 "부동소수점 경로 차이"로 설명했다. 실제 원인은 3절의 수정이다.
@@ -150,7 +151,7 @@ f(τ_start)는 초기 상한 수준의 고정값이다. 탐색이 진행되어 �
 
 - 값은 세 방식 모두 1.35e-8 안에서 같다.
 - 저자가 함께 배포한 쌍별 LMF 시간(`experiments/characters_valcomp_full_scatter_lmf.dat`)과 이번 저자 코드 시간의 순위 상관은 0.866이다.
-  - 그 파일은 쌍당 102.8 ms, 8,358회짜리 실행이다(`characters_valcomp_full_total_table.tex`).
+  - 그 파일은 쌍당 102.8 ms, 8,358회짜리 실행이다(102.8 ms는 `characters_valcomp_full_scatter_lmf.dat` 평균, 8,358회는 `characters_valcomp_full_total_table.tex`의 175,529,881/21,000).
   - 즉 논문 Table 4(140.0 ms, 12,387.1회)와는 다른 실행이다.
 
 ### 4.2 Sigspatial 값 계산 (LMF) — 저자의 결정 문제 1,000쌍, 전체 20,199곡선
@@ -191,7 +192,7 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
 | Sigspatial | 1,366.1 | **1,338.1** (−2.1 %) | 1,146.4 (−16 %) | 319.1 | 42.34 / 41.09 / 35.42 | **1.20×** / 1.11× [1.10, 1.11] | 1.16× / 1.08× |
 
 - **답은 세 방식이 모든 질의에서 같다**(69,000질의 × 3).
-- 저자 코드의 호출 수는 논문 Table 2와 2 % 안이다(−2.1~+1.6 %). 논문의 4^ℓ 질의 파일은 배포되지 않았는데, 같은 쌍과 같은 공식이라 이 정도로 맞는 것으로 보인다. r4에서 보고한 `original`의 −13~−16 %는 수정 때문이었다.
+- 저자 코드의 호출 수는 논문 Table 2와 2.1 % 안이다(−2.1~+1.6 %). 논문의 4^ℓ 질의 파일은 배포되지 않았는데, 같은 쌍과 같은 공식이라 이 정도로 맞는 것으로 보인다. r4에서 보고한 `original`의 −13~−16 %는 수정 때문이었다.
 - `original`은 저자 코드보다 호출이 14–15 % 적고 시간도 3–7 % 짧다. 수정이 배열에서 상자 변을 빼 시험점이 줄었기 때문이다. 그래서 **저자 코드 기준의 candidate7 가속이 r4보다 조금 크다.**
 
 ### 4.4 결정 문제 — 저자가 배포한 2^ℓ 출력과 대조
@@ -205,7 +206,7 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
 | Sigspatial | 22.81 | 24.58 | 24.24 |
 
 - 답은 저자 코드와 `original`이 모든 질의에서 같다.
-- δ*에서 먼 세트는 세 값이 거의 같다. 차이는 δ*에 가까운 NO 세트(ℓ ≤ −8)에 몰린다. 예를 들어 same-characters ℓ = −10 minus는 배포 출력 274.8, 저자 코드 634.3, `original` 569.4다.
+- δ\*에서 먼 세트는 세 값이 거의 같다. 차이는 δ\*에 가까운 NO 세트(ℓ ≤ −8)에 몰린다. 예를 들어 same-characters ℓ = −10 minus는 배포 출력 274.8, 저자 코드 634.3, `original` 569.4다.
 - 저자 코드조차 배포 출력과 다르다. 그런데 같은 코드가 논문 Table 4·Table 2를 거의 정확히 다시 낸다. 따라서 **배포된 `experiments/` 출력은 논문 실행과 다른 실행(다른 판이나 다른 설정)에서 나온 것으로 보는 게 맞다.** 4.1의 쌍별 시간 파일이 논문 Table 4와 다른 실행인 것과도 맞아떨어진다.
 - r4와 REPRO_check가 "`original`이 저자 출력을 재현한다"고 쓴 근거(이 2^ℓ 대조)는 근거가 약했다.
 
@@ -246,12 +247,12 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
 | 블랙박스: 가장 빠른 고정 평행이동 결정기를 이산판으로 | `DiscreteFrechetLight`(필터 포함) |
 | LMF 초기 구간 [max{δ_s, δ_e}/2, min{δ_s, δ_e}] | `getInitialEstimates`: 앞·뒤 정렬 평행이동에서 ε/2 정밀도로 재고 같은 공식에 ±ε/2 (304–374) |
 | δ̃ ← δ_UB, 초기 상자는 δ_UB로 같은 방식 | 147–159 |
-| 우선순위 큐, 키는 국소 하한 ℓ_B (작은 것 먼저) | `std::priority_queue<…, std::greater>` (158) |
+| 우선순위 큐, 키는 국소 하한 ℓ_B (작은 것 먼저) | `std::priority_queue<…, std::greater>` (158; 타입 정의는 `frechet_under_translation.h` 64–65) |
 | d_F(τ_B) ≤ δ̃ 이면 고정밀로 값을 재서 δ̃·ℓ_B 갱신 | 208–212: 정밀도 ε/10으로 값, ℓ_B = max(ℓ_B, δ̃ − d_B/2) |
 | 거친 정밀도로 ℓ_B 갱신 | 222–231: 정밀도 (δ̃ − ℓ_B)/10 |
 | 종료: δ̃ ≤ ℓ_B(1+ε). 구현은 가법 ε = 10⁻⁷ (본문에 명시) | `max − min_dist ≤ ε/2` (238) |
 | 기저 사례 크기 추정은 [ℓ_B, δ̃]의 **고리**(annulus)가 B와 만나는지로 하고, kd-tree로 찾는다 | `computeCutCenters(box, ℓ_B, δ̃)` + `intersectAnnulus(…, min_radius, max_radius)` (771–, 817–), `KdTree2::search(min, max)` |
-| 기저 사례 값은 "δ̃보다 작을 때만" 관심 (본문 문장 22) | 게이트 `if (n6_alg.lessThan(max, …, B))` 를 통과할 때만 이분 탐색 (194, 259) |
+| 기저 사례 값은 "δ̃보다 작을 때만" 관심 (본문 문장 22) | 게이트 `if (n6_alg.lessThan(max, …, B))` 를 통과할 때만 이분 탐색 (195, 260) |
 | 자식 상자에 부모의 ℓ_B를 물려줌 | `pushChildren(BBQueue&, …)`이 `min_dist`를 넘김 |
 
 ### 5.2 논문 서술과 다른 부분
@@ -300,7 +301,7 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
    - 기준선 재현을 보이는 데 이보다 강한 근거는 없다.
 2. 그림은 `fig_scatter_gitlab_vs_c7*.{pdf,png}`를 쓴다. 두 패널이 같은 기계에서 쟀고, Sigspatial은 1,000쌍 전부다.
 3. `original/`을 계속 둘 거라면 이름을 `original_modified`처럼 바꾸거나, 두 파일을 GitLab판으로 되돌리고 r4를 다시 돌린다. 이 보고서는 코드를 바꾸지 않았다.
-4. 두 LMF 벤치마크와 결정 문제 앞부분(same-characters 일부)은 다른 코어도 측정 중인 상태에서 쟀다. 논문 본표로 쓰려면 다른 코어를 비우고 한 번 더 재는 게 좋다. 방식 간 비는 번갈아 쟀으므로 지금도 공정하다. 호출 수와 값은 기계·부하와 무관하다.
+4. 두 LMF 벤치마크와 결정 문제의 same-characters 전부와 all-characters 23개 중 21개 파일(69개 중 1–44번)은 다른 코어도 측정 중인 상태에서 쟀다. 논문 본표로 쓰려면 다른 코어를 비우고 한 번 더 재는 게 좋다. 방식 간 비는 번갈아 쟀으므로 지금도 공정하다. 호출 수와 값은 기계·부하와 무관하다.
 5. 논문 Figure 6 자체(LMF vs Binary Search)는 저자가 배포한 쌍별 시간으로 그린 `fig6_authors_shipped.png`가 있다. 다만 그 자료는 논문 Table 4와 다른 실행이다(4.1). 논문과 같은 실행을 원하면 저자 코드로 Binary Search 21,000쌍을 돌려야 한다(약 3시간). Binary Search 경로에는 P10 결함이 있다.
 
 ## 8. 재현
@@ -310,9 +311,9 @@ CPU 0에서 쌍마다 세 방식을 번갈아 실행했다(같은 시간대에 C
 ```
 ARMS="authors_gitlab original candidate7" bash paper_bench/r4_original_vs_candidate7/scripts/build.sh   # ~/b_pb_<arm>/paper_bench
 #   (또는 bash paper_bench/authors_check/scripts/build_gitlab_arm.sh : authors_gitlab/이 있으면 zip 없이 빌드, ZIP=<zip>이면 zip에서)
-bash paper_bench/authors_check/scripts/run_lmf3.sh            # Characters 21,000쌍, CPU 1, W=~/lmf3 (세 방식 약 1시간 40분)
-CPU=0 bash paper_bench/authors_check/scripts/run_sig3.sh      # Sigspatial 1,000쌍, W=~/sig3 (약 1시간 40분)
-CPU=1 bash paper_bench/authors_check/scripts/run_dec3.sh      # 결정 문제 4^ℓ 69 파일, W=~/dec3 (약 1시간 50분)
+bash paper_bench/authors_check/scripts/run_lmf3.sh            # Characters 21,000쌍, CPU 1, W=~/lmf3 (세 방식 약 1시간 30분)
+CPU=0 bash paper_bench/authors_check/scripts/run_sig3.sh      # Sigspatial 1,000쌍, W=~/sig3 (약 1시간 10분)
+CPU=1 bash paper_bench/authors_check/scripts/run_dec3.sh      # 결정 문제 4^ℓ 69 파일, W=~/dec3 (약 1시간 20분)
 bash paper_bench/authors_check/scripts/run_dec_gitlab.sh paperq   # 결정 문제 2^ℓ, 저자 코드, W=~/gitdec (약 2분)
 python3 paper_bench/authors_check/scripts/cmp_dec.py paperq        # 4.4 표 (ORIGDEC=~/r4dec/original, GITDEC=~/gitdec/gitlab)
 # 정확성 (4.5): r4 검증 인스턴스를 풀고 방식 하나씩

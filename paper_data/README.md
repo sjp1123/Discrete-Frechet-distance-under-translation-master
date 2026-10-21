@@ -13,7 +13,9 @@ The authors' fetch/convert scripts live in their repository
 this directory had **no network access to archive.ics.uci.edu, martinwerner.de,
 sigspatial.org, the MPI/TUM mirrors, archive.org, HuggingFace, Zenodo or Kaggle**
 (egress policy), so the data was assembled from public GitHub/GitLab mirrors as
-documented below.  Everything here is reproducible from `convert_characters.py`
+documented below (later replaced: `characters_uci/` comes from the UCI file supplied by the user,
+and `sigspatial/shortest-sf.tgz` was obtained separately and is committed).  Everything here is
+reproducible from `convert_characters_uci.py` (characters_uci/), `convert_sigspatial.py` (sigspatial/)
 and the recorded source commits / checksums.
 
 ## characters/ — complete (2 858 curves) — NOT INCLUDED in this branch (mirror-order copy; see the full branch)
@@ -34,7 +36,7 @@ and the recorded source commits / checksums.
 | conversion | `convert_characters_uci.py`, the authors' `character_converter.m` line by line; `data/<i>.txt`, i = 1..2858 in the file's order |
 | identity check | the authors' per-letter index lists (`test_data/character_classification_data/*_dataset.txt`, 2 858 entries) agree with `consts.charlabels` on every index; the authors' `characters_fut_decider_computed_distances.check` (δ* of their 1 000 all-characters pairs) is reproduced by `original` to within 1.2e-8 (see `paper_bench/results/VERIFY_uci.md`) |
 | result | 2 858 curves, mean 120.99 vertices after duplicate removal (min 61, max 183) |
-| consequence | the authors' instance files apply unchanged: `fut_val_computation_benchmark_queries/characters_full_*` (21 000 LMF pairs) and `fut_decider_benchmark_queries/characters_fut_decider{,_samechar}_*` (23 × 1 000 decider instances each). `paper_bench/run_uci.sh` runs exactly those. `characters/` (mirror order) is kept only for the earlier results. |
+| consequence | the authors' instance files apply unchanged: `fut_val_computation_benchmark_queries/characters_full_*` (21 000 LMF pairs) and `fut_decider_benchmark_queries/characters_fut_decider{,_samechar}_*` (23 × 1 000 decider instances each). `paper_bench/run_uci.sh` runs exactly those. `characters/` (mirror order; full branch only) was used only for the earlier results. |
 
 ## sigspatial/ — the FULL set (20 199 curves), the authors' `shortest-sf.tgz`
 
@@ -43,7 +45,7 @@ and the recorded source commits / checksums.
 | source | `shortest-sf.tgz` (ACM SIGSPATIAL GIS Cup 2017, the file the authors' `fetch_and_convert_data.py` downloads from martinwerner.de; that host is down, the file was obtained by other means and is committed here as `sigspatial/shortest-sf.tgz`, 54.6 MB); SHA-256 in `sigspatial/SOURCE_SHA256.txt` |
 | conversion | `convert_sigspatial.py`: header line `x y k tid` removed from every `files/file-NNNNNN.dat`, exactly the authors' `tail -n +2`; the parser ignores columns 3-4.  `sigspatial/data/` (207 MB) is git-ignored, regenerate it with `python3 paper_data/convert_sigspatial.py` |
 | result | 20 199 curves, mean **247.9 vertices** (paper Table 1: 247.8); `dataset.txt` = sorted file names |
-| identity check | the authors' `sigspatial_fut_decider_computed_distances.check` (delta* of their 1 000 pairs) is reproduced by all three arms to within 1.33e-8 on every pair (`original` on 998 of the 1 000: two pairs exceed 12 GB; see experiment_log §6.9 and §6.12); the authors' 23 decider files `sigspatial_fut_decider_<l>_<sign>.txt` are copied unchanged to `paper_bench/queries/sigspatial_paperq_*` and run by `paper_bench/run_sig.sh` (r1, invalid timings) and `paper_bench/run_wsl_paired.sh` (r3, valid timings; experiment_log §6.12) |
+| identity check | the authors' `sigspatial_fut_decider_computed_distances.check` (delta* of their 1 000 pairs) is reproduced by all three arms to within 1.33e-8 on every pair (`original` on 998 of the 1 000: two pairs exceed 12 GB; see experiment_log §6.9 and §6.12; correction (2026-10-21): that failure comes from `original/`'s base-case modification, the authors' code finishes both pairs under 5 GB, [REPORT.md](../paper_bench/authors_check/REPORT.md) §4.2); the authors' 23 decider files `sigspatial_fut_decider_<l>_<sign>.txt` are copied unchanged to `paper_bench/queries/sigspatial_paperq_*` and run by `paper_bench/run_sig.sh` (r1, invalid timings) and `paper_bench/run_wsl_paired.sh` (r3, valid timings; experiment_log §6.12) |
 
 ## sigspatial_subset/ — **101 of the 20 199 curves** (subset!) — NOT INCLUDED in this branch
 
@@ -53,7 +55,7 @@ and the recorded source commits / checksums.
 | identity | same files, same format (EPSG:3857 metres, header `x y k tid`, columns 3–4 ignored by the parser) as the paper's `sigspatial/file-NNNNNN.dat`; the authors' query files reference e.g. `file-000015.dat`, which is one of these 101 |
 | conversion | header line removed, exactly what the authors' `fetch_and_convert_data.py` does (`tail -n +2`) |
 | result | 101 curves, mean **201.0 vertices** (min 18, max 659) vs 247.8 over the full 20 199 |
-| caveat | the full `shortest-sf.tgz` (20 199 trajectories, ≈5 M points) could not be fetched from any reachable host.  Numbers on this subset are on genuine GIS Cup curves, but from 0.5 % of the set and slightly shorter on average.  To run the full set: download `https://www.martinwerner.de/files/shortest-sf.tgz`, strip the header of every `file-*.dat` into `paper_data/sigspatial/data/`, write `dataset.txt`, and point `paper_bench/gen_pairs.py` / `run_bench.sh` at it. |
+| caveat | Superseded (2026-10-21): the full set is now in `sigspatial/` above.  At the time, the full `shortest-sf.tgz` (20 199 trajectories, ≈5 M points) could not be fetched from any reachable host.  Numbers on this subset are on genuine GIS Cup curves, but from 0.5 % of the set and slightly shorter on average.  To run the full set: download `https://www.martinwerner.de/files/shortest-sf.tgz`, strip the header of every `file-*.dat` into `paper_data/sigspatial/data/`, write `dataset.txt`, and point `paper_bench/gen_pairs.py` at it. |
 
 ## Not included
 

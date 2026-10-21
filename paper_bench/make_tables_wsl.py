@@ -109,7 +109,9 @@ def table_d():
          f"on one vCPU, one process per pair and arm; proposed = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0. {n} pairs measured on",
          f"both arms. On the other 2 the baseline is OOM-killed even under a 12 GB limit (at {OOM_KILL_S[oom[0]]:.0f} s and {OOM_KILL_S[oom[1]]:.0f} s in an",
          "earlier run with the old clock, `sigspatial_lmf_original_oom_12gb.txt` in the archive; an approximate lower bound on its time),",
-         f"and the proposed arm finishes them in {oom_p[0]:.2f} s and {oom_p[1]:.2f} s. The rows below cover the {n} pairs.", "",
+         f"and the proposed arm finishes them in {oom_p[0]:.2f} s and {oom_p[1]:.2f} s. (Correction (2026-10-21): the OOM is an artifact of the modified `original/`; the authors'",
+         "code finishes both within 5 GB in 497.5 s and 338.0 s — [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.2.)",
+         f"The rows below cover the {n} pairs.", "",
          "| Algorithm | Time | Black-Box Calls |", "|---|--:|--:|"]
     L += table_rows("LMF, baseline", O, n, "Construction") + table_rows("LMF, proposed", P, n, "Maximal-set enumeration")
     L += ["", f"Per-instance speed-up: geometric mean {gm:.2f} [95 % bootstrap interval {gm_lo:.2f}, {gm_hi:.2f}], median {med:.2f}, faster on {faster}/{n};",

@@ -1,10 +1,12 @@
 # Candidate 6 — candidate5 made sound per box
 
+> Correction (2026-10-21): `original/` is a modified copy of the authors' code; its [0, f(τ_start)] base-case search is the repo's modification (the authors' code bisects [max(0, f(τ_B) − d_B/2), f(τ_B)] inside the box). See [`../paper_bench/authors_check/REPORT.md`](../paper_bench/authors_check/REPORT.md).
+
 Candidate 6 is **candidate5 with its base case repaired**.  candidate5's
 maximal-region emitter ignores the discs that contain the whole search box; its
 witnesses (MEC centres) may then fall outside those discs, and the base case can
-answer NO for a box that contains a YES translation.  The authors' `original`
-has a second, independent defect in the LMF base case.  Both show up as wrong
+answer NO for a box that contains a YES translation.  `original/` (a modified
+copy of the authors' code) has a second, independent defect in the LMF base case.  Both show up as wrong
 answers on constructed inputs (section 2); neither showed up on the paper's data.
 
 Nothing outside the base case changes: the same divide-and-conquer driver, disc
@@ -87,7 +89,7 @@ Characters (1,000 pairs).
 | env | default | meaning |
 |---|---|---|
 | `MAXREGION_FIX` | `union` | `union` \| `box` \| `none` (= candidate5) \| `full` \| `aware` \| `lazy` |
-| `N6_RANGE` | `1` | `0` restores the authors' LMF base-case search |
+| `N6_RANGE` | `1` | `0` restores `original/`'s LMF base-case search (a repo modification, not the authors') |
 | `MAXREGION_EXACT`, `MAXREGION_SLACK`, `MAXREGION_BAND`, `MAXREGION_DP_LIMIT`, `MAXREGION` | as candidate5 | the paper configuration is `MAXREGION_EXACT=1 MAXREGION_SLACK=0` |
 
 `full`: box-containing discs added to the emitter's input.  `aware`: those
@@ -153,7 +155,7 @@ the component plus the box edges); `overflow = 0` throughout.
 ## 6. Reproducing
 
 ```
-bash _c6_build.sh                                          # -> ~/b_candidate6
+bash _c6_build.sh                                          # -> ~/b_candidate5 (sic: overwrites candidate5's build)
 ARMS="original candidate5 candidate6" bash paper_bench/build.sh
 cmake -S candidate6/tests -B ~/b_c6_tests -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_CXX_FLAGS="-include cstdint -include array -include cstddef"

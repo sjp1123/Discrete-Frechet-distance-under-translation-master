@@ -11,10 +11,12 @@ cut limit 12), `MEASUREMENT` counters/timers read per query.
 `std::chrono::steady_clock` (monotonic). The authors' code used `high_resolution_clock`, which
 libstdc++ defines as `system_clock`; under WSL2 that clock is stepped by several hundred ms up to
 ~1 s at Hyper-V time syncs, which corrupted the first WSL runs (negative instance times; `experiment_log` 6.12).
-Only the measurement changed; the algorithms are untouched. The container runs predate the change
+The clock change touches only the measurement, not the algorithms. The container runs predate the change
 and show no clock anomaly in 331,600 rows: `raw_characters_uci_lmf.tar.gz`, `raw_characters_uci_lmf_r2.tar.gz`,
 `raw_characters_uci_decider.tar.gz`, `raw_characters_uci_fpsens.tar.gz`. (`raw_characters_uci_decider_r2.tar.gz` is a
 WSL run with invalid timings; `raw_characters_uci_decider_r3.tar.gz` is its valid WSL re-measurement.)
+
+> **Correction (2026-10-21):** `original/` itself is a modified copy of the authors' code (its base case drops the search box); see [../BASELINE_NOTICE.md](../BASELINE_NOTICE.md) and [authors_check/REPORT.md](authors_check/REPORT.md) §2–3.
 
 ```
 bash paper_bench/build.sh              # -> ~/b_pb_original/paper_bench, ~/b_pb_candidate5/paper_bench
@@ -44,7 +46,7 @@ mirror-order data sets and the random-pair runs live in the full branch.
 * **Value computation (LMF)** — `calcDistance2`, the paper's main algorithm, per pair:
   time, black-box calls, the n6 arrangement/decider timers, the phase-2 timers.
 * **Decision problem** — `lessThan(δ)`, the paper's decider benchmark: 23 query sets per
-  benchmark, δ = (δ*−ε)(1−b^l), l=−10…−1 (answer must be *no*) and δ = (δ*+ε)(1+b^l),
+  benchmark, δ = (δ\*−ε)(1−b^l), l=−10…−1 (answer must be *no*) and δ = (δ\*+ε)(1+b^l),
   l=−10…2 (answer must be *yes*), with b = 2 in the authors' shipped files (`paperq`) and
   b = 4 in the paper's text (`paperq4`); time, black-box calls, the phase-1 stage timers.
 
@@ -69,7 +71,8 @@ mirror-order data sets and the random-pair runs live in the full branch.
   (r2 = back-to-back re-measurement, used in Table C and the abstract), Characters decider r1. WSL (user PC): Sigspatial
   r1 and the decider r2 have invalid timings (clock steps); r3 is the paired re-measurement and the only valid WSL timing.
   `raw_sigspatial_lmf_r3.tar.gz` also holds `sigspatial_lmf_rss_r3.txt` (peak RSS) and
-  `sigspatial_lmf_original_oom_12gb.txt` (the baseline's kill times on the two pairs above 12 GB).
+  `sigspatial_lmf_original_oom_12gb.txt` (the baseline's kill times on the two pairs above 12 GB; correction (2026-10-21):
+  a failure of the modified `original/` only, the authors' code finishes both under 5 GB, [authors_check/REPORT.md](authors_check/REPORT.md) §4.2).
 * `results/TABLES_uci.md` — paper-format tables (A-C container, D-E WSL r3); `RESULTS_uci.md`, `RESULTS_uci_r2.md`,
   `RESULTS_sig.md` — per-set summaries; `REPRO_check.md`, `VERIFY_uci.md` — reproduction and data-identity checks.
 
@@ -81,7 +84,7 @@ python3 paper_bench/plan_wsl_c7.py <plan_dir> 8                           # jobs
 bash paper_bench/run_wsl_c7.sh <plan_dir> ~/wsl_c7                         # 3 arms back-to-back per job on one pinned vCPU
 (cd ~/wsl_c7 && tar czf <repo>/paper_bench/results/raw_c7_timing.tar.gz lmf_chars lmf_sig decider rss rc.txt log.txt)
 python3 paper_bench/analyze_c7.py                                          # -> results/C7_timing.md
-bash paper_bench/c7_verify/verify.sh                                       # verification -> results/C7_report.md
+bash paper_bench/c7_verify/verify.sh                                       # verification -> ~/c7_verify_out (summarize.sh); written up in results/C7_report.md
 ```
 
 * `results/C7_report.md` — the audit's reproducers, exact-reference fuzzing and near-threshold real data on candidate7.

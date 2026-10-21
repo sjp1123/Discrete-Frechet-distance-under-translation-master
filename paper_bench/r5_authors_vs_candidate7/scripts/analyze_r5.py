@@ -142,6 +142,12 @@ def lmf_results():
     w(f"- 블랙박스 호출: 저자 코드 {fnum(S(cb, 'bbcalls'))}회 — 논문 Table 4는 {fnum(PAPER_T4['bbcalls'])}회"
       f"({'같다' if int(S(cb, 'bbcalls')) == PAPER_T4['bbcalls'] else '다르다'}).")
     w(f"- Arrangement algorithm 단계 비중: 기존 {arr_b:.1f} % → 제안 {arr_p:.1f} %. 바꾸지 않은 세 단계(전처리·Lipschitz 호출·배열 추정)가 제안 방법 시간의 {unch:.1f} %다.")
+    # stage timer gap (2026-10-21): calcDistance2 leaves FUT_BLACKBOX2 running when a box is pruned (`continue`), so
+    # that time is in no stage; total - sum of the four stages, per arm and benchmark
+    def gap(rows): return S(rows, "time_ms") - sum(S(rows, c) for c in ("pre2_ms", "bb2_ms", "disc2_ms", "arr2_ms"))
+    w(f"- (2026-10-21) 네 단계의 합은 Time보다 작다: 저자 코드 / candidate7에서 Characters {fnum(gap(cb))} / {fnum(gap(cp))} ms, "
+      f"Sigspatial {fnum(gap(sb))} / {fnum(gap(sp))} ms. 대부분 Lipschitz 단계 타이머 결함(버려지는 상자에서 `FUT_BLACKBOX2`가 멈추지 않음, "
+      f"[`README.md`](README.md#측정-주의--lipschitz-단계-타이머-2026-10-21))이고, 이를 Lipschitz 호출로 보면 위 비중은 약 {100 - arr_p:.0f} %다.")
     w("- 제안 방법의 Construction 행은 CGAL 배열 구성 대신 극대 집합·증인점 열거 시간이고, 그 아래 Black-box calls는 증인점에서의 판정이다.\n")
     w("## 2. Sigspatial — [BKN20] Table 4 형식 (1,000 인스턴스 합, Table 4에는 없는 벤치마크)\n")
     lmf_table(w, sb, sp); w("")

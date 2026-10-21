@@ -28,7 +28,7 @@ own, collected in `paper_bench/c7_verify/`. To reproduce everything below, run
 
 | harness | instances / queries | result |
 |---|---|---|
-| candidate6's own tests: box predicates; single-point family (seeds 1–30,000 at (6,6), 1–20,000 at (12,12), decider and LMF); clustered family 1–20,000 | 300,000 predicate cases; 70,000 decider + 20,000 LMF instances; 20,000 pairs | 0 mismatches, 0 fails, 0 zero answers |
+| candidate6's own tests: box predicates; single-point family (decider: seeds 1–50,000 at (6,6) and 1–20,000 at (12,12); LMF: seeds 1–20,000 at (6,6)); clustered family 1–20,000 | 300,000 predicate cases; 70,000 decider + 20,000 LMF instances; 20,000 pairs | 0 mismatches, 0 fails, 0 zero answers |
 | `test_exact_ref` (exact brute force over all candidate translations), families 1–5 incl. the seeds of the F08 abort and the F03 hangs | 22,000 instances, 257,570 decider queries | 0 value errors (max \|v − δ*\| = 1.34e-8), 0 wrong decisions, no abort, no hang |
 | `fuzz_oracle` (independent exact oracle, rational MEC over couplings): 11 generators with the default constructor, plus grid/dup/uniform with (depth, cut) = (6,3), (3,2), (40,3) and with `MAXREGION_DP_LIMIT=2` (forces the overflow fallback) | 46,000 instances, about 320,000 decider queries | FN = 0, FP = 0, value errors 0 (max 2.9e-8), crashes 0, timeouts 0 |
 

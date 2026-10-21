@@ -132,7 +132,8 @@ for tag, desc in (("paperq", "the authors' query files (factors 1 ± 2^l)"), ("p
         out.append(f"## Decision problem, {name}, {desc}\n")
         if DATASET == "sigspatial" and DEC_REP == "r3":
             out.append("candidate5 = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0 (run_wsl_paired.sh, r3); in RESULTS_uci.md it is the default configuration.\n")
-        if PAPER_DEC[ds][0] is not None: out.append(f"Paper Table 2 ({name}, authors' machine): {PAPER_DEC[ds][0]} ms and {PAPER_DEC[ds][1]:,} black-box calls per instance.\n")
+        if PAPER_DEC[ds][0] is not None: out.append(f"Paper Table 2 ({name}, authors' machine): {PAPER_DEC[ds][0]} ms and {PAPER_DEC[ds][1]:,} black-box calls per instance"
+                                                    + (" (4^l protocol; compare with the 4^l section below)" if tag == "paperq" else "") + ".\n")
         out.append("| set | expected | n | original ms/instance | candidate5 ms/instance | ratio | bb calls orig | bb calls c5 | wrong (orig / c5) | arms disagree |")
         out.append("|---|---|--:|--:|--:|--:|--:|--:|--:|--:|")
         out += table

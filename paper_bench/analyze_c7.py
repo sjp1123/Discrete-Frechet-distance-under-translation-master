@@ -83,7 +83,9 @@ def main():
     bad_rc = [l for l in rc.splitlines() if "rc=" in l and not l.endswith("rc=0")]
     skipped = [l for l in rc.splitlines() if "skipped" in l]
     w(f"Process exits: {len([l for l in rc.splitlines() if l.endswith('rc=0')]):,} with rc=0; "
-      f"{len(bad_rc)} non-zero; {len(skipped)} skipped (the original on the 2 Sigspatial pairs that needed > 12 GB in r3).")
+      f"{len(bad_rc)} non-zero; {len(skipped)} skipped (the original on the 2 Sigspatial pairs that needed > 12 GB in r3). "
+      "(Correction (2026-10-21): the > 12 GB is an artifact of the modified `original/`; the authors' code finishes both pairs "
+      "within 5 GB in 497.5 s and 338.0 s — [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.2.)")
     for l in bad_rc:
         w(f"- `{l}`")
     w("")
@@ -156,7 +158,7 @@ def main():
         if task == "lmf_sig":
             only = [k for k in R["candidate7"] if k not in R["original"]]
             if only:
-                w("Pairs without an original time (skipped: > 12 GB in r3): " + "; ".join(
+                w("Pairs without an original time (skipped: > 12 GB in r3; correction (2026-10-21): an artifact of the modified `original/`, see above): " + "; ".join(
                     f"{R['candidate7'][k]['file1']}/{R['candidate7'][k]['file2']} candidate7 {f(R['candidate7'][k],'time_ms')/1000:.2f} s, "
                     f"value {f(R['candidate7'][k],'value'):.6f}" for k in only) + ".\n")
             top = sorted(common, key=lambda k: -t["original"][k])[:4]

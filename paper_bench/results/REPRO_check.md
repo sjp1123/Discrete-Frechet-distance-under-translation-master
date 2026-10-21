@@ -2,6 +2,8 @@
 
 **Correction (2026-10-03):** `original/` is not the authors' unmodified code; its base case drops the search box (src/frechet_under_translation.cpp, src/fut_n6_algorithm.cpp). The authors' GitLab code (`authors_gitlab/`, 3bbb305) reproduces Table 4's 260,128,449 black-box calls exactly and Table 2 within 2.1 %. The −1.1 % (Table 4) and −13 to −16 % (Table 2) below come from that modification, not from floating point or sampling. See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md).
 
+**Correction (2026-10-21):** Section 1 is weak evidence of reproduction: on these 2^l files the authors' code itself gives 62.16 / 72.66 / 24.58 calls per instance (all-characters / same-characters / sigspatial) against the shipped 57.89 / 53.35 / 22.81, so the shipped `experiments/` outputs come from a different run than the paper's. See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.4.
+
 `original` is the authors' code (Bringmann, Kuennemann, Nusser, *When Lipschitz walks your dog*, ESA 2020; this repository's
 `original/`), built with their CMake flags (RelWithDebInfo, `-fopenmp`) and driven by `paper_bench/paper_bench.cpp`, which reads
 the same `MEASUREMENT` timers and counters as their `src/fut_paper_experiments.cpp` around `FrechetUnderTranslation` with the
@@ -63,8 +65,8 @@ Reading: on 56 of the 64 sets with a meaningful count (more than 0.5 calls per i
 within 2 % (50 to within 0.2 %). The 8 exceptions are mostly the sets closest to delta*, where the search has to
 exhaust its box and the branch-and-bound path is sensitive to floating-point decisions and to the arrangement kernel version:
 all-characters l=-9 minus (+4 %); all-characters l=-10 minus (+20 %); same-characters l=-8 minus (+5 %); same-characters l=-9 minus (+29 %); same-characters l=-10 minus (+107 %); same-characters l=-10 plus (+3 %); sigspatial l=-9 minus (+7 %); sigspatial l=-10 minus (+18 %).
-(The largest: same-characters l=-10 minus, 275 vs 569 calls; `experiment_log` 6.8 shows +28 % on one instance from compile
-flags alone.) These few sets carry nearly all of the difference in the totals (+6 %, +30 %, +6 %). Times differ by machine and,
+(The largest: same-characters l=-10 minus, 275 vs 569 calls; the compile-flag test of `experiment_log` 6.8 (`raw_characters_uci_fpsens.tar.gz`) changes single instances by up to
++58 % / −55 %.) These few sets carry nearly all of the difference in the totals (+6 %, +30 %, +6 %). Times differ by machine and,
 where our totals have more calls, by the extra work: x1.15 (all-characters, container, r1), x1.47 (same-characters, container, r1), x1.37 (sigspatial, user PC, WSL2, r3).
 
 ## 2. Paper Table 2 (4^l instances) vs `original` on our 4^l sets
@@ -97,7 +99,7 @@ comparable with this column.
 | - black-box calls | 545,442 ms | 367,421 ms | |
 
 The authors' own shipped `experiments/characters_valcomp_full_total_table.tex`, a different run of the same benchmark by the
-authors, reports 175,529,881 calls (8,358/inst), 33 % below their paper's 12,387; our 12,246 is within 1.1 % of the paper.
+authors, reports 175,529,881 calls (8,359/inst), 33 % below their paper's 12,387; our 12,246 is within 1.1 % of the paper.
 Call counts are therefore run-dependent even for the authors, and agreement at the percent level is as close as this
 quantity allows (`experiment_log` 6.8).
 

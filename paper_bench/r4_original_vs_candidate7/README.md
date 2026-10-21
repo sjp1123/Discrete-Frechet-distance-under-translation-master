@@ -1,8 +1,10 @@
 # r4 — 기존 구현(original) 대 candidate7, 값 계산(LMF)과 결정 문제 재측정
 
 > **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+>
+> **정정 (2026-10-21):** 저자 코드를 기준선으로 같은 방식(한 코어, 다른 코어 비움)으로 다시 잰 결과는 [`paper_bench/r5_authors_vs_candidate7/README.md`](../r5_authors_vs_candidate7/README.md)(r5)에 있다. r4의 기준선 수치는 r5가 대신한다.
 
-기존 구현(`original`, [BKN20] 저자 코드)과 제안 방법 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서
+기존 구현(`original`, [BKN20] 저자 코드의 수정판 — 위 정정 참조)과 제안 방법 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서
 **같은 서버 컨테이너·같은 방식**으로 잰 결과(2026-09-30 ~ 10-01). 값 계산 표는 [BKN20] Table 4 형식, 결정 문제 표는 Table 2 형식이고,
 그림은 그 논문의 Figure 6 형식이다. 자세한 표·검증·해석은 [`RESULTS.md`](RESULTS.md)(값 계산)와
 [`RESULTS_decider.md`](RESULTS_decider.md)(결정 문제)에 있다.
@@ -38,7 +40,7 @@
 
 두 구현을 새로 짠 독립 정확 오라클(17,553 인스턴스, 결정 질의 241,434), 실제 데이터 앵커(저자 δ*·번역 인증서, 5,100쌍),
 임계값 근처 질의 44,000, ASan/UBSan, 기존 감사 키트, 회귀·단위 테스트, 독립 코드 리뷰로 검증했다. candidate7은 측정 경로에서 오류 0,
-original은 무작위 입력에서 무한 루프·틀린 값·assert가 재현된다(논문 수치에는 영향 없음). 자세한 내용은
+original은 무작위 입력에서 무한 루프·틀린 값·assert가 재현된다(논문 수치에는 영향 없음). (정정 (2026-10-21): 결함은 논문 수치에 영향이 없지만, `original/` 수정 자체는 r4 기준선 수치를 바꾼다. Sigspatial 2쌍이 12 GB를 넘고, 나머지 998쌍의 총 시간은 저자 코드의 1.74배, 결정 문제 호출은 14–15 % 적다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2–4.3) 자세한 내용은
 [`verification/REPORT.md`](verification/REPORT.md).
 
 ## 그림
@@ -56,7 +58,7 @@ original은 무작위 입력에서 무한 루프·틀린 값·assert가 재현�
 캡션 예시: *Running time of LMF with the original arrangement construction (x) and with the proposed
 maximal-set enumeration (y) on every instance; dashed: equal time. Left: the 21,000 Characters instances of
 [2, Table 4]. Right: the Sigspatial decider pairs of [2] on the full 20,199-curve set, without the 2 pairs on
-which the original implementation exceeded 12 GB of memory. Both panels were measured on the same machine.*
+which the original implementation exceeded 12 GB of memory. Both panels were measured on the same machine.* (정정 (2026-10-21): 12 GB 초과는 수정판 `original/`의 문제이고, 저자 코드는 두 쌍을 5 GB 안에서 끝낸다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2. 저자 코드 기준 그림은 [`r5_authors_vs_candidate7/`](../r5_authors_vs_candidate7/README.md)에 있다.)
 
 ## 측정 환경과 방식
 

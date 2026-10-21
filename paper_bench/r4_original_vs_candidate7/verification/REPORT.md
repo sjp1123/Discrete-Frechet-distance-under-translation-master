@@ -8,15 +8,15 @@
 
 **candidate7.** 논문이 쓰는 두 진입점, 값 계산 `calcDistance2`(LMF)와 결정 문제 `lessThan`에서 오답, 크래시, 무한 루프를 하나도 찾지 못했다.
 - **새 오라클 비교:** 이번에 새로 짠 독립 정확 오라클과 17,553개 인스턴스(값 17,553개, 결정 질의 241,434개)에서 비교했다. 실제 곡선을 잘라 만든 인스턴스, 1e-3~1e8 규모의 좌표, 퇴화·동률 입력을 모두 포함한다.
-- **실제 데이터:** 5,100쌍의 값을 저자 δ*와 대조하고 번역 인증서를 확인했다. δ* 바로 옆 질의 44,000개도 돌렸다.
+- **실제 데이터:** 3,000쌍(original은 2,998쌍)의 값을 저자 δ\*와 대조하고, 5,100쌍의 번역 인증서를 확인했다. δ\* 바로 옆 질의 44,000개도 돌렸다.
 - **기존 검증:** ASan/UBSan, 기존 감사 키트, candidate7 회귀 테스트, 저자 단위 테스트를 모두 통과했다.
 
 남는 한계는 세 가지이고, 모두 original도 똑같이 갖는다.
-1. **동률·해상도 이하 간격.** δ가 δ*와 정확히 같거나 좌표의 배정밀도 해상도보다 가까우면(δ − δ* < 16·u·(|좌표| + δ)) NO가 나올 수 있다. 1 ulp만 올려도 YES다.
-2. **극단적 근-퇴화 입력에서의 느림.** 점이 10⁻⁷ 이내로 뭉친 군집 입력에서는 n, m ≤ 8인데도 값 계산이 최대 55 s 걸린다. original도 최대 50 s다.
+1. **동률·해상도 이하 간격.** δ가 δ\*와 정확히 같거나 좌표의 배정밀도 해상도보다 가까우면(δ − δ\* < 16·u·(|좌표| + δ)) NO가 나올 수 있다. 1 ulp만 올려도 YES다.
+2. **극단적 근-퇴화 입력에서의 느림.** 점이 10⁻⁷ 이내로 뭉친 군집 입력에서는 n, m ≤ 8인데도 값 계산이 최대 66 s 걸린다. original도 최대 50 s다.
 3. **측정에 쓰지 않는 진입점의 버그.** 이분 탐색 기준선 `calcDistance`가 짧은 곡선에서 값을 크게 틀린다(0.9 대신 1.5). 저자 코드에서 물려받은 버그로 두 구현에 똑같이 있다.
 
-**original(저자 코드).** 감사에서 문서화된 결함들이 이번에 무작위 입력에서 그대로 재현됐다. 모두 candidate7에서는 사라진다.
+**original(수정판).** 감사에서 문서화된 결함들이 이번에 무작위 입력에서 그대로 재현됐다. 모두 candidate7에서는 사라진다. (정정 (2026-10-21): 아래 틀린 값 가운데 재방문 곡선의 큰 값 7쌍은 `original/` 수정에서만 생긴다. 같은 인스턴스에서 저자 코드는 revisit 값 오답이 0 근처 값 2쌍뿐이다. 다만 틀린 NO(cluster 2개), 무한 루프(cluster 31·revisit 32개), 1e8 평행이동의 큰 값(19쌍)은 저자 코드에도 있다 — [`authors_check/REPORT.md`](../../authors_check/REPORT.md) 4.5)
 - **무한 루프(결함 C):**
   - 군집·재방문 인스턴스에서 결정 질의 86개
   - 실제 Sigspatial 데이터의 δ*±10⁻⁶ 질의 16개
@@ -27,11 +27,11 @@
   - 키트 재현 입력
 - **assert 크래시(결함 F):** 재방문 인스턴스 2쌍, 키트 `one_4697`
 - **틀린 NO:** 군집 7개, 1e8 평행이동 10개, 키트(작은 depth/cut 설정) 463개
-- **이분 탐색 무한 반복(결함 D):** 좌표 6.7e7 이상
+- **이분 탐색 무한 반복(결함 D):** 좌표 2^24(≈1.7e7, 키트 `circ_g3`)와 6.7e7 이상
 - **assert(결함 H):** 1.4e7 평행이동
 
-**논문 수치에는 영향이 없다.** 실제 데이터의 모든 측정 인스턴스에서 두 구현 모두 오답이 없었다.
-- **값:** 저자 δ*와 1.33×10⁻⁸ 이내, 두 구현끼리 8.6×10⁻⁹ 이내였다.
+**논문 수치에는 영향이 없다.** 실제 데이터의 모든 측정 인스턴스에서 두 구현 모두 오답이 없었다. (정정 (2026-10-21): 결함은 논문 수치에 영향이 없지만, `original/` 수정 자체는 r4 기준선 수치를 바꾼다. Sigspatial 2쌍이 12 GB를 넘고, 나머지 998쌍의 총 시간은 저자 코드의 1.74배, 결정 문제 호출은 14–15 % 적다 — [`authors_check/REPORT.md`](../../authors_check/REPORT.md) 4.2–4.3)
+- **값:** 저자 δ*와 1.33×10⁻⁸ 이내, 두 구현끼리 9.3×10⁻⁹ 이내였다(r4 Characters 21,000쌍 기준, 앵커 5,100쌍에서는 8.6×10⁻⁹).
 - **번역 인증서:** 보고한 평행이동에서의 DFD가 값보다 최대 1.4×10⁻⁸ 크다.
 - **결정 문제:** r4의 138,000 질의가 모두 정답이었다.
 
@@ -45,7 +45,7 @@
 | 2 | 실제 데이터 앵커 | 5,100쌍 (Characters 4,100 + Sigspatial 1,000/998) | 저자 δ*와 ≤1.33e-8, 인증서 ≤1.06e-8, 위반 0 | 저자 δ*와 ≤1.33e-8, 인증서 ≤1.38e-8, 위반 0 |
 | 3 | 임계값 근처 실제 데이터 (v ± 1e-6) | 44,000 질의 | 오답 0, 미종료 0 | 오답 0, 미종료 16 (Sigspatial) |
 | 4 | ASan + UBSan 빌드 | 30,191 인스턴스·질의 (실제 데이터 + 8개 가족) | 보고 0 | 메모리 오류 0. UBSan 520건은 모두 CGAL 5.6 헤더(배열 DCEL 다운캐스트) |
-| 5 | 기존 감사 키트 (`c7_verify`, QUICK = 1/10 규모) | 53개 작업 | 전부 통과 | 결함 C, D, F, H 재현, 값 오류 16, 틀린 NO 463 (아래 3절) |
+| 5 | 기존 감사 키트 (`c7_verify`, QUICK = 1/10 규모) | 52개 작업 | 전부 통과 | 결함 C, D, F, H 재현, 값 오류 16, 틀린 NO 463 (아래 3절) |
 | 6 | candidate7 회귀 테스트 (`candidate7/tests`) | 15개 작업 | 전부 통과 | 해당 없음 |
 | 7 | 저자 단위 테스트 `testFrechetUnderTranslation` (축소) | Sigspatial 20곡선 = 210쌍, 격자 101×101 | 통과 | 통과 |
 | 8 | 독립 코드 리뷰 (서브에이전트, 읽기 전용) + 재현 | candidate7 변경분 전체, original 기저 사례 | 측정 경로 결함 없음. 저위험 지적 2건 (3절 #6, #7) | 문서화된 결함 확인. 새 결함 2건 (#1, #5) |
@@ -66,8 +66,8 @@
 - 걸러내기 허용 오차를 바꾼 두 판을 303개 인스턴스에서 비교했다. 차이는 거의 0인 사례 하나뿐이었고(3.97e-15 대 3.86e-15), 이런 오차는 항상 위쪽으로만 난다.
 - 이 정도 오차는 판정 기준(아래)에 영향이 없다.
 
-**인스턴스 가족.** 가족마다 250~1,500개, 곡선 길이는 1~12, 차분점은 최대 144개다.
-- **무작위:** uniform, grid(정수 좌표, 동률·공원), cluster(10⁻⁹~10⁻² 반경으로 뭉친 점), collinear, copy(평행이동 사본, 잡음 0~10⁻³), singleton, revisit(같은 점을 다시 지나는 곡선)
+**인스턴스 가족.** 가족마다 250\~1,500개(review만 3개), 곡선 길이는 1\~12, 차분점은 최대 144개다.
+- **무작위:** uniform, grid(정수 좌표, 동률·공원), cluster(10⁻⁹\~10⁻² 반경으로 뭉친 점), collinear, copy(평행이동 사본, 잡음 0\~10⁻³), singleton, revisit(같은 점을 다시 지나는 곡선), medium_uniform(uniform, 8\~12점)
 - **좌표 규모:** offset_sig(좌표 1.36e7), big(±1e5), tiny(±1e-3)
 - **실제 곡선에서 잘라냄:** real_chars, real_sig, medium_real_chars, medium_real_sig(8~12점)
 - **곡선 사이 거리:** far_t_1e7, far_t_1e8, far_t_sig(곡선끼리 1.4e7~1e8 떨어짐)
@@ -82,7 +82,7 @@
 | 결정, δ < δ* − (1.5e-8 + 1e-15·M) | 반드시 NO (구현의 허용 오차 9e-9와 반올림을 감안) |
 | 결정, 그 사이 | 판정하지 않고 따로 센다 (동률·해상도 이하) |
 
-결정 질의는 인스턴스마다 12~14개다.
+결정 질의는 인스턴스마다 8~14개다(δ* = 0이면 8개).
 - **YES 쪽:** δ*·{2, 1+1e-2, 1+1e-4, 1+1e-6}, δ* + 2e-8, 정확한 동률 δ* 자체, δ* + 1e-12
 - **NO 쪽:** δ*·{0.5, 1−1e-2, 1−1e-4, 1−1e-6}, δ* − 5e-8, δ* − 2e-7, 동률 바로 아래
 
@@ -117,7 +117,7 @@ original의 실패가 몰린 곳은 다음과 같다.
 
 | 구현 | Characters 42,000 | Sigspatial 2,000 |
 |---|---|---|
-| candidate7 | 오답 0, 미종료 0 | 오답 0, 미종료 0 (최대 21 s) |
+| candidate7 | 오답 0, 미종료 0 | 오답 0, 미종료 0 (최대 28 s) |
 | original | 오답 0, 미종료 0 | 오답 0, **미종료 16** |
 
 original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candidate7이 1.7 s에 끝냈다. 같은 질의를 original로 10분 넘게 돌린 뒤 gdb로 스택을 떠 보니, depth-limit 분기(`frechet_under_translation.cpp:469` `computeCutCenters` → `cut_centers.size() == 0` → `continue`)를 반복하고 있었다. 결함 C의 무한 루프다.
@@ -127,7 +127,7 @@ original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candi
 `-fsanitize=address,undefined`로 두 구현의 paper_bench를 빌드했다. 입력은 다음과 같다.
 - Characters 값 300 / 결정 2,300
 - Sigspatial 값 45 / 결정 460
-- 오라클 가족 8개에서 값 200~300 / 결정 2,000~4,000
+- 오라클 가족 8개에서 값 40\~300 / 결정 560\~4,200
 
 결과:
 - **candidate7:** 보고 0건.
@@ -136,7 +136,7 @@ original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candi
 ### 1.5 기존 키트 · 회귀 테스트 · 단위 테스트
 
 **감사 키트 `paper_bench/c7_verify` (QUICK, 원래 규모의 1/10, `results/kit_quick_*.txt`).**
-- **candidate7:** 53개 작업이 모두 통과했다.
+- **candidate7:** 52개 작업이 모두 통과했다.
   - exact_ref 2,200 인스턴스, fuzz_oracle 4,600 인스턴스: 오류 0
   - 감사 재현 입력 A~H: 모두 정상
 - **original:** 결함 재현 결과는 3절 표에 있다.
@@ -173,17 +173,17 @@ original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candi
 
 | # | 구현 | 내용 | 재현 | 논문 수치 영향 |
 |---|---|---|---|---|
-| 1 | original | 결정 문제 무한 루프 (결함 C: depth-limit 상자에 cut 원판이 없으면 `step()` 없이 `continue`) | 오라클 cluster 38, revisit 48. 실제 Sigspatial δ*±1e-6 16. 키트 `c_g4_f03`, `exact_f5b`, fuzz 5. 예: `cluster/00075` δ = δ*−5e-8 | 없음 (논문 질의는 모두 끝남) |
+| 1 | original | 결정 문제 무한 루프 (결함 C: depth-limit 상자에 cut 원판이 없으면 `step()` 없이 `continue`) | 오라클 cluster 38, revisit 48. 실제 Sigspatial δ\*±1e-6 16. 키트 `c_g4_f03`, `exact_f5b`, fuzz 7(작은 depth/cut 설정에서 5). 예: `cluster/00075` δ = δ\*−5e-8 | 없음 (논문 질의는 모두 끝남) |
 | 2 | original | 값 계산이 크게 틀림. 재방문 곡선에서 5e-8(정답 2.46, 3.04) 또는 +6e-5~+0.14. 곡선이 1e8 떨어지면 +2e-6~+1.64(17 %) | `revisit/00257`, `00883`, `00498`, `far_t_1e8/00352`, 키트 `exact_f2`(0.43), `sp_lmf` 10/2,000 | 없음 (실제 데이터 5,100쌍 값 정상) |
 | 3 | original | `calcDistance2`에서 assert `!init_search_box.empty()` (결함 F: 동률에서 고정 평행이동 판정기의 거짓 YES) | `revisit/00145`, `00689`, 키트 `one_4697`, `diag`(lt(e) = 1) | 없음 |
-| 4 | original | 틀린 NO (δ ≥ δ*(1+1e-6), δ* + 2e-8) | cluster 7, far_t_1e8 10, 키트 작은 depth/cut 설정 463 (결함 B) | 없음 (r4 138,000 질의 정답) |
+| 4 | original | 틀린 NO (cluster: δ\* + 1e-12·max(1, δ\*) 6개, δ\* + 2e-8 1개; far_t_1e8: δ\*(1+1e-6) 7개, δ\*(1+1e-4) 3개) | cluster 7, far_t_1e8 10, 키트 작은 depth/cut 설정 463 (결함 B) | 없음 (r4 138,000 질의 정답) |
 | 5 | original | 큰 좌표에서 이분 탐색 무한 반복(D), 1.4e7 평행이동에서 assert(H) | 키트 `hang_*`, `circ_g3*`, `h_g4_assert` | 없음 |
 | 6 | 양쪽 | 이분 탐색 진입점 `calcDistance`의 cut 원판 누락 (리뷰 #1) | 위 2절 | 없음 (LMF만 사용) |
 | 7 | 양쪽 | 동률(δ = δ*)이나 좌표 해상도 이하 간격에서 NO (리뷰 #5) | `review/00001`, `00002`, 오라클 가족의 동률 질의 | 없음 |
-| 8 | 양쪽 | 근-퇴화 군집에서 매우 느림 (n, m ≤ 8에서 값 계산 최대 55 s / 50 s) | `cluster/00584`, `00163` (`hang/`) | 없음 (성능) |
+| 8 | 양쪽 | 근-퇴화 군집에서 매우 느림 (n, m ≤ 8에서 값 계산 최대 66 s / 50 s) | `cluster/00584`, `00163` (`hang/`) | 없음 (성능) |
 | 9 | candidate7 | A′ 상한에서 중심 반올림 누락, 상자 없는 N6 경로 (리뷰 #6, #7) | 해상도 밖에서는 재현 안 됨 | 없음 |
 
-정정: #2의 revisit 큰 값 오답 7개와 Sigspatial 12 GB 실패는 `original/` 수정 때문이며 저자 코드에는 없다(계측: original은 같은 쌍에서 전역 상한을 42–2,491번 올리고 저자 코드는 0번). 0 근처 값 2개, assert(F), 무한 루프(C), 원 잘림(B), 1e8 평행이동의 큰 값은 저자 코드에도 있다([`authors_check/REPORT.md`](../../authors_check/REPORT.md) 4.5).
+정정: #2의 revisit 큰 값 오답 7개와 Sigspatial 12 GB 실패는 `original/` 수정 때문이며 저자 코드에는 없다(계측한 5쌍에서 original은 전역 상한을 42–2,491번 올리고 저자 코드는 0번). 0 근처 값 2개, assert(F), 무한 루프(C), 원 잘림(B), 1e8 평행이동의 큰 값은 저자 코드에도 있다([`authors_check/REPORT.md`](../../authors_check/REPORT.md) 4.5).
 
 ## 4. 재현
 
@@ -192,9 +192,11 @@ original이 끝내지 못한 질의 하나(`file-020126`/`file-001221`)는 candi
 g++ -O2 -std=c++17 scripts/oracle.cpp -lgmpxx -lgmp -o oracle
 python3 scripts/gen.py inst 1 && python3 scripts/gen2.py inst2          # 인스턴스
 ./oracle inst/oracle_list.txt > inst/oracle_out.txt                      # 정확한 δ*
-python3 scripts/make_queries.py inst                                     # 결정 질의와 정답 부류
-python3 scripts/runner.py <arm> lmf|decider inst/<fam>.pairs|.q inst/<fam> res/<fam>_<lmf|dec>_<arm>.csv   # 미종료/크래시 내성
-python3 scripts/check.py                                                 # 표 1.1 (VD=inst2 VR=res2로 추가 가족)
+./oracle inst2/oracle_list.txt > inst2/oracle_out.txt                    # (추가 가족)
+python3 scripts/make_queries.py inst && python3 scripts/make_queries.py inst2   # 결정 질의와 정답 부류
+python3 scripts/runner.py <arm> lmf|decider inst/<fam>.pairs|.q inst/<fam> res/<fam>_<lmf|dec>_<arm>.csv   # 미종료/크래시 내성 (추가 가족은 inst2/, res2/)
+python3 scripts/check.py                                                 # 표 1.1 (기본 15가족)
+VD=inst2 VR=res2 python3 scripts/check.py review far_t_1e7 far_t_1e8 far_t_sig   # 표 1.1 추가 가족
 # 실제 데이터: patch_pb_translation.py로 만든 harness로 값과 t 기록 → dfdcert → real_check.py
 ```
 

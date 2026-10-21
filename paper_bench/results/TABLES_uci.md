@@ -1,5 +1,7 @@
 # Paper tables — the authors' data and instances (Characters UCI file; Sigspatial full set)
 
+**Correction (2026-10-21):** the baseline `original` is not the authors' unmodified code; `original/` is a modified copy whose base case drops the search box. The authors' GitLab code (`authors_gitlab/`, 3bbb305) reproduces Table 4's 260,128,449 black-box calls exactly, so the 1.1 % gap discussed below comes from that modification, not from floating point. See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md).
+
 Tables A-C (container, Characters): `RESULTS_uci_r2.md` for LMF (raw: `raw_characters_uci_lmf_r2.tar.gz`; original,
 candidate5_noslack and candidate5_exact measured back-to-back on one idle core of the same container instance) and
 `RESULTS_uci.md` for the decider (raw: `raw_characters_uci_decider.tar.gz`, earlier container instance —
@@ -16,12 +18,6 @@ Paper columns from Bringmann–Künnemann–Nusser, ESA 2020.
 |---|--:|--:|--:|--:|--:|---|--:|
 | all-characters | 16.77 | 7.46 | **2.25×** | 1,616 | 386 | 27.3 ms, 1,860 calls | 0 / 0 |
 | same-characters | 11.74 | 6.35 | **1.85×** | 997 | 247 | 18.7 ms, 1,159 calls | 0 / 0 |
-
-Note on the Paper Table 4 column: the black-box call count is not a deterministic function of the
-instance. Rebuilding the same `original` code with `-O3 -march=native` instead of the default
-RelWithDebInfo changes the count on 46 of the first 299 instances (total +0.10 %, one instance
-+28 %) while every value agrees to 1.4e-14 (`raw_characters_uci_fpsens.tar.gz`, experiment_log §6.8);
-the 1.1 % gap to the authors' 12,387.1 is within that environment sensitivity.
 
 ```latex
 \begin{table}[t]
@@ -49,6 +45,12 @@ same-characters & 11.74 & 6.35 & 1.85$\times$ &    997  & 247 & 18.7 / 1{,}159 \
 | Data set | n | Time / instance (ms) baseline | proposed | speed-up (sum / geomean) | Black-box calls / instance baseline | proposed | Construction share baseline → proposed | Paper Table 4 (baseline) | pairs off by > 10⁻⁷ |
 |---|--:|--:|--:|--:|--:|--:|---|---|--:|
 | Characters | 21,000 | 135.35 | 30.66 | **4.41× / 4.07×** [4.04, 4.10] | 12,246 | 3,146 | 60.1 % → 6.6 % | 140.0 ms, 12,387 calls, 52.3 % | 0 |
+
+Note on the Paper Table 4 column: the black-box call count is not a deterministic function of the
+instance. Rebuilding the same `original` code with `-O3 -march=native` instead of the default
+RelWithDebInfo changes the count on 46 of the first 299 instances (total +0.10 %, per-instance changes up to
++58 % / −55 %) while every value agrees to 1.4e-14 (`raw_characters_uci_fpsens.tar.gz`, experiment_log §6.8);
+the 1.1 % gap to the authors' 12,387.1 is within that environment sensitivity (superseded: see the correction under the title).
 
 ```latex
 \begin{table}[t]
@@ -83,7 +85,7 @@ algorithm = `FUT_ARRANGEMENT2` with Construction = `FUT_N6_ARR` and Black-box ca
 `FUT_N6_FRECHET` the predicate evaluations at the witnesses. Sub-rows omit untimed overhead.
 Exact-mode predicate statistics over the run: P2 197,226,956 evaluations, 0 rational
 re-evaluations; P3 289,116,753 evaluations, 74 rational re-evaluations; overflow 0.
-candidate5_noslack (same predicates without the filter) took 645,780 ms — the filter costs 0.3 %.
+candidate5_noslack (same predicates without the filter) took 645,780 ms — the filtered arm (643,923 ms) was 0.3 % faster, so the filter has no measurable cost.
 
 | Algorithm | Time | | Black-Box Calls |
 |---|---|--:|--:|
@@ -160,7 +162,9 @@ computation (`calcDistance2`), one measurement per instance; `run_wsl_paired.sh`
 on one vCPU, one process per pair and arm; proposed = candidate5 with MAXREGION_EXACT=1 MAXREGION_SLACK=0. 998 pairs measured on
 both arms. On the other 2 the baseline is OOM-killed even under a 12 GB limit (at 312 s and 203 s in an
 earlier run with the old clock, `sigspatial_lmf_original_oom_12gb.txt` in the archive; an approximate lower bound on its time),
-and the proposed arm finishes them in 0.52 s and 1.85 s. The rows below cover the 998 pairs.
+and the proposed arm finishes them in 0.52 s and 1.85 s. (Correction (2026-10-21): the OOM is an artifact of the modified `original/`; the authors'
+code finishes both within 5 GB in 497.5 s and 338.0 s — [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.2.)
+The rows below cover the 998 pairs.
 
 | Algorithm | Time | Black-Box Calls |
 |---|--:|--:|

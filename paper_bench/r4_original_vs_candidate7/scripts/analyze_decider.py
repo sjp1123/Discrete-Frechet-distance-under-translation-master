@@ -17,7 +17,13 @@ OUT = os.path.join(FOLDER, "RESULTS_decider.md")
 CORRECTION = ("> **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. "
               "`original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. "
               "저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 "
-              "[`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.\n")
+              "[`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.\n"
+              ">\n"
+              "> **정정 (2026-10-21):** 저자 코드를 기준선으로 같은 방식(한 코어, 다른 코어 비움)으로 다시 잰 결과는 "
+              "[`paper_bench/r5_authors_vs_candidate7/README.md`](../r5_authors_vs_candidate7/README.md)(r5)에 있다. "
+              "r4의 기준선 수치는 r5가 대신한다.\n")
+# calls of the authors' code (GitLab 3bbb305) on these 4^l query files vs [BKN20] Table 2 (authors_check/REPORT.md 4.3)
+AUTH_T2_DIFF = {"characters_uci_same": "+0.5 %", "characters_uci_all": "+1.6 %", "sigspatial": "−2.1 %"}
 O, P = "original", "candidate7"
 SETS = OrderedDict([("characters_uci_same", "same-characters"), ("characters_uci_all", "all-characters"), ("sigspatial", "Sigspatial")])
 TAGS = OrderedDict([("paperq4", "4^ℓ (논문 본문의 계수, 주 결과)"), ("paperq", "2^ℓ (저자가 배포한 질의 파일)")])
@@ -156,7 +162,10 @@ def main():
             w(f"- Arrangement algorithm 비중: 기존 {arr_o:.1f} % → 제안 {arr_p:.1f} %. 바꾸지 않은 Arrangement estimation이 기존 시간의 {est_o:.1f} %다.")
             if tag == "paperq4":
                 p = PAPER_T2[s]
-                w(f"- [BKN20]의 배열 알고리즘 비중은 {p[5]/p[0]*100:.1f} %, 배열 추정 비중은 {p[4]/p[0]*100:.1f} %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다).")
+                w(f"- [BKN20]의 배열 알고리즘 비중은 {p[5]/p[0]*100:.1f} %, 배열 추정 비중은 {p[4]/p[0]*100:.1f} %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다). "
+                  f"(정정 (2026-10-21): 기존 구현의 호출 수 차이({(st['co']/n)/(p[1]/23000)*100-100:+.1f} %, [BKN20] 대비)의 주원인은 "
+                  f"`original/` 수정이다. 같은 질의 파일에서 저자 코드는 {AUTH_T2_DIFF[s]}다 — "
+                  "[`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.3)".replace("(-", "(−"))
             w("")
 
     # ---------------- per level
