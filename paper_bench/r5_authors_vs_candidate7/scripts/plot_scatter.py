@@ -51,7 +51,7 @@ def save(fig, stem):
 def main():
     ch = load("characters_lmf_r5.tar.gz"); sg = load("sigspatial_lmf_r5.tar.gz")
     print(f"Characters {len(ch[0]):,}, Sigspatial {len(sg[0]):,} instances")
-    panels = [("Characters", ch, 3.0, 0.10, "fig_scatter_characters"), ("Sigspatial", sg, 7.0, 0.45, "fig_scatter_sigspatial")]
+    panels = [("Characters", ch, 5.0, 0.35, "fig_scatter_characters"), ("Sigspatial", sg, 7.0, 0.45, "fig_scatter_sigspatial")]
     for _, (x, y), s, a, stem in panels:
         fig, ax = plt.subplots(figsize=(3.35, 3.35)); draw(ax, x, y, s, a); save(fig, stem)
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.5))
