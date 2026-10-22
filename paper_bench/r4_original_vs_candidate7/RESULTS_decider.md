@@ -1,6 +1,8 @@
 # r4: 결정 문제 — 기존 구현(original) 대 candidate7, [BKN20] Table 2 형식
 
 > **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+>
+> **정정 (2026-10-21):** 저자 코드를 기준선으로 같은 방식(한 코어, 다른 코어 비움)으로 다시 잰 결과는 [`paper_bench/r5_authors_vs_candidate7/README.md`](../r5_authors_vs_candidate7/README.md)(r5)에 있다. r4의 기준선 수치는 r5가 대신한다.
 
 값 계산 r4(`RESULTS.md`)와 같은 서버 컨테이너·같은 방식으로 잰 결정 문제 결과다. 이 파일은 `scripts/analyze_decider.py`가 `raw/raw_decider_r4.tar.gz`에서 만든다.
 
@@ -41,7 +43,7 @@
 | &nbsp;&nbsp;∗ Black-box calls | 30,813 ms | 5,427 ms | 5.68× |
 
 - Arrangement algorithm 비중: 기존 50.9 % → 제안 7.9 %. 바꾸지 않은 Arrangement estimation이 기존 시간의 38.5 %다.
-- [BKN20]의 배열 알고리즘 비중은 52.7 %, 배열 추정 비중은 36.7 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다).
+- [BKN20]의 배열 알고리즘 비중은 52.7 %, 배열 추정 비중은 36.7 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다). (정정 (2026-10-21): 기존 구현의 호출 수 차이(−14.0 %, [BKN20] 대비)의 주원인은 `original/` 수정이다. 같은 질의 파일에서 저자 코드는 +0.5 %다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.3)
 
 ### all-characters (23,000질의, 오답 기존 0 / 제안 0)
 
@@ -60,7 +62,7 @@
 | &nbsp;&nbsp;∗ Black-box calls | 55,677 ms | 8,222 ms | 6.77× |
 
 - Arrangement algorithm 비중: 기존 58.3 % → 제안 9.7 %. 바꾸지 않은 Arrangement estimation이 기존 시간의 33.4 %다.
-- [BKN20]의 배열 알고리즘 비중은 61.3 %, 배열 추정 비중은 30.4 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다).
+- [BKN20]의 배열 알고리즘 비중은 61.3 %, 배열 추정 비중은 30.4 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다). (정정 (2026-10-21): 기존 구현의 호출 수 차이(−13.1 %, [BKN20] 대비)의 주원인은 `original/` 수정이다. 같은 질의 파일에서 저자 코드는 +1.6 %다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.3)
 
 ### Sigspatial (23,000질의, 오답 기존 0 / 제안 0)
 
@@ -79,7 +81,7 @@
 | &nbsp;&nbsp;∗ Black-box calls | 32,753 ms | 5,479 ms | 5.98× |
 
 - Arrangement algorithm 비중: 기존 18.3 % → 제안 1.9 %. 바꾸지 않은 Arrangement estimation이 기존 시간의 77.9 %다.
-- [BKN20]의 배열 알고리즘 비중은 20.6 %, 배열 추정 비중은 75.6 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다).
+- [BKN20]의 배열 알고리즘 비중은 20.6 %, 배열 추정 비중은 75.6 %다(인스턴스 파일이 달라 시간·호출은 직접 비교하지 않는다). (정정 (2026-10-21): 기존 구현의 호출 수 차이(−16.1 %, [BKN20] 대비)의 주원인은 `original/` 수정이다. 같은 질의 파일에서 저자 코드는 −2.1 %다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.3)
 
 ## 3. [BKN20] Table 2 형식 — 2^ℓ (저자가 배포한 질의 파일)
 

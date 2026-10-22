@@ -1,5 +1,7 @@
 # Candidate 5 — `original` + Čech maximal-region enumeration, Epeck fallback
 
+> Correction (2026-10-21): `original/` is a modified copy of the authors' code (its base case drops the search box and bisects [0, f(τ_start)]), and candidate 5 inherits that; see [`../paper_bench/authors_check/REPORT.md`](../paper_bench/authors_check/REPORT.md).
+
 Candidate 5 is **`original/` verbatim** with the candidate-region emitter swapped
 for candidate 4's Čech pipeline.  Nothing else changes: the same Epeck kernel,
 the same CGAL DCEL arrangement code, the same divide-and-conquer driver, kd-tree,
@@ -18,14 +20,17 @@ pipeline's value *after* the arrangement had already been made cheap.  Candidate
 
 | file | change |
 |---|---|
-| `lib/cgal_disk_arrangements/maximal_regions.h` | **copied verbatim from candidate4** — pipeline API |
-| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **copied verbatim from candidate4** — Stages 0–5 |
+| `lib/cgal_disk_arrangements/maximal_regions.h` | **copied verbatim from candidate4** — pipeline API; later (32c9cf3) the opt-in exact mode's `exact` param and counters |
+| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **copied verbatim from candidate4** — Stages 0–5; later (32c9cf3) the opt-in exact mode (`MAXREGION_EXACT`) |
+| `lib/cgal_disk_arrangements/test_exact_predicates.cpp` | **new** (later, bc1b22b) — boundary-case test for the exact-mode P2/P3 |
 | `lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp` | dispatcher + Epeck fallback; the original vertex enumeration kept verbatim on every pre-existing constructor |
 | `lib/cgal_disk_arrangements/disc_arrangement_traversal.h` | one added constructor (slack-aware) |
 | `lib/cgal_disk_arrangements/CMakeLists.txt` | build `maximal_regions.cpp` |
 | `src/fut_n6_algorithm.cpp` | **one line**: pass `epsilon_slack` to the traversal |
 
-`maximal_regions.{h,cpp}` are byte-identical to candidate 4's.  They depend only
+`maximal_regions.{h,cpp}` were byte-identical to candidate 4's when candidate 5
+was created (05a0f01); commit 32c9cf3 later added an opt-in exact mode
+(`MAXREGION_EXACT=1`, default off), so they now differ.  They depend only
 on `Point` / `Disc` / `Discs` from `disc_arrangement_traversal.h`, which
 `original/` already provides, so no adaptation was needed.
 
@@ -40,6 +45,7 @@ documented in `../candidate4/README.candidate4.md` §2 and are not repeated here
 | `MAXREGION_BAND` | `1e-12` | relative leniency on `r²` |
 | `MAXREGION_DP_LIMIT` | `20` | components larger than this go to the Epeck fallback |
 | `MAXREGION_SLACK` | *(from caller)* | override the predicate slack; `0` disables slack alignment |
+| `MAXREGION_EXACT` | `0` (off) | `1` = filtered P2/P3 with a `cpp_rational` fallback; band ignored (added in 32c9cf3, after the measurements below) |
 
 `MAXREGION=legacy` restores the original code path inside the same binary; §4
 below shows it reproduces `original`'s answers bit-for-bit at no measurable cost,
@@ -80,7 +86,7 @@ Arms: `A0` = `original`; `C5L` = candidate5 `MAXREGION=legacy`; `C5N` =
 `MAXREGION=cech MAXREGION_SLACK=0`; `C5` = `MAXREGION=cech` (default).
 
 > The curve files are not committed.  They were regenerated from the official
-> Geolife 1.3 zip with the tree's own `geolife_converter.py`.  Identity with
+> Geolife 1.3 zip with `authors_gitlab/test_data/benchmark/geolife_converter.py`.  Identity with
 > candidate 4's data is established by `original`'s answers being
 > **bit-identical on all 100 pairs** to the `A0` column of `_c4_bench.csv`
 > (exact Epeck output — one differing coordinate would move the 20th digit),
@@ -89,7 +95,7 @@ Arms: `A0` = `original`; `C5L` = candidate5 `MAXREGION=legacy`; `C5N` =
 
 | contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) | decider calls |
 |---|---|---|---|---|
-| **`A0` → `C5`** | **1.69× [1.52, 1.90]** | 48.2× [36.8, 63.4] | 36.9× [28.4, 47.9] | 4.49× [3.72, 5.44] |
+| **`A0` → `C5`** | **1.69× [1.52, 1.89]** | 48.2× [36.8, 63.4] | 36.9× [28.4, 47.9] | 4.49× [3.72, 5.44] |
 | pipeline alone (`A0/C5N`) | 1.24× [1.14, 1.34] | 22.4× | 17.0× | 2.70× |
 | slack given pipeline (`C5N/C5`) | 1.36× [1.22, 1.53] | 2.16× | 2.17× | 1.66× |
 | control (`A0/C5L`) | 1.00× [0.97, 1.01] | 0.98× | 0.98× | 1.000× |
@@ -127,8 +133,8 @@ Absolute over the 100 pairs:
 | `C5` candidate 5 | **41.56 s** | 0.66 s | 1.21 s | 40.35 s | 1 201 618 |
 
 **Candidate 4 and candidate 5 are indistinguishable** — 1.01× on the wall, CI
-[1.00, 1.02], and within 1% on every absolute total and on the decider-call
-count.  Once the Čech pipeline is in place, candidate 2's float rewrite buys
+[1.00, 1.02], within 2% on every absolute total (wall 1.2%, arrangement 1.5%,
+arr+fre 1.7%) and within 1% on the decider-call count.  Once the Čech pipeline is in place, candidate 2's float rewrite buys
 nothing: candidate 5 reaches the same end point from the untouched exact-Epeck
 tree.  What the rewrite *was* worth on its own is the 1.27× of row 1, and the
 pipeline supersedes it (`D1` → `C5` = 1.33× on top).
@@ -181,8 +187,9 @@ whole 1.44× coming from slack alignment.  On synthetic curves it is the other
 way round: the pipeline alone is 1.47× and slack alignment is not significant.
 
 Both readings are consistent, and the reason is what the pipeline replaces.  On
-candidate 2's double list the arrangement stage was already down to ~115 ms over
-100 pairs (X1 §3), leaving nothing for a faster emitter to win — only the search
+candidate 2's double list the arrangement stage was already down to ~625 ms over
+100 pairs (X1 §3, arm D1; 115 ms is D0, the same list with the maximal filter
+off), leaving nothing for a faster emitter to win — only the search
 trajectory could still move.  On `original` the Epeck arrangement *is* the
 dominant cost of the inner loop, so deleting it pays directly.  What the two
 data sets then decide is how much is *left* for slack alignment: on geolife the
@@ -217,8 +224,9 @@ fallback of §3, and the `C5L` bit-identity check.
   `original`, wall **0.84×–1.07×, median ≈ 1.00×**.  Same conclusion as
   candidate 4 §6, and the same remedy — implement §5 of the design note
   (Bron–Kerbosch + per-clique DP) before using `n6` as anything but a reference.
-* `CUT_LIMIT` above `MAXREGION_DP_LIMIT` disables the pipeline entirely and
-  leaves only the pre-pass overhead; see candidate 4 §7, which applies verbatim.
+* `CUT_LIMIT` above `MAXREGION_DP_LIMIT` lets components exceed the DP limit;
+  once they do, the pipeline is disabled entirely and only the pre-pass overhead
+  is left; see candidate 4 §7, which applies verbatim.
 
 ## 8. Reproducing
 
@@ -228,8 +236,9 @@ bash _build_one.sh original                         # -> ~/b_original  (baseline
 bash _c5_check.sh  test_cases/bench_small 15        # correctness gates
 
 # geolife_100 (real data).  The curve files are NOT committed: run
-# original/test_data/benchmark/fetch_and_convert_data.py, then _cp_manifest_data.sh
-# to stage the manifest's files in a native-FS ~/geodata.
+# authors_gitlab/test_data/benchmark/fetch_and_convert_data.py, then _cp_manifest_data.sh
+# to stage the manifest's files in a native-FS ~/geodata (_cp_manifest_data.sh
+# still hard-codes its source as original/test_data/benchmark/...; edit SRC).
 bash _c5_bench_geo.sh 100 3 ~/_c5/bench_geo.csv     # A0 vs C5L/C5N/C5
 python3 _c5_analyze.py ~/_c5/bench_geo.csv          # -> _c5_analysis_geo.txt
 

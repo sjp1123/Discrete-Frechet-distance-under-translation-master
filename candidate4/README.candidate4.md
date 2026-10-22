@@ -96,7 +96,7 @@ In `cech` mode `[sweep-stats]` reports `before == after == #emitted points`
 * exact tangency `d = 2r` under the closed (`≤`) convention.
 * isolated discs (the `|S| = 1` case).
 * DP-overflow hand-off.
-* **grid oracle** — 260×260 samples over random 8-disc sets: every observed
+* **grid oracle** — 261×261 samples over random 8-disc sets: every observed
   `S(p)` must be contained in some emitted region, the emitted family must be an
   antichain, and every witness must lie in every disc of its own region.
 
@@ -168,7 +168,8 @@ at `distance + epsilon_slack`, pairs the region's interior cannot.  One witness
 per region removes the accident and makes candidate 4 marginally *stricter*, which
 measured as a systematic `+5e-9` on the answer (≈ `epsilon_slack`, well inside the
 `ε = 1e-7` contract) — but it also pushed the divide-and-conquer search down more
-boxes, inflating the build count 1.6–2.9× and eating the per-build win:
+boxes, inflating the build count up to 2.9× (1.7–2.9× on four of the five pairs;
+13962/4238 unchanged at 486) and eating the per-build win:
 
 | pair | c2 wall | c4, no slack | c4, slack-aligned |
 |---|---|---|---|
@@ -234,8 +235,9 @@ trajectory fixed, which is why it read 1.15× as a hard ceiling.
 ### Global N6 path (`_c4_nsweep.sh`)
 
 On the standalone `n6` entry point the disc set is the full `n₁·n₂` product, so
-every component overflows the `2^m` DP (`max_comp` up to 196, `overflow` = one
-per build, `regions` = 0) and all the work goes to the legacy fall-back.
+every component overflows the `2^m` DP (`max_comp` = n₁·n₂ up to 784 at n = 28,
+`overflow` ≈ one per build, `regions` = 0 except one n = 8 run with 16) and all
+the work goes to the legacy fall-back.
 Result: **parity, 0.92×–1.07×, median ≈0.98×** over n = 6…28 — no gain, ~2–3%
 residual overhead from the Stage-0 pre-pass.  This is the price of not
 implementing §5 (below), and it is the regime where implementing it would pay.
@@ -262,8 +264,9 @@ Measured on geolife 13962/4238, 25 builds:
 
 Two silent traps, both now instrumented:
 
-* `CUT_LIMIT` **above** `MAXREGION_DP_LIMIT` disables candidate 4 completely and
-  leaves only the pre-pass overhead.  The shipped X3-b sweep (`_x3b_run.sh`) uses
+* `CUT_LIMIT` **above** `MAXREGION_DP_LIMIT` lets components exceed the DP limit;
+  once they do (`CUT_LIMIT` = 48 in the table), candidate 4 is disabled completely and
+  only the pre-pass overhead is left.  The shipped X3-b sweep (`_x3b_run.sh`) uses
   `CUT_LIMIT` 12/24/48, so this is reachable with existing scripts.  A one-shot
   `[maxregion]` warning now goes to stderr on the first overflow, and
   `overflow=` / `regions=` in `[maxregion-stats]` show it per run.

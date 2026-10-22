@@ -16,7 +16,7 @@ r4와 다른 것은 **기준선 하나**다. r4의 기준선 `original/`은 저�
 - Sigspatial 1,000쌍 전부를 쟀다. r4에서 기준선이 12 GB를 넘겨 빠졌던 2쌍(125·432번째)도 저자 코드는 5 GB 안에서 452.6 s, 388.2 s에 끝낸다. candidate7은 같은 쌍을 0.57 s, 2.32 s에 끝낸다.
 - 제안 방법이 빠른 인스턴스: Characters 20,095 / 21,000 (95.7 %), Sigspatial 925 / 1,000 (92.5 %).
 - 거리 값은 모든 쌍에서 10⁻⁷ 안에서 같다(최대 차이: Characters 1.35×10⁻⁸, Sigspatial 1.25×10⁻⁸).
-- 배열 알고리즘 단계만 놓고 보면 Characters 16.5×, Sigspatial 314×다. Characters의 총 시간 비가 3.75×에 머무는 이유는 바꾸지 않은 세 단계(전처리, Lipschitz 호출, 배열 추정)가 제안 방법 시간의 76.7 %를 차지하기 때문이다.
+- 배열 알고리즘 단계만 놓고 보면 Characters 16.5×, Sigspatial 314×다. Characters의 총 시간 비가 3.75×에 머무는 이유는 바꾸지 않은 세 단계(전처리, Lipschitz 호출, 배열 추정)가 제안 방법 시간의 76.7 %를 차지하기 때문이다. 단계 타이머 결함(아래 '측정 주의')으로 어느 단계에도 들어가지 않은 39.2 s를 Lipschitz 호출로 보면 이 비중은 약 82 %다.
 
 ## 요약 — 결정 문제 ([BKN20] Table 2 형식, 계수 1 ± 4^ℓ, 벤치마크마다 1,000쌍 × 23세트)
 
@@ -42,6 +42,10 @@ r4와 다른 것은 **기준선 하나**다. r4의 기준선 `original/`은 저�
 - 블랙박스 호출 수, 거리 값, 결정 문제의 답은 authors_check 실행과 모든 인스턴스에서 같다. 두 방식, Characters 21,000쌍, Sigspatial 1,000쌍, 결정 문제 69,000질의 전부가 그렇다. 달라진 것은 시간뿐이다.
 - 시간의 절댓값은 authors_check 때보다 약 10 % 길다(저자 코드 Characters 111.6 → 123.9 ms/쌍). 컨테이너가 다시 시작돼 다른 물리 기계에 놓였을 가능성이 있다. 그래서 절대 시간은 기계마다 다르다고 보고, 비교는 이 폴더 안의 비율로 한다.
 - 실행 순서의 영향은 작다. Characters 쌍별 기하평균이 저자 코드를 먼저 돌린 묶음에서 3.70×, candidate7을 먼저 돌린 묶음에서 3.74×다.
+
+## 측정 주의 — Lipschitz 단계 타이머 (2026-10-21)
+
+값 계산(`calcDistance2`)에서 `lessThanFixedTranslation(max + diag_dist)` 검사로 버려지는 상자는 `FUT_BLACKBOX2` 타이머를 멈추지 않고 `continue`로 빠져나가므로(`authors_gitlab/src/frechet_under_translation.cpp` 217–219, candidate7도 같다), 그 호출 시간은 어느 단계에도 들어가지 않는다. 총 시간 − 단계 합은 Characters 39,632 / 39,156 ms(저자 코드 / candidate7), Sigspatial 2,867 / 2,941 ms이고, 타이머를 고친 예비 실행에서는 이 차이의 약 92 %가 사라졌다. 결정 문제(`FUT_BLACKBOX1`은 `continue` 전에 멈춘다), 배열 알고리즘 단계의 비(16.5×, 314×), 총 시간은 영향을 받지 않는다. [BKN20] Table 4도 단계 합이 총 시간보다 49,623 ms 작아, 저자 코드의 같은 타이머와 맞는다.
 
 ## 그림
 
@@ -78,7 +82,7 @@ r4와 다른 것은 **기준선 하나**다. r4의 기준선 `original/`은 저�
 | `raw/sigspatial_lmf_r5.tar.gz` | Sigspatial 원시 CSV (쌍 s0001–s1000), 쌍 목록, `rc.txt`, `log.txt` |
 | `raw/decider_4l_r5.tar.gz`, `raw/decider_2l_r5.tar.gz` | 결정 문제 원시 CSV (질의 파일 69개 × 두 방식) |
 | `raw/r5_log.txt` | 전체 실행 시작·끝 시각 |
-| `scripts/run_r5.sh` | 측정 전체: `authors_check/scripts`의 `run_lmf3.sh`·`run_sig3.sh`·`run_dec3.sh`를 `ARMS="gitlab candidate7"`로 실행 |
+| `scripts/run_r5.sh` | 측정 전체: `authors_check/scripts`의 `run_lmf3.sh`·`run_sig3.sh`·`run_dec3.sh`와 `scripts/run_dec2.sh`(2^ℓ)를 `ARMS="gitlab candidate7"`로 실행 |
 | `scripts/run_dec2.sh` | 결정 문제 2^ℓ (`run_dec3.sh`와 같고 질의 파일만 다름) |
 | `scripts/analyze_r5.py` | `raw/` → `RESULTS.md`, `RESULTS_decider.md` |
 | `scripts/plot_scatter.py` | `raw/` → `fig_scatter*.{pdf,png}` |

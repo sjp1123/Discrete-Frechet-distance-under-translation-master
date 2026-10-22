@@ -2,7 +2,7 @@
 
 Machine: this PC (Intel Core Ultra 5 125H, WSL2 Ubuntu 22.04, g++ 11.4, CGAL 5.4, Boost 1.74), paper_bench built from the current sources of each arm (`RelWithDebInfo`, same flags). Every job (a chunk of 100 Characters pairs, one Sigspatial pair, or one decider query file) ran the three arms back-to-back on the same pinned vCPU, in an order rotated per job; 8 such streams ran in parallel (vCPUs 1,3,…,15). Clock: `steady_clock`. candidate7 and candidate5 run with `MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=0` (candidate7's defaults); original has no knobs. Raw data: `results/raw_c7_timing.tar.gz`.
 
-Process exits: 3,835 with rc=0; 0 non-zero; 2 skipped (the original on the 2 Sigspatial pairs that needed > 12 GB in r3).
+Process exits: 3,835 with rc=0; 0 non-zero; 2 skipped (the original on the 2 Sigspatial pairs that needed > 12 GB in r3). (Correction (2026-10-21): the > 12 GB is an artifact of the modified `original/`; the authors' code finishes both pairs within 5 GB in 497.5 s and 338.0 s — [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.2.)
 
 ## 1. Correctness
 
@@ -65,7 +65,7 @@ Times summed over the 998 pairs measured on all three arms (pairs measured on ev
 | original / candidate5 | 998 | 3,860.6 s | 84.4 s | **45.76×** | **2.47×** [2.36, 2.59] | 2.42× | 91.7 % |
 | candidate5 / candidate7 (cost of the fixes, <1 = slower) | 998 | 84.4 s | 86.2 s | **0.98×** | **1.02×** [1.00, 1.04] | 0.96× | 39.4 % |
 
-Pairs without an original time (skipped: > 12 GB in r3): file-003586.dat/file-002157.dat candidate7 0.66 s, value 5110.942581; file-002502.dat/file-016674.dat candidate7 2.67 s, value 3886.460162.
+Pairs without an original time (skipped: > 12 GB in r3; correction (2026-10-21): an artifact of the modified `original/`, see above): file-003586.dat/file-002157.dat candidate7 0.66 s, value 5110.942581; file-002502.dat/file-016674.dat candidate7 2.67 s, value 3886.460162.
 
 The total ratio is dominated by a few pairs: the 4 slowest original pairs are 88 % of the original total. Read the geometric mean and the median for the typical pair.
 

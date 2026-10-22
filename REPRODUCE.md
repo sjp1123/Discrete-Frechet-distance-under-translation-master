@@ -15,6 +15,9 @@ noise characterized in ENVIRONMENT.md §2 (median rep CV ≈ 4%).
   2.2 GB; obtain separately). Pair manifests are in `test_cases/geolife_100/`.
 - Copy the manifest's files to a native-FS dir `~/geodata` (avoids the /mnt/c
   per-exec overhead): `_cp_manifest_data.sh`.
+- Note (2026-10-21): most scripts below hard-code `ROOT=/mnt/c/Users/shiju/…` (or read
+  `/home/sjp/_x1/…`); edit those paths to run them elsewhere. Only `_build_one.sh` and
+  `reproduce.sh` locate the checkout themselves (`reproduce.sh` still calls the hard-coded scripts).
 
 ## 1. Build every arm
 

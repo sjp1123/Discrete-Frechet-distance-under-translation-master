@@ -68,6 +68,11 @@ L = ["# Does the `original` arm reproduce the ESA 2020 experiments? Three cross-
      "reproduces Table 4's 260,128,449 black-box calls exactly and Table 2 within 2.1 %. The −1.1 % (Table 4) and −13 to −16 % "
      "(Table 2) below come from that modification, not from floating point or sampling. "
      "See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md).", "",
+     # correction notice (2026-10-21): section 1 is weak evidence (authors_check/REPORT.md 4.4)
+     "**Correction (2026-10-21):** Section 1 is weak evidence of reproduction: on these 2^l files the authors' code itself gives "
+     "62.16 / 72.66 / 24.58 calls per instance (all-characters / same-characters / sigspatial) against the shipped 57.89 / 53.35 / 22.81, "
+     "so the shipped `experiments/` outputs come from a different run than the paper's. "
+     "See [paper_bench/authors_check/REPORT.md](../authors_check/REPORT.md) 4.4.", "",
      "`original` is the authors' code (Bringmann, Kuennemann, Nusser, *When Lipschitz walks your dog*, ESA 2020; this repository's",
      "`original/`), built with their CMake flags (RelWithDebInfo, `-fopenmp`) and driven by `paper_bench/paper_bench.cpp`, which reads",
      "the same `MEASUREMENT` timers and counters as their `src/fut_paper_experiments.cpp` around `FrechetUnderTranslation` with the",
@@ -118,8 +123,8 @@ L += ["", f"Reading: on {within2} of the {counted} sets with a meaningful count 
       f"within 2 % ({within02} to within 0.2 %). The {len(exceptions)} exceptions are mostly the sets closest to delta*, where the search has to",
       "exhaust its box and the branch-and-bound path is sensitive to floating-point decisions and to the arrangement kernel version:",
       "; ".join(exceptions) + ".",
-      f"(The largest: {worst[1]} l={worst[2][0]} {worst[2][1]}, {worst[3]:.0f} vs {worst[4]:.0f} calls; `experiment_log` 6.8 shows +28 % on one instance from compile",
-      f"flags alone.) These few sets carry nearly all of the difference in the totals ({', '.join(tot_diff)}). Times differ by machine and,",
+      f"(The largest: {worst[1]} l={worst[2][0]} {worst[2][1]}, {worst[3]:.0f} vs {worst[4]:.0f} calls; the compile-flag test of `experiment_log` 6.8 (`raw_characters_uci_fpsens.tar.gz`) changes single instances by up to",
+      f"+58 % / −55 %.) These few sets carry nearly all of the difference in the totals ({', '.join(tot_diff)}). Times differ by machine and,",
       "where our totals have more calls, by the extra work: " + ", ".join(time_ratio) + ".", "",
       "## 2. Paper Table 2 (4^l instances) vs `original` on our 4^l sets", ""]
 paper = {"all-characters": (628043, 42781931, 5, 50462, 191177, 385145, 237043, 120149),
@@ -156,7 +161,7 @@ L += ["", "Reading: our sets use the same 1,000 pairs as the shipped 2^l files w
       "| - construction | 1,537,500 ms (52.3 %) | 1,708,959 ms (60.1 %) | CGAL 5.6 here; Epeck kernel cost differs by version |",
       "| - black-box calls | 545,442 ms | 367,421 ms | |", "",
       "The authors' own shipped `experiments/characters_valcomp_full_total_table.tex`, a different run of the same benchmark by the",
-      "authors, reports 175,529,881 calls (8,358/inst), 33 % below their paper's 12,387; our 12,246 is within 1.1 % of the paper.",
+      "authors, reports 175,529,881 calls (8,359/inst), 33 % below their paper's 12,387; our 12,246 is within 1.1 % of the paper.",
       "Call counts are therefore run-dependent even for the authors, and agreement at the percent level is as close as this",
       "quantity allows (`experiment_log` 6.8).", "",
       "## Verdict", "",

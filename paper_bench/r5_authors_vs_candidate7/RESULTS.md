@@ -24,6 +24,7 @@
 
 - 블랙박스 호출: 저자 코드 260,128,449회 — 논문 Table 4는 260,128,449회(같다).
 - Arrangement algorithm 단계 비중: 기존 77.6 % → 제안 17.6 %. 바꾸지 않은 세 단계(전처리·Lipschitz 호출·배열 추정)가 제안 방법 시간의 76.7 %다.
+- (2026-10-21) 네 단계의 합은 Time보다 작다: 저자 코드 / candidate7에서 Characters 39,632 / 39,156 ms, Sigspatial 2,867 / 2,941 ms. 대부분 Lipschitz 단계 타이머 결함(버려지는 상자에서 `FUT_BLACKBOX2`가 멈추지 않음, [`README.md`](README.md#측정-주의--lipschitz-단계-타이머-2026-10-21))이고, 이를 Lipschitz 호출로 보면 위 비중은 약 82 %다.
 - 제안 방법의 Construction 행은 CGAL 배열 구성 대신 극대 집합·증인점 열거 시간이고, 그 아래 Black-box calls는 증인점에서의 판정이다.
 
 ## 2. Sigspatial — [BKN20] Table 4 형식 (1,000 인스턴스 합, Table 4에는 없는 벤치마크)

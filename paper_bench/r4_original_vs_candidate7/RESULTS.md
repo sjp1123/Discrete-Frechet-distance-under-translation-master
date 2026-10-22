@@ -1,8 +1,10 @@
 # r4: 기존 구현(original) 대 candidate7 — 값 계산(LMF), 한 컨테이너에서 측정
 
 > **정정 (2026-10-03):** 이 문서의 기준선 `original`은 [BKN20] 저자 코드 그대로가 아니다. `original/`의 `src/frechet_under_translation.cpp`·`src/fut_n6_algorithm.cpp`가 기저 사례에서 탐색 상자를 빼도록 수정되어 있다. 저자 코드([`authors_gitlab/`](../../authors_gitlab/), GitLab 3bbb305) 기준 수치는 [`paper_bench/authors_check/REPORT.md`](../authors_check/REPORT.md) 4절을 본다. 아래 수치는 수정판 기준 기록으로 남겨 둔다.
+>
+> **정정 (2026-10-21):** 저자 코드를 기준선으로 같은 방식(한 코어, 다른 코어 비움)으로 다시 잰 결과는 [`paper_bench/r5_authors_vs_candidate7/README.md`](../r5_authors_vs_candidate7/README.md)(r5)에 있다. r4의 기준선 수치는 r5가 대신한다.
 
-기존 구현(`original`, [BKN20] 저자 코드)과 제안 방법의 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서 같은 기계·같은 방식으로 쟀다. 인스턴스당 1회 측정. 표는 [BKN20] Table 4 형식이다. 이 파일은 `scripts/analyze.py`가 `raw/`에서 만든다.
+기존 구현(`original`, [BKN20] 저자 코드의 수정판 — 위 정정 참조)과 제안 방법의 최종형(`candidate7`)을 [BKN20]의 두 벤치마크에서 같은 기계·같은 방식으로 쟀다. 인스턴스당 1회 측정. 표는 [BKN20] Table 4 형식이다. 이 파일은 `scripts/analyze.py`가 `raw/`에서 만든다.
 
 - **Characters**: `characters_full` 21,000쌍 (`paper_bench/queries/characters_uci_lmf_pairs.txt`, 210파일 × 100쌍, 하네스 순서).
 - **Sigspatial**: 저자의 결정 문제 1,000쌍 (`paper_bench/queries/sigspatial_pairs.txt`, 전체 20,199곡선). 기존 구현은 12 GB를 넘는 2쌍(125·432번째, experiment_log §6.9)을 건너뛰었다. (정정: 수정판의 문제다. 저자 코드는 이 두 쌍을 5 GB 안에서 497.5 s, 338.0 s에 정답으로 끝낸다 — [`authors_check/REPORT.md`](../authors_check/REPORT.md) 4.2) 표는 두 방법 모두 잰 998쌍이다.
@@ -31,6 +33,7 @@
 
 - Arrangement algorithm 단계 비중: 기존 77.1 % → 제안 17.3 %. Construction 비중: 58.2 % → 10.5 % ([BKN20] 52.3 %).
 - 바꾸지 않은 세 단계(전처리·Lipschitz 호출·배열 추정)가 제안 방법 시간의 77.1 %다.
+- **측정 주의 (2026-10-21):** `calcDistance2`에서 `lessThanFixedTranslation(max + diag_dist)` 검사로 버려지는 상자는 `FUT_BLACKBOX2`를 멈추지 않고 `continue`로 빠져나가므로(`original/src/frechet_under_translation.cpp:217`, candidate7 `:230`) Lipschitz 행에는 그 시간이 빠져 있다. 총 시간 − 단계 합은 Characters 35,491 / 34,993 ms(original / candidate7), Sigspatial 2,956 / 2,712 ms다. 이를 Lipschitz 호출로 보면 위 비중은 77.1 % 대신 약 82.7 %다. 배열 알고리즘 단계의 비중·비와 결정 문제(`RESULTS_decider.md`)는 영향을 받지 않는다. 자세한 내용은 [`r5_authors_vs_candidate7/README.md`](../r5_authors_vs_candidate7/README.md)의 '측정 주의'.
 - 제안 방법의 Construction 행은 CGAL 배열 구성 대신 극대 집합·증인점 열거 시간이고, 그 아래 Black-box calls는 증인점에서의 판정이다.
 
 ## 2. Sigspatial — [BKN20] Table 4 형식 (Table 4에는 없는 벤치마크)
@@ -85,7 +88,7 @@
 ## 6. 초록의 4.41×와 달라진 이유 (추정)
 
 - **실행 순서 효과는 없다**: 묶음별 가속비 기하평균이 original을 먼저 돌린 묶음 3.92×, candidate7을 먼저 돌린 묶음 3.93×.
-- **기계 차이 (약 4.41× → 4.18×)**: 같은 original 코드의 시간이 초록 측정의 0.81배로 줄었는데, CGAL 배열 단계(0.80)가 바꾸지 않은 단계(전처리 0.91, Lipschitz 0.85, 배열 추정 0.87)보다 더 줄었다. 제안 방법은 시간 대부분이 바꾸지 않은 단계라 덜 빨라진다. 이 비율로 추정한 candidate5의 이 기계 시간은 약 553 s.
+- **기계 차이 (약 4.41× → 4.18×)**: 같은 original 코드의 시간이 초록 측정의 0.81배로 줄었는데, CGAL 배열 단계(0.80)가 바꾸지 않은 단계(전처리 0.91, Lipschitz 0.85(Lipschitz 행은 위 타이머 결함으로 과소), 배열 추정 0.87)보다 더 줄었다. 제안 방법은 시간 대부분이 바꾸지 않은 단계라 덜 빨라진다. 이 비율로 추정한 candidate5의 이 기계 시간은 약 553 s.
 - **candidate5 → candidate7 (약 4.18× → 3.70×)**: candidate7이 추정 candidate5보다 1.13배 시간. 차이는 Arrangement algorithm 단계에 몰려 있다(r4 candidate7 107,752 ms vs 초록 candidate5 77,596 ms). 원인은 candidate6의 `union` 모드다(7절).
 - 추정치는 candidate5를 이 기계에서 직접 잰 값이 아니라 단계별 시간 비율로 계산한 값이다.
 
@@ -151,7 +154,7 @@ LMF, proposed & \multicolumn{2}{c}{624{,}084 ms} & 68{,}690{,}225 \\
 ```latex
 \begin{table}[t]
 \centering
-\caption{Value computation on the Sigspatial decider pairs of~\cite{BKN20} (full 20{,}199-curve set), in the format of their Table~4, without the 2 pairs on which the baseline exceeds 12\,GB of memory. Same machine and protocol as the Characters table.}
+\caption{Value computation on the Sigspatial decider pairs of~\cite{BKN20} (full 20{,}199-curve set), in the format of their Table~4, without the 2 pairs on which the baseline exceeds 12\,GB of memory (this baseline is the modified copy \texttt{original/}; the authors' code finishes both pairs within 5\,GB). Same machine and protocol as the Characters table.}
 \label{tab:lmf-profile-sig}
 \begin{tabular}{llrr}
 \toprule

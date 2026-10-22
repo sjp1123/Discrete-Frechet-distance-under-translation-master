@@ -25,7 +25,7 @@ WSL Ubuntu 22.04, g++ 11.4 and CGAL 5.4.
 | `cases/a/case_sig_*.txt`, `cases/a/HIT_*.txt` | Sigspatial-scale 2×3 pairs where a certified witness was rejected; decider and LMF | F02, G1-1 (A) |
 | `cases/g4/` | GPS curves against translated copies: wrong NO at δ*+2e-7, a hang at δ*−2.5e-7, an assert at \|t\| ≈ 1.4e7 | G4-2, G4-3, G4-1 (B, C, H) |
 | `cases/near_threshold/` | candidate6's own LMF value ± 1e-6 for every Characters and Sigspatial pair (truth: plus YES, minus NO) | E3 |
-| `candidate7/tests/*` (built from the arm) | candidate6's shipped tests: box predicates, single-point and clustered families | README of candidate6 |
+| `candidate7/tests/test_box_predicates.cpp`, `test_single_point_family.cpp`, `test_clustered_family.cpp` (built from the arm; the other tests in `candidate7/tests/` are not run here) | candidate6's shipped tests: box predicates, single-point and clustered families | README of candidate6 |
 
 The case files hold `<delta>`, then `<n>` and n points, then `<m>` and m points. verify.sh turns
 them into paper_bench curve files.

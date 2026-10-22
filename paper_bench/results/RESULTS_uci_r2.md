@@ -22,7 +22,7 @@ Paper Table 4 (all 21,000 instances, authors' machine): 140.0 ms, 12,387 black-b
 
 ## Decision problem, all-characters, the authors' query files (factors 1 ± 2^l)
 
-Paper Table 2 (all-characters, authors' machine): 27.3 ms and 1,860 black-box calls per instance.
+Paper Table 2 (all-characters, authors' machine): 27.3 ms and 1,860 black-box calls per instance (4^l protocol; compare with the 4^l section below).
 
 | set | expected | n | original ms/instance | candidate5 ms/instance | ratio | bb calls orig | bb calls c5 | wrong (orig / c5) | arms disagree |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -55,7 +55,7 @@ Totals over 23000 instances: original 11.73 s, candidate5 11.00 s.
 
 ## Decision problem, same-characters, the authors' query files (factors 1 ± 2^l)
 
-Paper Table 2 (same-characters, authors' machine): 18.7 ms and 1,159 black-box calls per instance.
+Paper Table 2 (same-characters, authors' machine): 18.7 ms and 1,159 black-box calls per instance (4^l protocol; compare with the 4^l section below).
 
 | set | expected | n | original ms/instance | candidate5 ms/instance | ratio | bb calls orig | bb calls c5 | wrong (orig / c5) | arms disagree |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|
