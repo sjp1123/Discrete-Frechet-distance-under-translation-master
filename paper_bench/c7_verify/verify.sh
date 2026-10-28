@@ -1,6 +1,7 @@
 #!/bin/bash
 # candidate7 verification (results: paper_bench/results/C7_report.md).
 #   bash paper_bench/c7_verify/verify.sh [OUT=~/c7_verify_out]
+#   ARM=candidate8 B=~/b_c8v P=2 bash paper_bench/c7_verify/verify.sh ~/c8_verify_out    (another arm, 2 jobs at a time)
 # Builds the harnesses (~/b_c7v) and paper_bench for candidate7 (~/b_pb_candidate7) if missing, then runs
 # every job below, 12 at a time, in candidate7's default configuration (= the paper configuration).
 # Each job writes $OUT/out/<job>.txt ending in "#rc=<rc> secs=<s>"; summarize.sh prints one line per job.
@@ -9,8 +10,10 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 K="$ROOT/paper_bench/c7_verify"
 OUT="${1:-$HOME/c7_verify_out}"
+ARM="${ARM:-candidate7}"   # arm directory under the repository root (candidate8: same kit, its default configuration)
 B="${B:-$HOME/b_c7v}"
-PB="${PB:-$HOME/b_pb_candidate7/paper_bench}"
+PB="${PB:-$HOME/b_pb_$ARM/paper_bench}"
+P="${P:-12}"            # jobs at a time
 FLAGS="-include cstdint -include array -include cstddef"
 q() { if [ "${QUICK:-0}" = 1 ]; then echo $(( $1 / 10 )); else echo $1; fi; }
 mkdir -p "$OUT/out" "$OUT/work/a" "$OUT/nt"
@@ -18,11 +21,11 @@ rm -f "$OUT"/out/*.txt "$OUT/out/_DONE" "$OUT/nt/rc.txt"
 unset MAXREGION MAXREGION_EXACT MAXREGION_SLACK MAXREGION_FIX N6_RANGE LMF
 
 if [ ! -x "$B/fuzz_oracle" ]; then
-	cmake -S "$K" -B "$B" -DARM="$ROOT/candidate7" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="$FLAGS" > "$OUT/build.log" 2>&1
+	cmake -S "$K" -B "$B" -DARM="$ROOT/$ARM" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="$FLAGS" > "$OUT/build.log" 2>&1
 	cmake --build "$B" -j6 >> "$OUT/build.log" 2>&1 || { echo "build failed, see $OUT/build.log" >&2; exit 1; }
 fi
 if [ ! -x "$PB" ]; then
-	cmake -S "$ROOT/paper_bench" -B "$(dirname "$PB")" -DARM="$ROOT/candidate7" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="$FLAGS" >> "$OUT/build.log" 2>&1
+	cmake -S "$ROOT/paper_bench" -B "$(dirname "$PB")" -DARM="$ROOT/$ARM" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="$FLAGS" >> "$OUT/build.log" 2>&1
 	cmake --build "$(dirname "$PB")" -j6 --target paper_bench >> "$OUT/build.log" 2>&1 || { echo "paper_bench build failed" >&2; exit 1; }
 fi
 
@@ -103,6 +106,6 @@ runjob() {
 	echo "#rc=$rc secs=$(echo "$(date +%s.%N) - $t0" | bc)" >> "$OUT/out/$name.txt"
 }
 export -f runjob; export OUT
-grep -v '^$' "$OUT/jobs.txt" | xargs -d '\n' -P 12 -I{} bash -c 'runjob "$@"' _ {}
+grep -v '^$' "$OUT/jobs.txt" | xargs -d '\n' -P "$P" -I{} bash -c 'runjob "$@"' _ {}
 echo "VERIFY DONE $(date)" > "$OUT/out/_DONE"
 bash "$K/summarize.sh" "$OUT"
