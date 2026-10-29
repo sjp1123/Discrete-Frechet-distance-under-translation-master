@@ -37,16 +37,20 @@ In r5 (`paper_bench/r5_authors_vs_candidate7/`) candidate7 was slower than the a
 | `caller` | `slack` |
 | a number v | `min(v, slack)` — candidate7 did not clamp, see 3.3 |
 
-`decider_err` is candidate7's `N6Alg::deciderRoundingBound`, 2u(max\|p\| + R) + 6uR. It is about
-1e-13 on Characters and 3.1e-9 on Sigspatial (max\|p\| ≈ 1.4e7), so s ≈ 8.0e-9 and 4.9e-9. The
-margin slack/9 (= N6Alg's `epsilon_sub` at the default ε) is left for rounding the exact witness, so
-that `enumerate_box` rarely needs its fallback.
+`decider_err` is `N6Alg::deciderRoundingBound`: candidate7's 2u(max\|p\| + R) + 6uR (the decider's
+rounding of q + t and of its distance test) plus, since r6, 2u(max\|B\| + R) for the rounding of the
+centres c = fl(p − q) the enumeration works with (3.5). It is about 1e-13 on Characters and 3.1e-9 on
+Sigspatial (max\|p\| ≈ 1.4e7; the centre term is below 1e-11 on both), so s ≈ 8.0e-9 and 4.9e-9.
+The margin slack/9 (= N6Alg's `epsilon_sub` at the default ε) is left for rounding the exact witness,
+so that `enumerate_box` rarely needs its fallback.
 
 ## 3. Correctness
 
 Notation: the decider of the base case accepts a translation w when its floating-point evaluation of
-DFD(π, σ + w) is at most δ + η, with η = `epsilon_slack` (9e-9). Its rounding error is at most
-e = `decider_err`. The driver classifies the discs of radius δ against the box B into cut (C),
+DFD(π, σ + w) is at most δ + η, with η = `epsilon_slack` (9e-9). That evaluation differs from the
+distances |w − c_k| to the rounded centres c_k = fl(p_i − q_j), which the enumeration certifies, by at
+most e = `decider_err` (the decider's own rounding and the centres' rounding, 3.5); assume e ≤ η, as
+the authors' code needs for its arrangement vertices. The driver classifies the discs of radius δ against the box B into cut (C),
 containing (A) and far (F) exactly as in candidate7. Let s ∈ [0, η] be the enumeration slack and
 r = δ + s.
 
@@ -71,8 +75,9 @@ r in place of δ:
    `enumerate_box` keeps a witness w ∈ B only if it certifies max\|w − c_k\| ≤ r + t, with
    t = (η − s) − e. With s ≤ η this bound is r + t = δ + η − e, whatever s is. Any other region keeps
    its witness and also sends its discs to the box-arrangement fallback on the original radius δ.
-3. If w was kept, the decider sees every pair of X within δ + η − e, and every pair of A within δ,
-   because w ∈ B. Its evaluation is therefore at most δ + η. The pairs that p uses lie in T(p) ∪ A,
+3. If w was kept, every pair of X is within δ + η − e of w and every pair of A within δ, both
+   measured to the rounded centres, because w ∈ B. The decider's evaluation is therefore at most
+   δ + η (A: δ + e ≤ δ + η). The pairs that p uses lie in T(p) ∪ A,
    since the discs of F miss B. So the decider accepts w.
 4. If the region went to the fallback, the box arrangement on radius δ is the authors' base case, and
    it is complete per box.
@@ -93,8 +98,26 @@ candidate7 allowed such a value through `MAXREGION_SLACK=<v>`. candidate8 clamps
 The value is the lower end of a bisection whose test is the base case above. Every YES still comes
 from a translation the decider accepted at split + η. Completeness gives YES at every split above the
 box minimum. Hence the value stays within [δ* − η − e − ε/2, δ* + ε/2]. That is inside the ε = 1e-7
-contract for coordinates below about 4e7, the same bound as the authors' code. candidate8's values
-are at most s below candidate7's.
+contract while e ≤ η, i.e. for curve and translation coordinates below about 4e7, the same bound as
+the authors' code. candidate8's values are below candidate7's, but not by at most s as an earlier
+version of this README said: the bisection then ends on a different grid point. r6 measured up to
+1.23e-8 below candidate7 and up to 1.26e-8 below the authors' code (Characters), all inside 1e-7.
+
+### 3.5 The centres' rounding (found in r6)
+
+The first version of candidate8 used candidate7's `decider_err`, which bounds the rounding of q + t
+in the decider but not that of the centres c = fl(p − q). That rounding is u·\|c\| per coordinate.
+candidate7 left it the whole η − e ≈ 9e-9; the budget leaves only about slack/9 ≈ 1e-9. With curve 2
+at ~1e8 and curve 1 near the origin (r4's `far_t_1e8`, \|c\| ≈ 1.04e8, half an ulp ≈ 7.5e-9) a
+certified witness then lay outside the decider's band and the base case answered NO for boxes that
+hold the optimum: 2 of 800 LMF values were 5.1e-3 and 1.9e-2 too high (candidate7: 0; even
+`MAXREGION_SLACK=1e-9` failed on one). The fix adds 2u(max\|B\| + R) to `deciderRoundingBound`:
+wherever a disc matters at a box point w, \|c\| ≤ \|w\| + R ≤ max\|B\| + R. The budget then
+shrinks to 0 at such coordinates (candidate7's radius) and the far families have no wrong value or
+answer. On the paper's data the term is below 1e-11: values, answers and black-box calls are identical to
+the first version on all 21,000 Characters pairs, all 69,000 decider queries and 998 of the 1,000
+Sigspatial pairs; the other two (δ* ≈ 3.1e4 and 1.7e4) end 3.6e-9 and 3.3e-9 higher with 4 and 5 more
+calls, a bisection step that lands within the changed s (r6).
 
 ## 4. Evidence
 

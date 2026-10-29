@@ -99,7 +99,18 @@ double N6Alg::deciderRoundingBound(Curve const& curve1, distance_t radius) const
 	double const u = std::numeric_limits<double>::epsilon() / 2.0;
 	auto const ep = curve1.getExtremePoints();
 	double const M = std::max(std::max(std::abs(ep.min_x), std::abs(ep.max_x)), std::max(std::abs(ep.min_y), std::abs(ep.max_y)));
-	return 2.0 * u * (M + radius) + 6.0 * u * radius;
+	double err = 2.0 * u * (M + radius) + 6.0 * u * radius;
+	// FIX (candidate8, r6): the enumeration certifies witnesses against the rounded centres
+	// c = fl(p − q), the decider measures p − fl(q + t).  fl(p − q) is off by at most u·|c| per
+	// coordinate, and wherever a disc matters at a box point w, |c| ≤ |w| + radius ≤ max|B| + radius.
+	// Without this term the budget left ~1e-9 for that rounding; with curve 2 at ~1e8 (|c| ~ 1e8, half
+	// an ulp ~ 7.5e-9) the base case answered NO for boxes holding the optimum (r6: 2 of 800 far_t_1e8
+	// LMF values 5e-3 and 2e-2 high).  On the paper's data the term is below 1e-11 and changes nothing.
+	if (has_box) {
+		double const B = std::max(std::max(std::abs(box_.min.x), std::abs(box_.max.x)), std::max(std::abs(box_.min.y), std::abs(box_.max.y)));
+		err += 2.0 * u * (B + radius);
+	}
+	return err;
 }
 
 bool N6Alg::witnessInBlock(Point const& w, distance_t r) const
