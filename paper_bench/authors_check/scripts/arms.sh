@@ -8,17 +8,24 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 GITLAB=${GITLAB:-$HOME/b_pb_authors_gitlab/paper_bench}
 ORIG=${ORIG:-$HOME/b_pb_original/paper_bench}
 C7=${C7:-$HOME/b_pb_candidate7/paper_bench}
+C8=${C8:-$HOME/b_pb_candidate8/paper_bench}
 read -r -a ARM_LIST <<< "${ARMS:-gitlab original candidate7}"
 
 arm_bin() {
   case $1 in
-    gitlab) echo "$GITLAB" ;; original) echo "$ORIG" ;; candidate7) echo "$C7" ;;
-    *) echo "unknown arm $1 (gitlab, original, candidate7)" >&2; return 1 ;;
+    gitlab) echo "$GITLAB" ;; original) echo "$ORIG" ;; candidate7) echo "$C7" ;; candidate8) echo "$C8" ;;
+    *) echo "unknown arm $1 (gitlab, original, candidate7, candidate8)" >&2; return 1 ;;
   esac
 }
 
-# arm_env <arm>: environment prefix for the arm (candidate7 in its paper configuration)
-arm_env() { [ "$1" = candidate7 ] && echo "MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=0"; }
+# arm_env <arm>: environment prefix for the arm (candidate7 in its paper configuration; candidate8 in its
+# default configuration, MAXREGION_SLACK=budget)
+arm_env() {
+  case $1 in
+    candidate7) echo "MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=0" ;;
+    candidate8) echo "MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=budget" ;;
+  esac
+}
 
 # arm_order <n>: the run order for job n, rotating through 2k orders of the k arms so that every arm
 # takes every position equally often.  Orders 0..k-1 rotate ARM_LIST left; orders k..2k-1 rotate
