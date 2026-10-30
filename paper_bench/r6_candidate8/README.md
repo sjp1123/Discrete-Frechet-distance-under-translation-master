@@ -152,6 +152,9 @@ candidate8(커밋 e264dd4)은 candidate7에서 한 가지만 바꾼다. LMF 기�
 | 경로 | 내용 |
 |---|---|
 | `RESULTS.md` | 생성된 표: `analyze_r6.py` 출력, 1차·2차 `sig_r6.py` 출력, 오라클 표 |
+| `RESULTS_vs_authors.md` | 저자 코드 대 candidate8(candidate7 함께), r5와 같은 형식: [BKN20] Table 4 형식 표, 인스턴스별 가속, 정확성, LaTeX (`scripts/analyze_vs_authors.py`) |
+| `fig_scatter_characters.{pdf,png}`, `fig_scatter_sigspatial.{pdf,png}`, `fig_scatter.{pdf,png}` | 저자 코드(x) 대 candidate8(y), r5와 같은 Figure 6 형식 산점도 (`scripts/plot_scatter.py`) |
+| `fig_scatter_c7_c8.{pdf,png}` | candidate7(x) 대 candidate8(y), 두 패널 |
 | `raw/r6_timing_3arm.tar.xz` | 1차 원시 CSV (`chars/`, `sig/`, `dec4/` × `gitlab`, `candidate7`, `candidate8`), rc·progress·log |
 | `raw/r6b_timing_c7_c8fix.tar.xz` | 2차 원시 CSV (`candidate7`, `candidate8` = f51bcbd) |
 | `raw/r6_correctness.tar.xz` | 오라클 표·실패·시간 초과 기록(e264dd4 far 가족은 CSV 포함), ±5e-8 질의 CSV, 키트 요약, 수정 전후 비교 |
@@ -159,6 +162,7 @@ candidate8(커밋 e264dd4)은 candidate7에서 한 가지만 바꾼다. LMF 기�
 | `scripts/run_tight.sh`, `make_tight_queries.py` | 실제 데이터 v ± 5e-8 질의 |
 | `scripts/run_oracle.sh`, `check_oracle.py` | r4 오라클 가족(한 방식씩), 판정 표 |
 | `scripts/analyze_r6.py`, `sig_r6.py` | 표와 유의성 검정 |
+| `scripts/analyze_vs_authors.py`, `plot_scatter.py` | 저자 코드 대비 표와 산점도 (`raw/r6_timing_3arm.tar.xz`에서) |
 
 ## 8. 재현
 
