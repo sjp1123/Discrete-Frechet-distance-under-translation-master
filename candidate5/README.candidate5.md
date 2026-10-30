@@ -1,121 +1,118 @@
-# Candidate 5 — `original` + Čech maximal-region enumeration, Epeck fallback
+# Candidate 5 — `original` + Čech 극대 영역 열거, Epeck 대체 경로
 
-> Correction (2026-10-21): `original/` is a modified copy of the authors' code (its base case drops the search box and bisects [0, f(τ_start)]), and candidate 5 inherits that; see [`../paper_bench/authors_check/REPORT.md`](../paper_bench/authors_check/REPORT.md).
+> 정정 (2026-10-21): `original/`은 저자 코드를 수정한 사본이다(기저 사례에서 탐색 상자를 버리고 [0, f(τ_start)]를 이분 탐색한다). candidate 5도 이를 그대로 물려받는다. [`../paper_bench/authors_check/REPORT.md`](../paper_bench/authors_check/REPORT.md)를 보라.
 
-Candidate 5 is **`original/` verbatim** with the candidate-region emitter swapped
-for candidate 4's Čech pipeline.  Nothing else changes: the same Epeck kernel,
-the same CGAL DCEL arrangement code, the same divide-and-conquer driver, kd-tree,
-sub-Fréchet decider and `CUT_LIMIT`/`DEPTH_LIMIT` knobs.  Components too large
-for the pipeline's DP are handed back to the **Epeck arrangement**, which is why
-the arm is exact by construction wherever the pipeline declines to answer.
+Candidate 5는 **`original/`을 그대로** 두고, 후보 영역 생성기만 candidate 4의
+Čech 파이프라인으로 바꾼 것이다.  나머지는 바뀌지 않는다.  Epeck 커널, CGAL DCEL
+배열 코드, 분할 정복 드라이버, kd-tree, sub-Fréchet 판정자, `CUT_LIMIT`/`DEPTH_LIMIT`
+설정값이 모두 같다.  파이프라인의 DP가 다루기에 너무 큰 성분은 **Epeck 배열**로
+되돌려 넘긴다.  그래서 파이프라인이 답하지 않는 곳에서는 이 방식이 구성상 정확하다.
 
-This is the arm the earlier work never built.  Candidate 4 put the pipeline on
-top of candidate 2's **double** rewrite, so it could only ever measure the
-pipeline's value *after* the arrangement had already been made cheap.  Candidate
-5 measures it against the arithmetic the paper actually uses.
+이전 작업에서는 이 방식을 만든 적이 없다.  Candidate 4는 파이프라인을 candidate 2의
+**double** 재작성 위에 얹었다.  그래서 배열이 이미 싸진 *뒤의* 파이프라인 가치만
+잴 수 있었다.  Candidate 5는 논문이 실제로 쓰는 산술을 상대로 그 가치를 잰다.
 
 ---
 
-## 1. What changed relative to `original/`
+## 1. `original/` 대비 바뀐 것
 
-| file | change |
+| 파일 | 변경 |
 |---|---|
-| `lib/cgal_disk_arrangements/maximal_regions.h` | **copied verbatim from candidate4** — pipeline API; later (32c9cf3) the opt-in exact mode's `exact` param and counters |
-| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **copied verbatim from candidate4** — Stages 0–5; later (32c9cf3) the opt-in exact mode (`MAXREGION_EXACT`) |
-| `lib/cgal_disk_arrangements/test_exact_predicates.cpp` | **new** (later, bc1b22b) — boundary-case test for the exact-mode P2/P3 |
-| `lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp` | dispatcher + Epeck fallback; the original vertex enumeration kept verbatim on every pre-existing constructor |
-| `lib/cgal_disk_arrangements/disc_arrangement_traversal.h` | one added constructor (slack-aware) |
-| `lib/cgal_disk_arrangements/CMakeLists.txt` | build `maximal_regions.cpp` |
-| `src/fut_n6_algorithm.cpp` | **one line**: pass `epsilon_slack` to the traversal |
+| `lib/cgal_disk_arrangements/maximal_regions.h` | **candidate4에서 그대로 복사** — 파이프라인 API. 나중에(32c9cf3) 선택형(opt-in) 정확 모드의 `exact` 매개변수와 카운터 |
+| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **candidate4에서 그대로 복사** — Stage 0–5. 나중에(32c9cf3) 선택형 정확 모드(`MAXREGION_EXACT`) |
+| `lib/cgal_disk_arrangements/test_exact_predicates.cpp` | **신규** (나중에, bc1b22b) — 정확 모드 P2/P3의 경계 사례 테스트 |
+| `lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp` | 디스패처 + Epeck 대체 경로. 기존 생성자에서는 모두 원래 꼭짓점 열거를 그대로 유지 |
+| `lib/cgal_disk_arrangements/disc_arrangement_traversal.h` | 생성자 하나 추가(여유를 반영) |
+| `lib/cgal_disk_arrangements/CMakeLists.txt` | `maximal_regions.cpp` 빌드 |
+| `src/fut_n6_algorithm.cpp` | **한 줄**: `epsilon_slack`을 traversal에 넘김 |
 
-`maximal_regions.{h,cpp}` were byte-identical to candidate 4's when candidate 5
-was created (05a0f01); commit 32c9cf3 later added an opt-in exact mode
-(`MAXREGION_EXACT=1`, default off), so they now differ.  They depend only
-on `Point` / `Disc` / `Discs` from `disc_arrangement_traversal.h`, which
-`original/` already provides, so no adaptation was needed.
+`maximal_regions.{h,cpp}`는 candidate 5를 만들 때(05a0f01)는 candidate 4의 것과
+바이트 단위로 같았다.  나중에 커밋 32c9cf3이 선택형 정확 모드(`MAXREGION_EXACT=1`,
+기본값 꺼짐)를 더해서, 지금은 다르다.  이 파일들은 `disc_arrangement_traversal.h`의
+`Point` / `Disc` / `Discs`에만 의존한다.  이것들은 `original/`에 이미 있으므로
+따로 손볼 필요가 없었다.
 
-The idea, the Helly-3 / equal-radii predicate system and the stage breakdown are
-documented in `../candidate4/README.candidate4.md` §2 and are not repeated here.
+아이디어, Helly-3 / 같은 반지름 술어 체계, 단계 구성은
+`../candidate4/README.candidate4.md` §2에 정리되어 있으므로 여기서는 되풀이하지 않는다.
 
-## 2. Runtime knobs
+## 2. 실행 시 설정값
 
-| env | default | meaning |
+| 환경 변수 | 기본값 | 의미 |
 |---|---|---|
-| `MAXREGION` | `cech` | `cech` \| `legacy` (= `original` verbatim, the control arm) |
-| `MAXREGION_BAND` | `1e-12` | relative leniency on `r²` |
-| `MAXREGION_DP_LIMIT` | `20` | components larger than this go to the Epeck fallback |
-| `MAXREGION_SLACK` | *(from caller)* | override the predicate slack; `0` disables slack alignment |
-| `MAXREGION_EXACT` | `0` (off) | `1` = filtered P2/P3 with a `cpp_rational` fallback; band ignored (added in 32c9cf3, after the measurements below) |
+| `MAXREGION` | `cech` | `cech` \| `legacy` (= `original` 그대로, 대조 방식) |
+| `MAXREGION_BAND` | `1e-12` | `r²`에 대한 상대 허용 폭 |
+| `MAXREGION_DP_LIMIT` | `20` | 이보다 큰 성분은 Epeck 대체 경로로 간다 |
+| `MAXREGION_SLACK` | *(호출자가 정함)* | 술어 여유를 덮어쓴다. `0`이면 여유 정렬을 끈다 |
+| `MAXREGION_EXACT` | `0` (꺼짐) | `1` = `cpp_rational` 대체 경로가 있는 필터링된 P2/P3. band는 무시한다 (32c9cf3에서 추가, 아래 측정 이후) |
 
-`MAXREGION=legacy` restores the original code path inside the same binary; §4
-below shows it reproduces `original`'s answers bit-for-bit at no measurable cost,
-which is what makes the contrast a clean one.
+`MAXREGION=legacy`는 같은 바이너리 안에서 원래 코드 경로를 되살린다.  아래 §4에서
+보듯이 이 경로는 `original`의 답을 비트 단위로 재현하고, 측정 가능한 비용도 없다.
+그래서 대비가 깨끗하다.
 
-## 3. The Epeck fallback must run on the **un-inflated** radii
+## 3. Epeck 대체 경로는 **부풀리지 않은** 반지름에서 돌아야 한다
 
-`N6Alg` builds discs of radius `distance` but asks the decider about
-`distance + epsilon_slack`, so the pipeline enumerates at `distance + slack`
-(candidate 4 §5).  The fallback must **not** inherit that inflation.
+`N6Alg`는 반지름 `distance`인 원판을 만들지만, 판정자에게는
+`distance + epsilon_slack`을 묻는다.  그래서 파이프라인은 `distance + slack`에서
+열거한다(candidate 4 §5).  대체 경로는 이 부풀림을 물려받으면 **안 된다**.
 
-An arrangement vertex sits exactly *on* a circle.  At the inflated radius the
-`sqrt` construction error there (~1.5e-8·r) exceeds the slack (~9e-9), so the
-decider can miss the very pair the vertex was built for — this is candidate 4's
-`C4S` pathology (§6, "Caveat on `C4S`"), and it is silent.
+배열 꼭짓점은 정확히 원 *위에* 놓인다.  부풀린 반지름에서는 그 점의 `sqrt` 구성
+오차(~1.5e-8·r)가 여유(~9e-9)보다 크다.  그래서 판정자가 그 꼭짓점을 만든 바로 그
+쌍을 놓칠 수 있다.  이것이 candidate 4의 `C4S` 병리 현상이다(§6, "Caveat on `C4S`").
+게다가 아무 경고 없이 일어난다.
 
-Measured on `test_cases/bench_small`, with the fallback forced to fire
-(`MAXREGION_DP_LIMIT=4`, 758 fallback components over 15 pairs):
+`test_cases/bench_small`에서 대체 경로가 강제로 동작하게 하고 쟀다
+(`MAXREGION_DP_LIMIT=4`, 15쌍에서 대체 경로 성분 758개).
 
-| fallback radius | answer vs `original` |
+| 대체 경로 반지름 | `original` 대비 답 |
 |---|---|
-| inflated (`radius + slack`) | off by up to **2.7e-4** — 11/15 pairs breach ε = 1e-7 |
-| original radius | **bit-identical**, 15/15 |
+| 부풀림 (`radius + slack`) | 최대 **2.7e-4** 어긋남 — 11/15쌍이 ε = 1e-7을 넘음 |
+| 원래 반지름 | **비트 단위로 같음**, 15/15 |
 
-`build_candidates_cech` therefore slices the fallback's sub-vectors out of
-`discs`, never out of the inflated copy.  The pipeline keeps the inflated set;
-the two are deliberately not the same object.
+그래서 `build_candidates_cech`는 대체 경로의 부분 벡터를 항상 `discs`에서 잘라 내고,
+부풀린 사본에서는 절대 잘라 내지 않는다.  파이프라인은 부풀린 집합을 쓴다.  두 집합은
+일부러 서로 다른 객체로 둔다.
 
-## 4. Measured runtime — `geolife_100` (real data)
+## 4. 실행시간 측정 — `geolife_100` (실제 데이터)
 
-`_c5_bench_geo.sh` + `_c5_analyze.py`, the **same `geolife_100` manifest and the
-same curve files candidate 4 was measured on**, `fut_lmf`, **100 pairs × 4 arms ×
-3 reps**, arm order reshuffled every rep, min per (pair, arm), 60 s censoring
-(0 censored).  Per-pair log-ratios → geomean with a 10 000-resample bootstrap
-95% CI, the same protocol as `_c4_bench.sh` / `_factor_perpair.sh`.
+`_c5_bench_geo.sh` + `_c5_analyze.py`로 쟀다.  **candidate 4를 잰 것과 같은
+`geolife_100` manifest와 같은 곡선 파일**을 썼고, `fut_lmf`, **100쌍 × 4 방식 ×
+3회 반복**이다.  반복마다 방식 순서를 다시 섞었고, (쌍, 방식)마다 최솟값을 취했다.
+60 s에서 중도 절단했다(절단 0건).  쌍별 로그 비 → 기하평균, 10 000회 재표본
+bootstrap 95% CI를 구했다.  `_c4_bench.sh` / `_factor_perpair.sh`와 같은 절차다.
 
-Arms: `A0` = `original`; `C5L` = candidate5 `MAXREGION=legacy`; `C5N` =
-`MAXREGION=cech MAXREGION_SLACK=0`; `C5` = `MAXREGION=cech` (default).
+방식: `A0` = `original`, `C5L` = candidate5 `MAXREGION=legacy`, `C5N` =
+`MAXREGION=cech MAXREGION_SLACK=0`, `C5` = `MAXREGION=cech` (기본값).
 
-> The curve files are not committed.  They were regenerated from the official
-> Geolife 1.3 zip with `authors_gitlab/test_data/benchmark/geolife_converter.py`.  Identity with
-> candidate 4's data is established by `original`'s answers being
-> **bit-identical on all 100 pairs** to the `A0` column of `_c4_bench.csv`
-> (exact Epeck output — one differing coordinate would move the 20th digit),
-> all 200 manifest files present, and the manifest's `n` column matching
-> max(curve length).
+> 곡선 파일은 커밋되어 있지 않다.  공식 Geolife 1.3 zip에서
+> `authors_gitlab/test_data/benchmark/geolife_converter.py`로 다시 만들었다.  candidate 4의
+> 데이터와 같다는 것은 세 가지로 확인했다.  `original`의 답이 `_c4_bench.csv`의
+> `A0` 열과 **100쌍 모두에서 비트 단위로 같다**(정확한 Epeck 출력이다.  좌표 하나만
+> 달라도 20번째 자리가 움직인다).  manifest 파일 200개가 모두 있다.  manifest의
+> `n` 열이 max(curve length)와 맞는다.
 
-| contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) | decider calls |
+| 대비 | WALL | ARRANGEMENT | INTERNAL (arr+fre) | 판정자 호출 |
 |---|---|---|---|---|
 | **`A0` → `C5`** | **1.69× [1.52, 1.89]** | 48.2× [36.8, 63.4] | 36.9× [28.4, 47.9] | 4.49× [3.72, 5.44] |
-| pipeline alone (`A0/C5N`) | 1.24× [1.14, 1.34] | 22.4× | 17.0× | 2.70× |
-| slack given pipeline (`C5N/C5`) | 1.36× [1.22, 1.53] | 2.16× | 2.17× | 1.66× |
-| control (`A0/C5L`) | 1.00× [0.97, 1.01] | 0.98× | 0.98× | 1.000× |
+| 파이프라인만 (`A0/C5N`) | 1.24× [1.14, 1.34] | 22.4× | 17.0× | 2.70× |
+| 파이프라인이 있을 때 여유 (`C5N/C5`) | 1.36× [1.22, 1.53] | 2.16× | 2.17× | 1.66× |
+| 대조 (`A0/C5L`) | 1.00× [0.97, 1.01] | 0.98× | 0.98× | 1.000× |
 
-Faster on **86/100** pairs; median 1.50×, p90 3.88×.  Absolute over all 100
-pairs: wall **68.0 s → 39.7 s**, arrangement **12.37 s → 0.61 s**, internal
-**21.07 s → 1.11 s**, decider calls **4 000 135 → 1 201 618**.
+**86/100**쌍에서 빨라졌다.  중앙값 1.50×, p90 3.88×다.  100쌍 전체의 절대값은
+wall **68.0 s → 39.7 s**, arrangement **12.37 s → 0.61 s**, internal
+**21.07 s → 1.11 s**, 판정자 호출 **4 000 135 → 1 201 618**이다.
 
-Answers vs `original`: max |Δ| **1.11e-8**, **0/100** pairs over ε = 1e-7;
-`C5L` bit-identical on 100/100.
+`original` 대비 답: max |Δ| **1.11e-8**, ε = 1e-7을 넘는 쌍 **0/100**.
+`C5L`은 100/100쌍에서 비트 단위로 같다.
 
-### Against candidate 2 and candidate 4 — same machine, same round-robin
+### candidate 2, candidate 4와 비교 — 같은 기계, 같은 라운드 로빈
 
-`_c5_bench_all.sh` + `_c5_analyze_all.py` rebuild **all four arms on this host
-with this toolchain** and interleave them pair by pair in one run, so the
-untouched-code term that sets the Amdahl ceiling is identical for every arm.
-Sanity gate: `A0`, `D1` and `C4` reproduce the answers recorded in
-`_c4_bench.csv` bit-for-bit, so the arms are the same programs, just rebuilt.
+`_c5_bench_all.sh` + `_c5_analyze_all.py`는 **네 방식을 모두 이 호스트에서 이
+툴체인으로** 다시 빌드하고, 한 번의 실행 안에서 쌍마다 번갈아 돌린다.  그래서
+Amdahl 상한을 정하는 항, 즉 손대지 않은 코드의 비용이 모든 방식에서 같다.
+기본 점검: `A0`, `D1`, `C4`는 `_c4_bench.csv`에 기록된 답을 비트 단위로 재현한다.
+따라서 이 방식들은 다시 빌드했을 뿐 같은 프로그램이다.
 
-| contrast | WALL | ARRANGEMENT | INTERNAL | decider calls |
+| 대비 | WALL | ARRANGEMENT | INTERNAL | 판정자 호출 |
 |---|---|---|---|---|
 | `original` → candidate 2 | 1.27× [1.21, 1.34] | 12.9× | 5.25× | 2.08× |
 | `original` → candidate 4 | 1.69× [1.52, 1.88] | 43.6× | 34.0× | 4.53× |
@@ -123,112 +120,108 @@ Sanity gate: `A0`, `D1` and `C4` reproduce the answers recorded in
 | candidate 2 → candidate 5 | 1.33× [1.22, 1.47] | 3.74× | 6.98× | 2.16× |
 | **candidate 4 → candidate 5** | **1.01× [1.00, 1.02]** | 1.10× | 1.08× | 0.99× |
 
-Absolute over the 100 pairs:
+100쌍 전체의 절대값:
 
-| arm | wall | arrangement | arr+fre | residual (wall − internal) | decider calls |
+| 방식 | wall | arrangement | arr+fre | 나머지 (wall − internal) | 판정자 호출 |
 |---|--:|--:|--:|--:|--:|
 | `A0` original | 72.71 s | 13.44 s | 22.85 s | 49.86 s | 4 000 135 |
 | `D1` candidate 2 | 54.40 s | 1.08 s | 6.52 s | 47.88 s | 2 002 463 |
 | `C4` candidate 4 | 42.06 s | 0.67 s | 1.23 s | 40.83 s | 1 192 443 |
 | `C5` candidate 5 | **41.56 s** | 0.66 s | 1.21 s | 40.35 s | 1 201 618 |
 
-**Candidate 4 and candidate 5 are indistinguishable** — 1.01× on the wall, CI
-[1.00, 1.02], within 2% on every absolute total (wall 1.2%, arrangement 1.5%,
-arr+fre 1.7%) and within 1% on the decider-call count.  Once the Čech pipeline is in place, candidate 2's float rewrite buys
-nothing: candidate 5 reaches the same end point from the untouched exact-Epeck
-tree.  What the rewrite *was* worth on its own is the 1.27× of row 1, and the
-pipeline supersedes it (`D1` → `C5` = 1.33× on top).
+**Candidate 4와 candidate 5는 구별되지 않는다.**  wall에서 1.01×, CI
+[1.00, 1.02]다.  모든 절대 합계에서 차이가 2% 안이고(wall 1.2%, arrangement 1.5%,
+arr+fre 1.7%), 판정자 호출 수에서는 1% 안이다.  Čech 파이프라인이 들어가면
+candidate 2의 float 재작성으로 얻는 것은 없다.  candidate 5는 손대지 않은 exact-Epeck
+트리에서 출발해 같은 지점에 도달한다.  재작성이 그 자체로 *가졌던* 가치는 1행의
+1.27×다.  그리고 파이프라인이 이를 대체한다(`D1` → `C5` = 그 위에 1.33×).
 
-> Candidate 5's small edge on the internal metric (1.08×) is not a real
-> algorithmic difference: candidate 4's decider loop carries the per-query
-> `chrono` instrumentation and `x3q_row` call that candidate 5 does not.  Read
-> `C4 ≈ C5`, not `C5 > C4`.
+> internal 지표에서 candidate 5가 조금 앞서는 것(1.08×)은 실제 알고리즘 차이가
+> 아니다.  candidate 4의 판정자 루프에는 질의마다 도는 `chrono` 계측과 `x3q_row`
+> 호출이 있고, candidate 5에는 없다.  `C5 > C4`가 아니라 `C4 ≈ C5`로 읽어야 한다.
 
-An earlier revision of this file compared candidate 5's run against candidate 4's
-*recorded* numbers from `_c4_bench.csv` and read 1.69× against 1.98×.  That gap
-was a host artifact — that recording was made on a machine whose untouched-code
-cost is 26.6 s against 49.9 s here.  Measured together, the two arms tie.  The
-cross-host comparison is retained nowhere; use `_c5_bench_all.sh`.
+이 파일의 이전 판은 candidate 5의 측정을 `_c4_bench.csv`에 *기록된* candidate 4의
+숫자와 비교해서 1.69× 대 1.98×로 읽었다.  그 차이는 호스트 때문에 생긴 허상이었다.
+그 기록을 만든 기계는 손대지 않은 코드의 비용이 26.6 s였고, 여기서는 49.9 s다.
+함께 재면 두 방식은 비긴다.  호스트를 넘나드는 비교는 어디에도 남겨 두지 않았다.
+`_c5_bench_all.sh`를 써라.
 
-### Slack alignment matters here, unlike on synthetic data
+### 여기서는 합성 데이터와 달리 여유 정렬이 중요하다
 
-The two factors multiply as 1.24× (pipeline) × 1.36× (slack) = 1.69×.  On the
-synthetic `bench_100` of §5 slack alignment is not significant at all.  The
-mechanism is candidate 4 §5: real trajectories contain repeated and
-near-repeated points, so an un-aligned pipeline emits far more regions than the
-decider needs — on pair `13962/4238`, 2 606 regions without slack against **65**
-with it, and 606 ms against 207 ms.  Synthetic random-walk curves carry no such
-degeneracy, so there is nothing for the alignment to collapse.
+두 요인은 1.24× (파이프라인) × 1.36× (여유) = 1.69×로 곱해진다.  §5의 합성
+`bench_100`에서는 여유 정렬이 전혀 유의하지 않다.  메커니즘은 candidate 4 §5에 있다.
+실제 궤적에는 반복되는 점과 거의 반복되는 점이 있다.  그래서 정렬하지 않은
+파이프라인은 판정자에게 필요한 것보다 훨씬 많은 영역을 낸다.  쌍 `13962/4238`에서는
+여유가 없으면 영역 2 606개, 있으면 **65**개였고, 시간은 606 ms 대 207 ms였다.
+합성 무작위 보행(random-walk) 곡선에는 이런 퇴화가 없으므로, 정렬이 합쳐 줄 것이 없다.
 
-## 5. Measured runtime — synthetic `bench_100`
+## 5. 실행시간 측정 — 합성 `bench_100`
 
-Same protocol, `test_cases/bench_100` (100 synthetic pairs, n ∈ [100, 1000]),
-120 s censoring (0 censored).  Committed as `_c5_bench.csv` / `_c5_analysis.txt`;
-the geolife run is `_c5_bench_geo.csv` / `_c5_analysis_geo.txt`.
+절차는 같다.  `test_cases/bench_100`(합성 100쌍, n ∈ [100, 1000])에서 120 s 중도
+절단(절단 0건)으로 쟀다.  결과는 `_c5_bench.csv` / `_c5_analysis.txt`로 커밋했다.
+geolife 측정은 `_c5_bench_geo.csv` / `_c5_analysis_geo.txt`다.
 
-| contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) | decider calls |
+| 대비 | WALL | ARRANGEMENT | INTERNAL (arr+fre) | 판정자 호출 |
 |---|---|---|---|---|
 | **`A0` → `C5`** | **1.50× [1.42, 1.58]** | 32.8× [28.9, 37.5] | 8.52× [7.62, 9.60] | 3.65× [3.36, 3.99] |
-| pipeline alone (`A0/C5N`) | 1.47× [1.40, 1.55] | 30.2× | 7.87× | 3.40× |
-| slack given pipeline (`C5N/C5`) | 1.02× [0.98, 1.06] | 1.09× | 1.08× | 1.07× |
-| control (`A0/C5L`) | 1.01× [0.99, 1.03] | 0.99× | 1.00× | 1.000× |
+| 파이프라인만 (`A0/C5N`) | 1.47× [1.40, 1.55] | 30.2× | 7.87× | 3.40× |
+| 파이프라인이 있을 때 여유 (`C5N/C5`) | 1.02× [0.98, 1.06] | 1.09× | 1.08× | 1.07× |
+| 대조 (`A0/C5L`) | 1.01× [0.99, 1.03] | 0.99× | 1.00× | 1.000× |
 
-Faster on **95/100** pairs; median 1.48×, p90 1.99×.  Absolute over all 100
-pairs: wall **59.4 s → 39.8 s**, arrangement stage **5.03 s → 0.17 s**, internal
-**20.5 s → 2.34 s**, decider calls **1 055 717 → 287 713**.
+**95/100**쌍에서 빨라졌다.  중앙값 1.48×, p90 1.99×다.  100쌍 전체의 절대값은
+wall **59.4 s → 39.8 s**, arrangement 단계 **5.03 s → 0.17 s**, internal
+**20.5 s → 2.34 s**, 판정자 호출 **1 055 717 → 287 713**이다.
 
-Run twice end to end: 1.508× and 1.498×, i.e. reproducible inside the ~4% rep
-noise characterised in `_x1_results/ENVIRONMENT.md` §2.
+처음부터 끝까지 두 번 돌렸다.  1.508×와 1.498×로, `_x1_results/ENVIRONMENT.md` §2에서
+측정한 반복 간 잡음(~4%) 안에서 재현된다.
 
-### Why the pipeline alone carries this run
+### 이 측정에서 파이프라인만으로 효과가 나는 이유
 
-Candidate 4 found the pipeline alone to be a wash (`D1/C4N` = 0.98×) with the
-whole 1.44× coming from slack alignment.  On synthetic curves it is the other
-way round: the pipeline alone is 1.47× and slack alignment is not significant.
+Candidate 4에서는 파이프라인만으로는 효과가 없었고(`D1/C4N` = 0.98×), 1.44× 전부가
+여유 정렬에서 나왔다.  합성 곡선에서는 반대다.  파이프라인만으로 1.47×이고 여유
+정렬은 유의하지 않다.
 
-Both readings are consistent, and the reason is what the pipeline replaces.  On
-candidate 2's double list the arrangement stage was already down to ~625 ms over
-100 pairs (X1 §3, arm D1; 115 ms is D0, the same list with the maximal filter
-off), leaving nothing for a faster emitter to win — only the search
-trajectory could still move.  On `original` the Epeck arrangement *is* the
-dominant cost of the inner loop, so deleting it pays directly.  What the two
-data sets then decide is how much is *left* for slack alignment: on geolife the
-degeneracy of real trajectories gives it a further 1.36× (§4), on synthetic
-random walks nothing.
+두 결과는 서로 모순되지 않는다.  이유는 파이프라인이 무엇을 대체하느냐에 있다.
+candidate 2의 double 리스트에서는 arrangement 단계가 이미 100쌍에 ~625 ms까지 줄어
+있었다(X1 §3, 방식 D1.  115 ms는 D0로, 같은 리스트에서 극대 필터를 끈 것이다).
+그래서 더 빠른 생성기가 얻을 것이 남지 않았고, 탐색 궤적만 바뀔 여지가 있었다.
+`original`에서는 Epeck 배열이 내부 루프의 주된 비용 *그 자체*다.  그래서 이것을
+없애면 바로 이득이 난다.  그다음 두 데이터 집합이 가르는 것은 여유 정렬에 얼마가
+*남느냐*다.  geolife에서는 실제 궤적의 퇴화 덕분에 1.36×가 더 생기고(§4), 합성
+무작위 보행에서는 아무것도 없다.
 
-The end-to-end figure stays far below the arrangement win for the ordinary
-Amdahl reason recorded in R1: the N6 loop is a minority share of the wall.
+전체 실행 기준 수치가 arrangement 이득보다 훨씬 작은 것은 R1에 기록한 흔한 Amdahl
+이유 때문이다.  N6 루프는 wall에서 차지하는 몫이 작다.
 
-## 6. Correctness
+## 6. 정확성
 
-Against `original` (exact Epeck), over the 100 pairs of each run:
+`original`(정확한 Epeck) 대비, 각 측정의 100쌍에 대해:
 
-| arm | max \|Δ\| geolife | max \|Δ\| synthetic | pairs over ε = 1e-7 | `C5L` bit-identical |
+| 방식 | max \|Δ\| geolife | max \|Δ\| 합성 | ε = 1e-7을 넘는 쌍 | `C5L` 비트 단위 일치 |
 |---|---|---|---|---|
 | `C5L` | 0.00e+00 | 0.00e+00 | 0/100 | **100/100** |
 | `C5N` | 1.09e-08 | 7.13e-09 | 0/100 | — |
 | `C5`  | 1.11e-08 | 1.15e-08 | 0/100 | — |
 
-`_c5_check.sh <case_dir> [N]` runs the gates: default vs `original`, the forced
-fallback of §3, and the `C5L` bit-identity check.
+`_c5_check.sh <case_dir> [N]`가 점검 항목을 돌린다.  기본값 대 `original`, §3의 강제
+대체 경로, `C5L` 비트 일치 점검이다.
 
-## 7. Operating limits
+## 7. 동작 한계
 
-* **The fallback is dormant on the `fut_lmf` path.**  With `CUT_LIMIT = 12` and
-  `MAXREGION_DP_LIMIT = 20`, `overflow = 0` on every build (checked over 20
-  benchmark pairs).  The §4/§5 numbers are therefore the pipeline alone; Epeck is
-  carried as a safety net, not as part of the measured path.
-* **The global `n6` entry point is parity.**  There the disc set is the full
-  n₁·n₂ product, every component overflows, and all the work goes to the Epeck
-  fallback.  Measured over `_nsweep` n = 6…20: answers **bit-identical** to
-  `original`, wall **0.84×–1.07×, median ≈ 1.00×**.  Same conclusion as
-  candidate 4 §6, and the same remedy — implement §5 of the design note
-  (Bron–Kerbosch + per-clique DP) before using `n6` as anything but a reference.
-* `CUT_LIMIT` above `MAXREGION_DP_LIMIT` lets components exceed the DP limit;
-  once they do, the pipeline is disabled entirely and only the pre-pass overhead
-  is left; see candidate 4 §7, which applies verbatim.
+* **`fut_lmf` 경로에서는 대체 경로가 쉬고 있다.**  `CUT_LIMIT = 12`,
+  `MAXREGION_DP_LIMIT = 20`이면 모든 build에서 `overflow = 0`이다(벤치마크 20쌍에서
+  확인).  따라서 §4/§5의 숫자는 파이프라인만의 결과다.  Epeck는 측정된 경로의 일부가
+  아니라 안전망으로 들고 있는 것이다.
+* **전역 `n6` 진입점에서는 성능이 같다.**  여기서는 원판 집합이 n₁·n₂ 곱 전체이므로
+  모든 성분이 넘치고, 모든 일이 Epeck 대체 경로로 간다.  `_nsweep` n = 6…20에서
+  잰 결과, 답은 `original`과 **비트 단위로 같고** wall은 **0.84×–1.07×, 중앙값 ≈ 1.00×**다.
+  결론은 candidate 4 §6과 같고 처방도 같다.  `n6`을 참조용 이외로 쓰려면 먼저 설계
+  노트의 §5(Bron–Kerbosch + clique별 DP)를 구현해야 한다.
+* `CUT_LIMIT`가 `MAXREGION_DP_LIMIT`보다 크면 성분이 DP 한도를 넘을 수 있다.  일단
+  넘으면 파이프라인이 통째로 꺼지고 사전 처리(pre-pass) 오버헤드만 남는다.
+  candidate 4 §7을 보라.  그 내용이 그대로 적용된다.
 
-## 8. Reproducing
+## 8. 재현 방법
 
 ```
 bash _c5_build.sh                                   # -> ~/b_candidate5
@@ -254,24 +247,23 @@ bash _c5_bench.sh  test_cases/bench_100 100 3 ~/_c5/bench.csv
 python3 _c5_analyze.py ~/_c5/bench.csv              # -> _c5_analysis.txt
 ```
 
-Committed outputs, all per-pair raw: `_c5_bench_all.csv` /
-`_c5_analysis_all.txt` (four-arm ranking), `_c5_bench_geo.csv` /
-`_c5_analysis_geo.txt` (geolife factor decomposition), `_c5_bench.csv` /
-`_c5_analysis.txt` (synthetic).
+커밋된 출력은 모두 쌍별 원자료다.  `_c5_bench_all.csv` /
+`_c5_analysis_all.txt`(네 방식 순위), `_c5_bench_geo.csv` /
+`_c5_analysis_geo.txt`(geolife 요인 분해), `_c5_bench.csv` /
+`_c5_analysis.txt`(합성).
 
-**Environment used for the §4 numbers** — WSL2 Ubuntu, g++ 15.2, CGAL **6.1.1**,
-CMake 4.2.3, `RelWithDebInfo`.  This is *not* the g++ 13 / CGAL 5.6 toolchain of
-`_x1_results/ENVIRONMENT.md`.  CGAL ≥ 6 requires C++17 while the tree requests
-C++14, so `-std=c++14` was raised to `-std=c++17` — applied identically to both
-arms -- including candidate 2 and candidate 4 when they are rebuilt for
-`_c5_bench_all.sh` -- so no contrast is affected; the committed `CMakeLists.txt`
-is left at C++14 to match the other arms.  Absolute times here are **not**
-comparable to numbers recorded in `_c4_bench.csv` or `_x1_results/` on the
-g++ 13 / CGAL 5.6 host: `original` costs 39.5 s there against 72.7 s here on the
-same 100 pairs.  Any cross-arm claim must come from arms measured together.
+**§4 숫자에 쓴 환경** — WSL2 Ubuntu, g++ 15.2, CGAL **6.1.1**,
+CMake 4.2.3, `RelWithDebInfo`.  이것은 `_x1_results/ENVIRONMENT.md`의 g++ 13 / CGAL 5.6
+툴체인이 *아니다*.  CGAL ≥ 6은 C++17을 요구하는데 이 트리는 C++14를 요청한다.  그래서
+`-std=c++14`를 `-std=c++17`로 올렸다.  이 변경은 두 방식에 똑같이 적용했고,
+`_c5_bench_all.sh`용으로 다시 빌드한 candidate 2와 candidate 4에도 적용했다.  따라서
+어떤 대비도 영향을 받지 않는다.  커밋된 `CMakeLists.txt`는 다른 방식과 맞추려고
+C++14로 두었다.  여기의 절대 시간은 g++ 13 / CGAL 5.6 호스트에서 `_c4_bench.csv`나
+`_x1_results/`에 기록한 숫자와 비교할 수 **없다**.  같은 100쌍에서 `original`은
+그쪽에서 39.5 s, 여기서 72.7 s 걸린다.  방식 사이의 주장은 반드시 함께 잰 방식들에서
+나와야 한다.
 
-**Data.**  §4 is on `geolife_100`, the same manifest and the same curve files
-as every prior arm, so it is directly comparable to candidate 2 and candidate 4
-through the shared `A0` baseline.  §5 is on the committed synthetic
-`bench_100`; the repository's own `bench_100.out` (different machine) recorded
-`original` → candidate 2 at 1.24× there.
+**데이터.**  §4는 `geolife_100`에서 쟀다.  이전의 모든 방식과 같은 manifest, 같은
+곡선 파일이므로, 공유하는 `A0` 기준선을 통해 candidate 2, candidate 4와 직접 비교할
+수 있다.  §5는 커밋된 합성 `bench_100`에서 쟀다.  저장소에 있는 `bench_100.out`(다른
+기계)은 그 데이터에서 `original` → candidate 2를 1.24×로 기록했다.

@@ -1,38 +1,30 @@
-# Candidate 4 — Čech maximal-region enumeration
+# Candidate 4 — Čech 극대 영역 열거
 
-Candidate 4 is candidate 2 with the *maximal-region* stage replaced.  Everything
-else (divide-and-conquer driver, kd-tree, sub-Fréchet decider, benchmarks,
-`CUT_LIMIT`/`DEPTH_LIMIT` knobs) is untouched.
+Candidate 4는 candidate 2에서 *극대 영역* 단계만 바꾼 것이다. 나머지(분할 정복 드라이버, kd-tree, sub-Fréchet 판정자, 벤치마크, `CUT_LIMIT`/`DEPTH_LIMIT` 설정값)는 그대로다.
 
-Design reference: `maximal_region_pipeline.md` (outside the repo).
+설계 참고 문서: `maximal_region_pipeline.md`(저장소 밖에 있음).
 
 ---
 
-## 1. What changed
+## 1. 바뀐 것
 
-| file | change |
+| 파일 | 변경 내용 |
 |---|---|
-| `lib/cgal_disk_arrangements/maximal_regions.h` | **new** — pipeline API |
-| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **new** — Stages 0–5 |
-| `lib/cgal_disk_arrangements/test_maximal_regions.cpp` | **new** — §9 regression suite |
-| `lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp` | dispatcher, `verify` cross-check; the old path kept verbatim as `build_candidates_legacy` |
-| `lib/cgal_disk_arrangements/disc_arrangement_traversal.h` | slack-aware constructor |
-| `lib/cgal_disk_arrangements/CMakeLists.txt` | build `maximal_regions.cpp` |
-| `CMakeLists.txt` | `test_maximal_regions` target + `add_test` |
-| `src/fut_n6_algorithm.cpp` | pass `epsilon_slack` to the traversal (§5) |
+| `lib/cgal_disk_arrangements/maximal_regions.h` | **새 파일** — 파이프라인 API |
+| `lib/cgal_disk_arrangements/maximal_regions.cpp` | **새 파일** — Stage 0–5 |
+| `lib/cgal_disk_arrangements/test_maximal_regions.cpp` | **새 파일** — §9 회귀 테스트 모음 |
+| `lib/cgal_disk_arrangements/disc_arrangement_traversal.cpp` | 분기기(dispatcher), `verify` 교차 검사. 예전 경로는 `build_candidates_legacy`로 그대로 남김 |
+| `lib/cgal_disk_arrangements/disc_arrangement_traversal.h` | 여유를 받는 생성자 |
+| `lib/cgal_disk_arrangements/CMakeLists.txt` | `maximal_regions.cpp` 빌드 |
+| `CMakeLists.txt` | `test_maximal_regions` 타깃 + `add_test` |
+| `src/fut_n6_algorithm.cpp` | `epsilon_slack`를 traversal에 넘김 (§5) |
 
-## 2. The idea
+## 2. 아이디어
 
-The decider only ever sees a translation `t` through the index set
-`S(t) = { k : |t − c_k| ≤ r }`, and it is **monotone** in `S`.  So the only
-translations worth testing are those realising an inclusion-maximal `S`, and by
-the nerve lemma those are exactly the inclusion-maximal simplices of the Čech
-complex of the discs.  No arrangement is needed to find them:
+판정자는 평행이동 `t`를 인덱스 집합 `S(t) = { k : |t − c_k| ≤ r }`를 통해서만 본다. 그리고 판정자는 `S`에 대해 **단조**다. 따라서 시험할 가치가 있는 평행이동은 포함 관계로 극대인 `S`를 실현하는 것뿐이다. nerve lemma에 따르면 이들은 정확히 원판들의 Čech 복합체(Čech complex)에서 포함 관계로 극대인 단체(simplex)들이다. 이들을 찾는 데 배열은 필요 없다.
 
-* **Helly** — discs are convex in the plane, so `∩_{k∈S} D_k ≠ ∅` iff every
-  3-subset of `S` has a common point.
-* **Equal radii** — `∩_{k∈S} D_k ≠ ∅` iff `MEC(centres of S)` has radius `≤ r`,
-  which for `|S| ≤ 3` is a **sqrt-free, division-free polynomial inequality**.
+* **Helly** — 원판은 평면에서 볼록하다. 따라서 `∩_{k∈S} D_k ≠ ∅`일 필요충분조건은 `S`의 모든 3-부분집합이 공통점을 갖는 것이다.
+* **같은 반지름** — `∩_{k∈S} D_k ≠ ∅`일 필요충분조건은 `MEC(centres of S)`의 반지름이 `≤ r`인 것이다. `|S| ≤ 3`이면 이 조건은 **sqrt도 나눗셈도 없는 다항식 부등식**이다.
 
 ```
 Stage 0  merge bitwise-identical centres · proximity graph · components
@@ -43,33 +35,26 @@ Stage 4  alias expansion back to global disc indices
 Stage 5  witness translation = MEC centre (Welzl, incremental)
 ```
 
-Consequences relative to the arrangement path:
+배열 경로와 비교하면 다음이 달라진다.
 
-1. **One witness per region** instead of every boundary vertex of that region.
-   Measured 8.6× fewer decider calls on geolife (561 → 65 points for the same
-   65 maximal families).
-2. **No sqrt.**  `h = √(r² − d²/4)` is gone, so the `√ε` error amplification
-   that forced `band = 1e-7` is gone; the band is `1e-12` and one-sided.
-3. **No coordinate-tolerance dedup** (`tol = 1e-9`).  Regions are identified by
-   their index set — exact combinatorial data.
+1. 영역의 경계 꼭짓점 전부 대신 **영역마다 증인점 하나**만 낸다. geolife에서 판정자 호출이 8.6× 적었다(같은 극대 집합족 65개에 대해 점 561 → 65개).
+2. **sqrt가 없다.** `h = √(r² − d²/4)`가 사라졌다. 그래서 `band = 1e-7`을 강요하던 `√ε` 오차 증폭도 사라졌다. band는 `1e-12`이고 한쪽 방향이다.
+3. **좌표 허용오차로 중복을 제거하지 않는다** (`tol = 1e-9`). 영역은 인덱스 집합으로 식별한다. 이것은 정확한 조합적 데이터다.
 
-## 3. Runtime knobs
+## 3. 실행 시 설정값
 
-| env | default | meaning |
+| 환경 변수 | 기본값 | 의미 |
 |---|---|---|
-| `MAXREGION` | `cech` | `cech` \| `legacy` (candidate2 verbatim) \| `verify` (run both, compare families, return the pipeline's points) |
-| `MAXREGION_BAND` | `1e-12` | relative leniency on `r²`; predicates run at radius `r√(1+band)` |
-| `MAXREGION_DP_LIMIT` | `20` | components larger than this go to the legacy path (hard-capped at 24, see §7) |
-| `MAXREGION_SLACK` | *(from caller)* | override the predicate slack of §5; `0` disables it |
-| `MAXREGION_LEGACY_SLACK` | unset | control arm: apply the §5 slack to the *arrangement* emitter too |
-| `MAXREGION_VERIFY_ABORT` | unset | `abort()` on the first verify failure |
+| `MAXREGION` | `cech` | `cech` \| `legacy` (candidate2 그대로) \| `verify` (둘 다 실행해 집합족을 비교하고, 파이프라인의 점을 반환) |
+| `MAXREGION_BAND` | `1e-12` | `r²`에 주는 상대적 허용치. 술어는 반지름 `r√(1+band)`에서 계산 |
+| `MAXREGION_DP_LIMIT` | `20` | 이보다 큰 성분은 legacy 경로로 보냄 (상한 24로 고정, §7 참고) |
+| `MAXREGION_SLACK` | *(호출자가 줌)* | §5의 술어 여유를 덮어씀. `0`이면 끔 |
+| `MAXREGION_LEGACY_SLACK` | 미설정 | 대조 방식(control arm): §5 여유를 *배열* 출력기(emitter)에도 적용 |
+| `MAXREGION_VERIFY_ABORT` | 미설정 | 첫 verify 실패에서 `abort()` |
 
-`MAXIMAL_MODE ∈ {off, mask-only, exact}` and `X3Q_DUMP` are defined in terms of
-the arrangement path, so they force `legacy` and behave exactly as in
-candidate 2.  `MAXREGION=legacy` reproduces candidate 2 bit-for-bit (verified:
-identical answers, `m`, `K`, `builds`, `queries` on 15 geolife pairs).
+`MAXIMAL_MODE ∈ {off, mask-only, exact}`와 `X3Q_DUMP`는 배열 경로를 기준으로 정의되어 있다. 그래서 이 둘은 `legacy`를 강제하고 candidate 2와 똑같이 동작한다. `MAXREGION=legacy`는 candidate 2를 비트 단위로 재현한다(확인함: geolife 15쌍에서 답, `m`, `K`, `builds`, `queries`가 같음).
 
-New stats line at exit:
+종료할 때 새 통계 줄을 출력한다.
 
 ```
 [maxregion-stats] calls= discs= groups= comps= max_comp= dp_masks= regions=
@@ -77,226 +62,114 @@ New stats line at exit:
                   pre_ms= dp_ms= mec_ms=
 ```
 
-In `cech` mode `[sweep-stats]` reports `before == after == #emitted points`
-(nothing is filtered at the point level); the stage timings live in
-`[maxregion-stats]`.
+`cech` 모드에서 `[sweep-stats]`는 `before == after == #emitted points`를 보고한다(점 수준에서는 아무것도 걸러내지 않는다). 단계별 시간은 `[maxregion-stats]`에 있다.
 
-## 4. Correctness
+## 4. 정확성
 
-`ctest -R maximal_regions` runs the §9 regression table:
+`ctest -R maximal_regions`는 §9 회귀 표를 실행한다.
 
-* **Rips ≠ Čech** — equilateral triangle of side exactly `2r`: all three pairs
-  touch, but the circumradius is `2r/√3 > r`, so the triple has no common point.
-  An implementation that skips the Helly/P3 check emits `{0,1,2}`; the correct
-  answer is the three pairs.  This is the decisive test.
-* P3 boundary at `s = r√3 · (1 ∓ 0.001)`.
-* **P3 slivers** — two centres nearly coincident, third far away, radius set
-  1e-11 above the exact circumradius; see the apex discussion below.
-* coincident centres → merge + alias expansion.
-* exact tangency `d = 2r` under the closed (`≤`) convention.
-* isolated discs (the `|S| = 1` case).
-* DP-overflow hand-off.
-* **grid oracle** — 261×261 samples over random 8-disc sets: every observed
-  `S(p)` must be contained in some emitted region, the emitted family must be an
-  antichain, and every witness must lie in every disc of its own region.
+* **Rips ≠ Čech** — 한 변이 정확히 `2r`인 정삼각형. 세 쌍이 모두 맞닿지만 외접원 반지름이 `2r/√3 > r`이므로 세 원판에는 공통점이 없다. Helly/P3 검사를 건너뛰는 구현은 `{0,1,2}`를 내놓는다. 정답은 세 쌍이다. 이것이 결정적인 테스트다.
+* `s = r√3 · (1 ∓ 0.001)`에서의 P3 경계.
+* **P3 sliver** — 두 중심이 거의 겹치고 세 번째는 멀리 있다. 반지름은 정확한 외접원 반지름보다 1e-11 크게 잡는다. 아래의 꼭지각(apex) 논의를 보라.
+* 중심이 겹침 → 병합 + 별칭(alias) 확장.
+* 닫힌(`≤`) 규약에서 정확히 접하는 경우 `d = 2r`.
+* 고립된 원판(`|S| = 1`인 경우).
+* DP overflow 시 넘겨주기.
+* **격자 오라클** — 무작위 8원판 집합 위에서 261×261 표본을 뽑는다. 관측된 모든 `S(p)`는 출력된 어떤 영역에 포함되어야 한다. 출력된 집합족은 반사슬(antichain)이어야 한다. 모든 증인점은 자기 영역의 모든 원판 안에 있어야 한다.
 
-Cross-check against the arrangement path (`MAXREGION=verify`, 486 builds on
-geolife pair 13962/4238): **`cech_only = 0`, `legacy_only = 0`** — the two
-emitters induce exactly the same family of maximal index sets.
+배열 경로와 교차 검사한 결과(`MAXREGION=verify`, geolife 쌍 13962/4238에서 빌드 486회)는 **`cech_only = 0`, `legacy_only = 0`**이다. 두 출력기가 정확히 같은 극대 인덱스 집합족을 만든다.
 
-> Note on comparing the two: the raw survivor sets are *not* comparable.  Every
-> arrangement vertex lies exactly on two circles, so `mask_hi ≠ mask_lo` at ~90%
-> of them, and `filter_maximal`'s conservative hi/lo domination rule leaves a
-> large non-maximal tail (21114 points spanning 2606 distinct maximal families in
-> the run above).  `verify` therefore puts both sides through the same plain
-> closed-disc mask and the same plain subset filter.
+> 둘을 비교할 때 주의할 점: 걸러지고 남은 원래 집합(raw survivor set)끼리는 비교할 수 *없다*. 배열 꼭짓점은 모두 정확히 두 원 위에 있으므로, 그중 ~90%에서 `mask_hi ≠ mask_lo`이다. 그래서 `filter_maximal`의 보수적인 hi/lo 지배 규칙을 거치면 극대가 아닌 점이 길게 남는다(위 실행에서 점 21114개, 서로 다른 극대 집합족 2606개에 걸침). 따라서 `verify`는 양쪽을 같은 단순한 닫힌 원판 마스크와 같은 단순한 부분집합 필터에 통과시킨다.
 
-### P3's apex must be the largest angle
+### P3의 꼭지각(apex)은 가장 큰 각이어야 한다
 
-`|cross| = |u|·|v|·sin θ` is a 2×2 determinant of two terms of size `|u|·|v|`, so
-its relative error is ≈ `ε/sin θ`, and `R² ∝ 1/cross²` doubles that.  An earlier
-revision evaluated `cross` at a fixed argument position and justified it with
-"an acute triangle has every angle < 90°, hence sin ≥ √3/2" — **which is false**:
-that bound holds for the *largest* angle, and an acute triangle's smallest angle
-is unbounded ((89°, 89°, 2°) is acute).  Measured against an exact rational
-oracle, relative error of the implied `4R²` over random slivers:
+`|cross| = |u|·|v|·sin θ`는 크기가 `|u|·|v|`인 두 항으로 된 2×2 행렬식이다. 그래서 상대 오차가 ≈ `ε/sin θ`이고, `R² ∝ 1/cross²`에서 이것이 두 배가 된다. 이전 판은 `cross`를 고정된 인자 위치에서 계산했고, 그 근거로 "예각삼각형은 모든 각이 < 90°이므로 sin ≥ √3/2"를 들었다. **이것은 틀렸다.** 그 하한은 *가장 큰* 각에서만 성립하고, 예각삼각형의 가장 작은 각은 얼마든지 작아질 수 있다((89°, 89°, 2°)도 예각삼각형이다). 무작위 sliver에서 이로부터 얻는 `4R²`의 상대 오차를 정확한 유리수 오라클과 비교해 쟀다.
 
-| sin θ at the apex | fixed argument | largest angle |
+| 꼭지각의 sin θ | 고정 인자 | 가장 큰 각 |
 |---|---|---|
 | 1e-3 | 2.8e-13 | 7.5e-16 |
 | 1e-4 | 2.5e-12 | 7.4e-16 |
 | 1e-5 | 2.9e-11 | 6.6e-16 |
 
-So the fixed-argument form escapes `band = 1e-12` below sin θ ≈ 1e-4, and the
-error direction is the harmful one: rejecting a valid triple deletes every
-superset of it through the Helly recursion, so a genuine maximal region is
-**lost**, not merely duplicated.  Worse, the bad shape — two centres nearly
-coincident with the third far away — is precisely what `curve1[i] − curve2[j]`
-produces from near-repeated curve points, which the *bitwise* coincidence merge
-does not collapse.  `pred3` now takes the apex opposite the longest side, where
-the acute branch guarantees sin θ ≥ √3/2; `[P3 sliver]` in the regression suite
-carries two exact-oracle witnesses (one at geolife's working scale) that fail on
-the old form and pass on the new.
+따라서 고정 인자 형태는 sin θ ≈ 1e-4 아래에서 `band = 1e-12`를 벗어난다. 오차 방향도 해로운 쪽이다. 유효한 삼원소 집합(triple)을 거부하면 Helly 재귀를 통해 그 상위집합이 모두 지워진다. 그러면 진짜 극대 영역이 단순히 중복되는 것이 아니라 **사라진다**. 더 나쁜 점이 있다. 이 나쁜 모양(두 중심은 거의 겹치고 세 번째는 멀리 있음)은 바로 거의 반복되는 곡선 점에서 `curve1[i] − curve2[j]`가 만들어 내는 모양이다. *비트 단위* 일치 병합은 이것을 하나로 합치지 못한다. 이제 `pred3`는 가장 긴 변의 맞은편 각을 꼭지각으로 잡는다. 예각 분기에서는 거기서 sin θ ≥ √3/2가 보장된다. 회귀 테스트 모음의 `[P3 sliver]`에는 정확한 오라클로 확인한 증인 사례 두 개가 들어 있다(하나는 geolife의 실제 작업 규모다). 둘 다 예전 형태에서는 실패하고 새 형태에서는 통과한다.
 
-Exposure in practice was nevertheless **zero**: `p3_sliver = 0` out of 150 652
-acute evaluations over 38 geolife pairs, and 0 on the full-precision synthetic
-sets.  Geolife coordinates are quantised at ~1e-5 while the radii are ~5e-2, so
-sin θ is bounded below by ~2e-4 by the data itself.  Answers, builds and decider
-queries are bit-identical before and after the fix on all 15 spot-check pairs —
-**the measurements in §6 are unaffected.**  The fix is prophylactic, and the
-`p3_sliver` counter exists so the assumption stays checkable on new data.
+그래도 실제로 이 문제에 걸린 경우는 **전혀 없었다**. geolife 38쌍의 예각 평가 150 652회 중 `p3_sliver = 0`이었고, 전체 정밀도 합성 집합에서도 0이었다. Geolife 좌표는 ~1e-5 단위로 양자화되어 있고 반지름은 ~5e-2이다. 그래서 데이터 자체 때문에 sin θ의 하한이 ~2e-4이다. 표본 점검한 15쌍 모두에서 답, 빌드, 판정자 질의가 수정 전후에 비트 단위로 같다. **§6의 측정은 영향을 받지 않는다.** 이 수정은 예방 차원이다. `p3_sliver` 카운터는 새 데이터에서도 이 가정을 확인할 수 있게 하려고 둔 것이다.
 
-### One-sided band, deliberately
+### 한쪽 방향 band는 의도한 것이다
 
-The first revision used two tables (strict/lenient) mirroring the arrangement
-path's hi/lo guard.  At an exact tangency `d = 2r` the pair is lenient-valid but
-not strict-valid, so the strict extension test failed to prune the singletons and
-`{0}`, `{1}`, `{0,1}` were all emitted — redundant output and a broken antichain.
-One lenient table is both simpler and safe: a genuinely feasible set is
-lenient-valid, hence contained in some emitted set, whose witness misses that
-set's discs by at most `r·band/2 ≈ 5e-13·r`.
+첫 판은 배열 경로의 hi/lo 보호 장치를 본떠 표 두 개(strict/lenient)를 썼다. 정확히 접하는 `d = 2r`에서 그 쌍은 lenient로는 유효하지만 strict로는 유효하지 않다. 그래서 strict 확장 검사가 단원소 집합을 가지치기하지 못했고, `{0}`, `{1}`, `{0,1}`이 모두 출력됐다. 출력이 중복되고 반사슬도 깨진다. lenient 표 하나만 쓰는 편이 더 단순하면서 안전하다. 실제로 실현 가능한 집합은 lenient로 유효하므로 출력된 어떤 집합에 포함된다. 그 출력 집합의 증인점은 그 집합의 원판에서 많아야 `r·band/2 ≈ 5e-13·r`만큼 벗어난다.
 
-## 5. The predicate slack (why `fut_n6_algorithm.cpp` changed)
+## 5. 술어 여유 (`fut_n6_algorithm.cpp`를 바꾼 이유)
 
-`N6Alg::lessThan` builds discs of radius `distance`, then asks the sub-Fréchet
-decider about `distance + epsilon_slack`.  The pair set the decider actually sees
-is therefore the one at the **larger** radius.
+`N6Alg::lessThan`은 반지름 `distance`인 원판을 만든 다음, sub-Fréchet 판정자에게 `distance + epsilon_slack`에 대해 묻는다. 따라서 판정자가 실제로 보는 쌍 집합은 **더 큰** 반지름에서의 쌍 집합이다.
 
-The arrangement path hides this by accident: it probes many boundary vertices per
-region, and a vertex sitting exactly on two circles of radius `distance` can see,
-at `distance + epsilon_slack`, pairs the region's interior cannot.  One witness
-per region removes the accident and makes candidate 4 marginally *stricter*, which
-measured as a systematic `+5e-9` on the answer (≈ `epsilon_slack`, well inside the
-`ε = 1e-7` contract) — but it also pushed the divide-and-conquer search down more
-boxes, inflating the build count up to 2.9× (1.7–2.9× on four of the five pairs;
-13962/4238 unchanged at 486) and eating the per-build win:
+배열 경로는 우연히 이 문제를 가린다. 배열 경로는 영역마다 경계 꼭짓점을 여러 개 시험한다. 반지름 `distance`인 두 원 위에 정확히 놓인 꼭짓점은 `distance + epsilon_slack`에서 영역 내부가 볼 수 없는 쌍을 볼 수 있다. 영역마다 증인점을 하나만 쓰면 이 우연이 사라지고 candidate 4가 아주 조금 *더 엄격*해진다. 측정해 보니 답에 체계적인 `+5e-9`가 생겼다(≈ `epsilon_slack`, `ε = 1e-7` 약속 범위 안쪽). 그런데 이 때문에 분할 정복 탐색이 더 많은 상자로 내려갔다. 빌드 수가 최대 2.9×로 늘었고(다섯 쌍 중 네 쌍에서 1.7–2.9×, 13962/4238은 486으로 그대로), 빌드당 이득을 잡아먹었다.
 
-| pair | c2 wall | c4, no slack | c4, slack-aligned |
+| 쌍 | c2 wall | c4, 여유 없음 | c4, 여유 맞춤 |
 |---|---|---|---|
-| 3110/11704   | 325 ms (238 builds) | 406 ms (398) | **66 ms (29)** |
-| 15818/12700  | 181 ms (177 builds) | 385 ms (508) | **43 ms (26)** |
-| 10725/2829   | 179 ms (144 builds) | 224 ms (282) | **47 ms (26)** |
-| 14551/3143   | 379 ms (155 builds) | 413 ms (288) | **219 ms (26)** |
-| 13962/4238   | 504 ms (486 builds) | 503 ms (486) | **131 ms (25)** |
+| 3110/11704   | 325 ms (빌드 238회) | 406 ms (398) | **66 ms (29)** |
+| 15818/12700  | 181 ms (빌드 177회) | 385 ms (508) | **43 ms (26)** |
+| 10725/2829   | 179 ms (빌드 144회) | 224 ms (282) | **47 ms (26)** |
+| 14551/3143   | 379 ms (빌드 155회) | 413 ms (288) | **219 ms (26)** |
+| 13962/4238   | 504 ms (빌드 486회) | 503 ms (486) | **131 ms (25)** |
 
-`epsilon_slack` is now passed to the traversal and the pipeline enumerates at
-`distance + epsilon_slack`.  The arrangement path ignores the parameter, which is
-what keeps `MAXREGION=legacy` bit-identical to candidate 2, and
-`MAXREGION_LEGACY_SLACK` exists as the control arm that isolates the slack factor.
+이제 `epsilon_slack`를 traversal에 넘기고, 파이프라인은 `distance + epsilon_slack`에서 열거한다. 배열 경로는 이 인자를 무시한다. 그래서 `MAXREGION=legacy`가 candidate 2와 비트 단위로 같게 유지된다. `MAXREGION_LEGACY_SLACK`은 여유 요인만 떼어 보는 대조 방식(control arm)이다.
 
-§6 quantifies both factors over 100 pairs.  Briefly: slack alignment cuts the
-*number* of arrangement builds (the search converges sooner), the pipeline cuts
-the *cost per build*, and neither alone is reliably a win.  `_c4_factor.sh`
-reproduces the per-pair view above on demand.
+§6에서 100쌍으로 두 요인을 정량화한다. 요약하면, 여유 맞춤은 배열 빌드 *횟수*를 줄이고(탐색이 더 빨리 수렴한다), 파이프라인은 *빌드당 비용*을 줄인다. 어느 쪽도 혼자서는 확실한 이득이 아니다. `_c4_factor.sh`로 위의 쌍별 결과를 언제든 재현할 수 있다.
 
-## 6. Measured runtime
+## 6. 실행시간 측정 결과
 
-`_c4_bench.sh` + `_c4_analyze.py`, geolife_100, **100 pairs × 5 arms × 3 reps**,
-arm order reshuffled every rep, min per (pair, arm), 60 s censoring (0 censored).
-Statistics are per-pair log-ratios → geomean with a 10 000-resample bootstrap
-95% CI, the same protocol as `_factor_perpair.sh`/`_factor_analyze.py`.
+`_c4_bench.sh` + `_c4_analyze.py`, geolife_100, **100쌍 × 5방식 × 3회 반복**. 반복마다 방식 순서를 다시 섞었고, (쌍, 방식)마다 최솟값을 썼다. 60 s에서 중도절단했다(중도절단 0건). 통계는 쌍별 로그 비 → 기하평균이고, 10 000회 재표본 bootstrap으로 95% CI를 구했다. `_factor_perpair.sh`/`_factor_analyze.py`와 같은 절차다.
 
-| contrast | WALL | ARRANGEMENT | INTERNAL (arr+fre) |
+| 비교 | WALL | ARRANGEMENT | INTERNAL (arr+fre) |
 |---|---|---|---|
 | **candidate2 → candidate4** | **1.44× [1.30, 1.60]** | 3.33× [2.62, 4.25] | 6.03× [4.66, 7.85] |
 | original → candidate4 | 1.98× [1.77, 2.24] | 42.3× | 33.8× |
-| *(prior work)* original → candidate2 | 1.38× [1.32, 1.44] | 12.7× | 5.61× |
+| *(이전 작업)* original → candidate2 | 1.38× [1.32, 1.44] | 12.7× | 5.61× |
 
-Faster on **93/100** pairs; median 1.11×, p90 3.71×.  Absolute wall over all 100
-pairs: original 39.5 s → candidate2 28.4 s → **candidate4 21.8 s**.  Decider
-calls **689 354 → 54 666 (12.6×)**; arrangement builds 26 488 → 18 515.
+**93/100**쌍에서 빨라졌다. 중앙값 1.11×, p90 3.71×다. 100쌍 전체의 절대 wall 시간: original 39.5 s → candidate2 28.4 s → **candidate4 21.8 s**. 판정자 호출은 **689 354 → 54 666 (12.6×)**, 배열 빌드는 26 488 → 18 515다.
 
-Answers vs candidate 2: max |Δ| **1.1e-8**, **0/100** pairs exceed ε = 1e-7.
-(Candidate 2 itself agrees with the exact-arithmetic original to 4.4e-9.)
+candidate 2 대비 답: 최대 |Δ| **1.1e-8**, ε = 1e-7을 넘는 쌍은 **0/100**이다. (candidate 2 자체는 정확 산술을 쓰는 original과 4.4e-9 안에서 일치한다.)
 
-### Factor decomposition (WALL)
+### 요인 분해 (WALL)
 
-| factor | geomean |
+| 요인 | 기하평균 |
 |---|---|
-| slack alignment alone (`D1/C4S`) | 1.18× [1.08, 1.29] |
-| **pipeline alone** (`D1/C4N`) | **0.98× [0.91, 1.03]** — a wash |
-| pipeline given slack (`C4S/C4`) | 1.22× [1.15, 1.30] |
-| product | 1.18 × 1.22 = **1.44** ✓ |
+| 여유 맞춤만 (`D1/C4S`) | 1.18× [1.08, 1.29] |
+| **파이프라인만** (`D1/C4N`) | **0.98× [0.91, 1.03]** — 득실 없음 |
+| 여유가 있을 때 파이프라인 (`C4S/C4`) | 1.22× [1.15, 1.30] |
+| 곱 | 1.18 × 1.22 = **1.44** ✓ |
 
-This *reproduces* the earlier X1 result (maximal reduction alone is an
-end-to-end wash, `M_D` ≈ 0.98×) and the R1 Amdahl ceiling — the inner loop is
-too small a share of the wall for a 2.9× internal win to show.  What unlocks it
-is the slack alignment, which moves the search trajectory itself; R1 held that
-trajectory fixed, which is why it read 1.15× as a hard ceiling.
+이것은 앞선 X1 결과(극대 축소만으로는 전체적으로 득실이 없다, `M_D` ≈ 0.98×)와 R1의 Amdahl 상한을 *재현*한다. 안쪽 루프가 wall 시간에서 차지하는 비중이 너무 작아서, 내부 2.9× 이득이 드러나지 않는다. 이 이득을 끌어내는 것은 여유 맞춤이다. 여유 맞춤은 탐색 경로 자체를 바꾼다. R1은 그 경로를 고정했기 때문에 1.15×를 넘을 수 없는 상한으로 읽었다.
 
-> **Caveat on `C4S`.**  The slack-only arm exceeds ε on 5/100 pairs (max 3.3e-6),
-> always *upward*.  Running the arrangement emitter at the inflated radius puts
-> its vertices exactly on the inflated circles, where the `sqrt` error (~1.5e-8·r)
-> is larger than the slack (9e-9), so the decider can miss the very pair the
-> vertex was built for.  `C4S` is diagnostic-only (off by default) and its 1.18×
-> should be read as an upper bound.  `C4` does not have this problem — an MEC
-> centre sits away from the boundary by construction.
+> **`C4S`에 대한 주의.** 여유만 적용한 방식은 5/100쌍에서 ε을 넘는다(최대 3.3e-6). 항상 *위쪽*으로 넘는다. 배열 출력기를 부풀린 반지름에서 돌리면 꼭짓점이 정확히 부풀린 원 위에 놓인다. 거기서는 `sqrt` 오차(~1.5e-8·r)가 여유(9e-9)보다 크다. 그래서 판정자가 그 꼭짓점이 겨냥한 바로 그 쌍을 놓칠 수 있다. `C4S`는 진단용일 뿐이고(기본값은 꺼짐), 그 1.18×는 상한으로 읽어야 한다. `C4`에는 이 문제가 없다. MEC 중심은 구성상 경계에서 떨어져 있다.
 
-### Global N6 path (`_c4_nsweep.sh`)
+### 전역 N6 경로 (`_c4_nsweep.sh`)
 
-On the standalone `n6` entry point the disc set is the full `n₁·n₂` product, so
-every component overflows the `2^m` DP (`max_comp` = n₁·n₂ up to 784 at n = 28,
-`overflow` ≈ one per build, `regions` = 0 except one n = 8 run with 16) and all
-the work goes to the legacy fall-back.
-Result: **parity, 0.92×–1.07×, median ≈0.98×** over n = 6…28 — no gain, ~2–3%
-residual overhead from the Stage-0 pre-pass.  This is the price of not
-implementing §5 (below), and it is the regime where implementing it would pay.
+단독 `n6` 진입점에서는 원판 집합이 `n₁·n₂` 곱 전체다. 그래서 모든 성분이 `2^m` DP를 넘친다(`max_comp` = n₁·n₂, n = 28에서 최대 784; `overflow` ≈ 빌드당 하나; `regions` = 0, 단 n = 8 실행 하나만 16). 결국 모든 일이 legacy 대체 경로(fall-back)로 간다. 결과: n = 6…28에서 **동률, 0.92×–1.07×, 중앙값 ≈0.98×**. 이득은 없고, Stage-0 사전 단계(pre-pass)에서 오는 ~2–3% 오버헤드가 남는다. 이것은 §5(아래)를 구현하지 않은 대가다. 그리고 그것을 구현하면 효과를 볼 영역이 바로 여기다.
 
-> An earlier revision measured 0.85×–1.00× here.  The gap was a fall-back
-> defect, not the pipeline: `ply` was being computed for every fall-back point
-> with an `O(#points · n)` mask pass (plus a heap allocation per point) even
-> though `ply` is only ever read under `X3Q_DUMP`, which forces the legacy path.
-> Fixed, together with a needless disc-vector copy when the whole set is one
-> oversized component.
+> 이전 판에서는 여기서 0.85×–1.00×가 나왔다. 그 차이는 파이프라인이 아니라 대체 경로의 결함 때문이었다. `ply`는 legacy 경로를 강제하는 `X3Q_DUMP`에서만 읽힌다. 그런데도 대체 경로의 모든 점에 대해 `O(#points · n)` 마스크 계산(점마다 힙 할당도 하나씩)으로 `ply`를 구하고 있었다. 이것을 고쳤다. 집합 전체가 너무 큰 성분 하나일 때 원판 벡터를 쓸데없이 복사하던 것도 함께 고쳤다.
 
-## 7. Operating limits — `CUT_LIMIT` vs `MAXREGION_DP_LIMIT`
+## 7. 동작 한계 — `CUT_LIMIT` vs `MAXREGION_DP_LIMIT`
 
-The DP is Θ(m·2^m) in the component size while the arrangement fall-back is
-polynomial, so the driver's `CUT_LIMIT` (which caps the component size in the
-divide-and-conquer path) and `MAXREGION_DP_LIMIT` have to be read together.
-Measured on geolife 13962/4238, 25 builds:
+DP는 성분 크기에 대해 Θ(m·2^m)이고, 배열 대체 경로는 다항식 시간이다. 그래서 드라이버의 `CUT_LIMIT`(분할 정복 경로에서 성분 크기의 상한)와 `MAXREGION_DP_LIMIT`를 함께 봐야 한다. geolife 13962/4238, 빌드 25회에서 잰 값은 다음과 같다.
 
-| `CUT_LIMIT` | `max_comp` | `dp_masks` | `overflow` | `dp_ms` | effect |
+| `CUT_LIMIT` | `max_comp` | `dp_masks` | `overflow` | `dp_ms` | 효과 |
 |---|---|---|---|---|---|
-| 12 (default) | 8 | 6 400 | 0 | ~0.0 | pipeline active, DP negligible |
-| 24 | 20 | 26 214 400 | 0 | **107.8** | pipeline active, but the DP now dominates the stage |
-| 48 | 48 | 0 | **143** | 0.0 | **pipeline entirely inactive** — everything falls back |
+| 12 (기본값) | 8 | 6 400 | 0 | ~0.0 | 파이프라인 동작, DP는 무시할 만함 |
+| 24 | 20 | 26 214 400 | 0 | **107.8** | 파이프라인 동작, 하지만 이제 DP가 이 단계를 지배함 |
+| 48 | 48 | 0 | **143** | 0.0 | **파이프라인 완전히 비활성** — 모두 대체 경로로 감 |
 
-Two silent traps, both now instrumented:
+드러나지 않는 함정이 두 개 있다. 이제 둘 다 계측된다.
 
-* `CUT_LIMIT` **above** `MAXREGION_DP_LIMIT` lets components exceed the DP limit;
-  once they do (`CUT_LIMIT` = 48 in the table), candidate 4 is disabled completely and
-  only the pre-pass overhead is left.  The shipped X3-b sweep (`_x3b_run.sh`) uses
-  `CUT_LIMIT` 12/24/48, so this is reachable with existing scripts.  A one-shot
-  `[maxregion]` warning now goes to stderr on the first overflow, and
-  `overflow=` / `regions=` in `[maxregion-stats]` show it per run.
-* Raising `MAXREGION_DP_LIMIT` to match makes the DP the bottleneck instead —
-  each step of `m` doubles it.  The knob is hard-capped at 24; beyond that the
-  component is handed back, which is always exact, just not accelerated.
+* `CUT_LIMIT`를 `MAXREGION_DP_LIMIT` **위로** 잡으면 성분이 DP 한도를 넘을 수 있다. 실제로 넘으면(표의 `CUT_LIMIT` = 48) candidate 4는 완전히 꺼지고 사전 단계 오버헤드만 남는다. 함께 배포된 X3-b sweep(`_x3b_run.sh`)은 `CUT_LIMIT` 12/24/48을 쓰므로, 기존 스크립트로도 이 상황에 빠질 수 있다. 이제 첫 overflow에서 `[maxregion]` 경고가 stderr에 한 번 출력된다. `[maxregion-stats]`의 `overflow=` / `regions=`로 실행마다 확인할 수도 있다.
+* 그에 맞춰 `MAXREGION_DP_LIMIT`를 올리면 대신 DP가 병목이 된다. `m`이 한 단계 커질 때마다 DP 비용이 두 배가 된다. 이 설정값은 상한이 24로 고정되어 있다. 그보다 큰 성분은 되돌려 넘긴다. 이 처리는 언제나 정확하고, 다만 가속되지 않을 뿐이다.
 
-`MAXREGION=verify` additionally reports `vacuous=`: builds where every component
-overflowed, so the "pipeline" output *is* the arrangement output and the
-agreement check compares legacy against itself.  Trust an agreement figure only
-when `vacuous = 0`.
+`MAXREGION=verify`는 `vacuous=`도 보고한다. 모든 성분이 overflow한 빌드를 가리킨다. 그런 빌드에서는 "파이프라인" 출력이 *곧* 배열 출력이므로, 일치 검사는 legacy를 자기 자신과 비교하는 셈이다. 일치 수치는 `vacuous = 0`일 때만 믿는다.
 
-## 8. Not implemented
+## 8. 구현하지 않은 것
 
-* **§5 of the design note** (Bron–Kerbosch + per-clique DP + extremal-set filter)
-  for components beyond the `2^m` DP.  Instead, oversized components are handed
-  back and solved by the legacy arrangement path restricted to that component —
-  exact, because components are more than `2r` apart and share no point.  With
-  `CUT_LIMIT = 12` this branch never fires in the divide-and-conquer path
-  (`overflow = 0` on every geolife build), so it costs the headline result
-  nothing; on the standalone N6 entry point it fires on every build and the
-  pipeline degenerates to parity (§6).  Implement §5 before raising `CUT_LIMIT`
-  past ~24, or before using the `n6` algorithm as anything but a reference.
-* **Filtered exact predicates** (§3.3): `P2`/`P3` are evaluated in plain double.
-  They are polynomial and well-conditioned (only pairwise differences enter), and
-  the grid oracle plus the `verify` runs show no disagreement, but a
-  double-double fallback inside the band is the principled next step.
-* **`epsilon_slack` for the arrangement path.**  The slack misalignment of §5 is
-  candidate 2's too; it is simply invisible there.  Fixing it *inside* the
-  arrangement emitter is not as simple as inflating the radius (see the `C4S`
-  caveat in §6) — the vertices would have to be nudged inward off the circles.
-* Raising `CUT_LIMIT` (§10.4) — X3-b already found no break-even up to 48 on the
-  arrangement path; worth re-running now that the per-build cost profile changed.
+* **설계 문서의 §5** (Bron–Kerbosch + clique별 DP + extremal-set 필터): `2^m` DP를 넘는 성분을 위한 것이다. 대신 너무 큰 성분은 되돌려 넘겨서, 그 성분으로 제한한 legacy 배열 경로로 푼다. 성분끼리는 `2r`보다 멀리 떨어져 있어 공통점이 없으므로 이 방법은 정확하다. `CUT_LIMIT = 12`에서는 분할 정복 경로에서 이 분기가 한 번도 실행되지 않는다(모든 geolife 빌드에서 `overflow = 0`). 그래서 대표 결과에는 비용이 전혀 없다. 단독 N6 진입점에서는 빌드마다 이 분기가 실행되어 파이프라인이 동률 수준으로 떨어진다(§6). `CUT_LIMIT`를 ~24 넘게 올리기 전에, 또는 `n6` 알고리즘을 참고용 이외의 용도로 쓰기 전에 §5를 구현해야 한다.
+* **필터링된 정확한 술어** (§3.3): `P2`/`P3`는 보통 double로 계산한다. 이 술어들은 다항식이고 조건이 좋다(두 점 사이의 차만 들어간다). 격자 오라클과 `verify` 실행에서도 불일치가 없었다. 그래도 band 안에서 double-double 대체 경로(fallback)를 두는 것이 원칙적인 다음 단계다.
+* **배열 경로의 `epsilon_slack`.** §5의 여유 불일치는 candidate 2에도 있다. 거기서는 그냥 보이지 않을 뿐이다. 이것을 배열 출력기 *안에서* 고치는 일은 반지름을 부풀리는 것만큼 단순하지 않다(§6의 `C4S` 주의 참고). 꼭짓점을 원에서 안쪽으로 살짝 밀어 넣어야 한다.
+* `CUT_LIMIT` 올리기 (§10.4) — X3-b는 배열 경로에서 48까지 손익분기점을 찾지 못했다. 이제 빌드당 비용 구성이 바뀌었으므로 다시 돌려 볼 만하다.
