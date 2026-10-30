@@ -1,22 +1,21 @@
-# paper_bench — `original` vs `candidate5` on the paper's data sets
+# paper_bench — 논문 데이터 세트에서 `original` 대 `candidate5`
 
-In-process driver (`paper_bench.cpp`) compiled **once per arm against that arm's own
-sources** (`CMakeLists.txt` pulls the arm in as a subdirectory and links its `trans`
-objects + `disc_arrangement_traversal`, i.e. the same code path and flags as the arm's
-`fut_paper_experiments`).  Timing follows the paper harness: a clock around
-`FrechetUnderTranslation` construction + call, default parameters (ε = 1e-7, depth 40,
-cut limit 12), `MEASUREMENT` counters/timers read per query.
+프로세스 내 드라이버(`paper_bench.cpp`)를 **방식마다 한 번씩, 그 방식 자신의 소스로** 컴파일한다.
+`CMakeLists.txt`가 방식을 하위 디렉터리로 끌어오고, 그 방식의 `trans` 객체 + `disc_arrangement_traversal`을
+링크한다. 곧 그 방식의 `fut_paper_experiments`와 코드 경로와 플래그가 같다. 실행시간 측정은 논문 하니스를
+따른다. `FrechetUnderTranslation` 생성 + 호출을 시계로 감싸고, 기본 매개변수(ε = 1e-7, depth 40,
+cut limit 12)를 쓰며, `MEASUREMENT` 카운터/타이머를 질의마다 읽는다.
 
-**Clock.** The harness and both arms' `lib/measurement_tool/measurement_tool.h` use
-`std::chrono::steady_clock` (monotonic). The authors' code used `high_resolution_clock`, which
-libstdc++ defines as `system_clock`; under WSL2 that clock is stepped by several hundred ms up to
-~1 s at Hyper-V time syncs, which corrupted the first WSL runs (negative instance times; `experiment_log` 6.12).
-The clock change touches only the measurement, not the algorithms. The container runs predate the change
-and show no clock anomaly in 331,600 rows: `raw_characters_uci_lmf.tar.gz`, `raw_characters_uci_lmf_r2.tar.gz`,
-`raw_characters_uci_decider.tar.gz`, `raw_characters_uci_fpsens.tar.gz`. (`raw_characters_uci_decider_r2.tar.gz` is a
-WSL run with invalid timings; `raw_characters_uci_decider_r3.tar.gz` is its valid WSL re-measurement.)
+**시계.** 하니스와 두 방식의 `lib/measurement_tool/measurement_tool.h`는 `std::chrono::steady_clock`(단조)을
+쓴다. 저자 코드는 `high_resolution_clock`을 썼는데, libstdc++는 이를 `system_clock`으로 정의한다. WSL2에서는
+Hyper-V 시간 동기화 때 이 시계가 수백 ms에서 ~1 s까지 건너뛴다. 이 때문에 첫 WSL 측정들이 망가졌다
+(음수 인스턴스 시간, `experiment_log` 6.12). 시계 변경은 측정만 건드리고 알고리즘은 건드리지 않는다.
+컨테이너 측정은 이 변경 전에 했으며, 331,600행에서 시계 이상이 없다: `raw_characters_uci_lmf.tar.gz`,
+`raw_characters_uci_lmf_r2.tar.gz`, `raw_characters_uci_decider.tar.gz`, `raw_characters_uci_fpsens.tar.gz`.
+(`raw_characters_uci_decider_r2.tar.gz`는 실행시간 측정이 무효인 WSL 측정이다.
+`raw_characters_uci_decider_r3.tar.gz`는 그것을 유효하게 다시 잰 WSL 측정이다.)
 
-> **Correction (2026-10-21):** `original/` itself is a modified copy of the authors' code (its base case drops the search box); see [../BASELINE_NOTICE.md](../BASELINE_NOTICE.md) and [authors_check/REPORT.md](authors_check/REPORT.md) §2–3.
+> **정정 (2026-10-21):** `original/` 자체가 저자 코드를 수정한 사본이다(기저 사례에서 탐색 상자를 뺀다). [../BASELINE_NOTICE.md](../BASELINE_NOTICE.md)와 [authors_check/REPORT.md](authors_check/REPORT.md) §2–3을 보라.
 
 ```
 bash paper_bench/build.sh              # -> ~/b_pb_original/paper_bench, ~/b_pb_candidate5/paper_bench
@@ -34,49 +33,49 @@ python3 paper_bench/make_repro_check.py    # -> results/REPRO_check.md (original
 python3 paper_bench/figures/plot_scatter.py  # -> figures/fig_scatter*.{pdf,png} (the paper's Figure 6 format)
 ```
 
-`run_sig.sh` is the first (r1) Sigspatial runner; its timings are superseded by r3.
+`run_sig.sh`는 첫 번째(r1) Sigspatial 실행 스크립트다. 그 실행시간 측정은 r3로 대체되었다.
 
-This branch holds only the runs the abstract and the paper draft cite: the authors' own Characters
-instances (`paper_data/characters_uci`, `queries/characters_uci_*`, `results/*_uci_*`) and the full
-Sigspatial set (`paper_data/sigspatial`, `queries/sigspatial_*`, `results/*sigspatial*`).  The
-mirror-order data sets and the random-pair runs live in the full branch.
+이 브랜치에는 초록과 논문 초안이 인용하는 측정만 있다. 저자들의 Characters 인스턴스(`paper_data/characters_uci`,
+`queries/characters_uci_*`, `results/*_uci_*`)와 Sigspatial 전체 세트(`paper_data/sigspatial`,
+`queries/sigspatial_*`, `results/*sigspatial*`)다. 거울 순서(mirror-order) 데이터 세트와 무작위 쌍 측정은
+전체(full) 브랜치에 있다.
 
-## What is measured
+## 측정하는 것
 
-* **Value computation (LMF)** — `calcDistance2`, the paper's main algorithm, per pair:
-  time, black-box calls, the n6 arrangement/decider timers, the phase-2 timers.
-* **Decision problem** — `lessThan(δ)`, the paper's decider benchmark: 23 query sets per
-  benchmark, δ = (δ\*−ε)(1−b^l), l=−10…−1 (answer must be *no*) and δ = (δ\*+ε)(1+b^l),
-  l=−10…2 (answer must be *yes*), with b = 2 in the authors' shipped files (`paperq`) and
-  b = 4 in the paper's text (`paperq4`); time, black-box calls, the phase-1 stage timers.
+* **값 계산 (LMF)** — 논문의 주 알고리즘 `calcDistance2`. 쌍마다 시간, 블랙박스 호출,
+  n6 배열/판정자 타이머, phase-2 타이머를 잰다.
+* **결정 문제** — 논문의 판정자 벤치마크 `lessThan(δ)`. 벤치마크마다 질의 세트가 23개다.
+  δ = (δ\*−ε)(1−b^l), l=−10…−1(답은 *no*여야 한다)과 δ = (δ\*+ε)(1+b^l),
+  l=−10…2(답은 *yes*여야 한다)를 쓴다. 저자들이 배포한 파일(`paperq`)은 b = 2, 논문 본문(`paperq4`)은
+  b = 4다. 시간, 블랙박스 호출, phase-1 단계 타이머를 잰다.
 
-## Data sets (see `../paper_data/README.md`)
+## 데이터 세트 (`../paper_data/README.md` 참조)
 
-| set | curves | pairs | note |
+| 세트 | 곡선 | 쌍 | 비고 |
 |---|--:|--:|---|
-| `characters_uci` (LMF) | 2 858 | 21 000 | the authors' `characters_full_<s1>_<s2>.txt`, 210 files x 100 (paper Table 4) |
-| `characters_uci_all` / `_same` (decider) | 2 858 | 1 000 each | the authors' decider pair files, 23 sets each |
-| `sigspatial` (decider, LMF) | 20 199 | 1 000 | the authors' `sigspatial_fut_decider_*` files (full GIS Cup set, `paper_data/sigspatial`) |
+| `characters_uci` (LMF) | 2 858 | 21 000 | 저자들의 `characters_full_<s1>_<s2>.txt`, 210 파일 x 100 (논문 표 4) |
+| `characters_uci_all` / `_same` (판정자) | 2 858 | 각 1 000 | 저자들의 판정자 쌍 파일, 각 23세트 |
+| `sigspatial` (판정자, LMF) | 20 199 | 1 000 | 저자들의 `sigspatial_fut_decider_*` 파일 (GIS Cup 전체 세트, `paper_data/sigspatial`) |
 
-## Correctness gates
+## 정확성 관문
 
-* LMF: |value(original) − value(candidate5)| ≤ ε = 1e-7 on every pair (the tree's
-  convention; both are ε-approximations of the same quantity, bit-identity is not expected).
-* Decider: every answer equals the expected one for **both** arms, and the arms agree.
+* LMF: 모든 쌍에서 |value(original) − value(candidate5)| ≤ ε = 1e-7 (이 소스 트리의 관례다. 둘 다 같은
+  양의 ε-근사이므로 비트 단위 일치는 기대하지 않는다).
+* 판정자: **두** 방식 모두 모든 답이 기대한 답과 같고, 두 방식의 답이 서로 일치한다.
 
-## Files
+## 파일
 
-* `queries/<set>_{paperq,paperq4}_<l>_<plus|minus>.txt` — decider sets; `*_computed_distances.check` — δ* per pair.
-* `results/raw_*.tar.gz` — per-instance rows per arm (`<set>_..._<arm>_<rep>.csv`). Container: Characters LMF r1 and r2
-  (r2 = back-to-back re-measurement, used in Table C and the abstract), Characters decider r1. WSL (user PC): Sigspatial
-  r1 and the decider r2 have invalid timings (clock steps); r3 is the paired re-measurement and the only valid WSL timing.
-  `raw_sigspatial_lmf_r3.tar.gz` also holds `sigspatial_lmf_rss_r3.txt` (peak RSS) and
-  `sigspatial_lmf_original_oom_12gb.txt` (the baseline's kill times on the two pairs above 12 GB; correction (2026-10-21):
-  a failure of the modified `original/` only, the authors' code finishes both under 5 GB, [authors_check/REPORT.md](authors_check/REPORT.md) §4.2).
-* `results/TABLES_uci.md` — paper-format tables (A-C container, D-E WSL r3); `RESULTS_uci.md`, `RESULTS_uci_r2.md`,
-  `RESULTS_sig.md` — per-set summaries; `REPRO_check.md`, `VERIFY_uci.md` — reproduction and data-identity checks.
+* `queries/<set>_{paperq,paperq4}_<l>_<plus|minus>.txt` — 판정자 세트. `*_computed_distances.check` — 쌍별 δ*.
+* `results/raw_*.tar.gz` — 방식별, 인스턴스별 행(`<set>_..._<arm>_<rep>.csv`). 컨테이너: Characters LMF r1과 r2
+  (r2 = 연달아 다시 잰 측정, 표 C와 초록에 쓰임), Characters 판정자 r1. WSL(사용자 PC): Sigspatial r1과
+  판정자 r2는 실행시간 측정이 무효다(시계 건너뜀). r3는 짝지은 재측정이며 유일하게 유효한 WSL 실행시간 측정이다.
+  `raw_sigspatial_lmf_r3.tar.gz`에는 `sigspatial_lmf_rss_r3.txt`(최대 RSS)와
+  `sigspatial_lmf_original_oom_12gb.txt`(12 GB를 넘는 두 쌍에서 기준선이 강제 종료된 시각; 정정(2026-10-21):
+  수정된 `original/`만의 실패이며, 저자 코드는 두 쌍 모두 5 GB 안에서 끝낸다, [authors_check/REPORT.md](authors_check/REPORT.md) §4.2)도 들어 있다.
+* `results/TABLES_uci.md` — 논문 형식의 표(A-C 컨테이너, D-E WSL r3). `RESULTS_uci.md`, `RESULTS_uci_r2.md`,
+  `RESULTS_sig.md` — 세트별 요약. `REPRO_check.md`, `VERIFY_uci.md` — 재현 검사와 데이터 동일성 검사.
 
-## candidate7 (candidate6 with the audit fixes; `../candidate7/README.candidate7.md`)
+## candidate7 (감사 수정을 넣은 candidate6; `../candidate7/README.candidate7.md`)
 
 ```
 ARMS="original candidate5 candidate7" bash paper_bench/build.sh           # ~/b_pb_<arm>
@@ -87,7 +86,7 @@ python3 paper_bench/analyze_c7.py                                          # -> 
 bash paper_bench/c7_verify/verify.sh                                       # verification -> ~/c7_verify_out (summarize.sh); written up in results/C7_report.md
 ```
 
-* `results/C7_report.md` — the audit's reproducers, exact-reference fuzzing and near-threshold real data on candidate7.
-* `results/C7_timing.md` — every answer and value plus paired timings (original, candidate7, candidate5) on the full
-  Characters LMF (21,000), Sigspatial LMF (1,000) and paperq4 decider sets (3 × 23,000); raw rows in `raw_c7_timing.tar.gz`.
-* `results/PAPER_tables_c7.md` — the main paper's tables (Korean captions) built from `C7_timing.md`.
+* `results/C7_report.md` — candidate7에 대한 감사의 재현 사례, 정확한 기준값 퍼징, 임계값 근처 실제 데이터.
+* `results/C7_timing.md` — Characters LMF 전체(21,000), Sigspatial LMF(1,000), paperq4 판정자 세트(3 × 23,000)의
+  모든 답과 값, 그리고 짝지은 실행시간 측정(original, candidate7, candidate5). 원시 행은 `raw_c7_timing.tar.gz`에 있다.
+* `results/PAPER_tables_c7.md` — `C7_timing.md`로 만든 본 논문의 표(한국어 캡션).

@@ -1,139 +1,134 @@
-# Candidate 8 — candidate7 with the base case's enumeration radius budgeted
+# Candidate 8 — 기저 사례의 열거 반지름에 예산을 적용한 candidate7
 
-candidate8 is candidate7 with one change: the union base case (candidate5's witnesses, then the box
-family) enumerates maximal sets at radius δ + s instead of δ, where s is the part of the decider's own
-slack that rounding does not need. Everything else is candidate7 bit for bit; `MAXREGION_SLACK=0`
-selects candidate7's radius and reproduces candidate7's answers, values and black-box calls exactly.
-The change is marked `FIX (candidate8)` in three files:
-`lib/cgal_disk_arrangements/disc_arrangement_traversal.{h,cpp}` and `src/fut_n6_algorithm.{h,cpp}`.
+candidate8은 candidate7에서 한 가지만 바꾼다. union 기저 사례(candidate5의 증인점, 그다음 box family)가
+극대 집합을 반지름 δ 대신 δ + s에서 열거한다. 여기서 s는 판정자 자체의 여유 중 반올림에 필요 없는 부분이다.
+나머지는 candidate7과 비트 단위로 같다. `MAXREGION_SLACK=0`은 candidate7의 반지름을 고르며,
+candidate7의 답, 값, 블랙박스 호출을 정확히 재현한다.
+바뀐 파일은 `lib/cgal_disk_arrangements/disc_arrangement_traversal.{h,cpp}`와 `src/fut_n6_algorithm.{h,cpp}`다.
+`src/fut_n6_algorithm.h`(설정 변수 주석만 추가)를 뺀 세 파일에는 바뀐 곳마다 `FIX (candidate8)` 표시가 있다.
 
-## 1. Why: candidate7 was slower than the authors' code on about 1 % of the instances
+## 1. 이유: candidate7이 인스턴스의 약 1 %에서 저자 코드보다 느렸다
 
-In r5 (`paper_bench/r5_authors_vs_candidate7/`) candidate7 was slower than the authors' code on 905 of
-21,000 Characters pairs and 75 of 1,000 Sigspatial pairs. Two causes:
+r5(`paper_bench/r5_authors_vs_candidate7/`)에서 candidate7은 Characters 21,000쌍 중 905쌍,
+Sigspatial 1,000쌍 중 75쌍에서 저자 코드보다 느렸다. 원인은 두 가지다.
 
-- 715 and 60 of them never reach a base case in either arm (same black-box calls, zero base-case
-  time). The two arms run the same code there; re-measuring them five times gives a ratio of 0.997 and
-  1.013 with half of them faster. This is timing noise on 4–10 ms instances.
-- 190 and 15 of them are real: candidate7 processed about 5× the boxes of the authors' code.
-  - The LMF search drops a box when `max − min_dist ≤ ε/2`.
-  - On these pairs the start/end lower bound sits within 1e-8 of `δ* − ε/2`, so every box is on that
-    edge.
-  - The authors' base case tests arrangement vertices with the decider at `δ + epsilon_slack`
-    (9e-9 at the default ε), so its bisection settles up to 9e-9 below the box minimum.
-  - candidate7 enumerated maximal sets at exactly δ and settled 0.2–8e-9 higher. A final `max` 1e-9
-    above the edge keeps every box alive.
-  - With the enumeration radius raised by the slack, candidate7 processes the authors' number of boxes
-    on these pairs.
+- 그중 715쌍과 60쌍은 어느 방식에서도 기저 사례에 이르지 않는다(블랙박스 호출이 같고 기저 사례에 쓴 시간이 없다).
+  여기서는 두 방식이 같은 코드를 실행한다. 다섯 번 다시 재면 비는 0.997과 1.013이고, 절반은 더 빠르게 나온다.
+  4–10 ms 인스턴스의 실행시간 측정 잡음이다.
+- 190쌍과 15쌍은 실제로 느리다. candidate7이 처리한 상자 수가 저자 코드의 약 5×였다.
+  - LMF 탐색은 `max − min_dist ≤ ε/2`이면 상자를 버린다.
+  - 이 쌍들에서는 시작/끝 하한이 `δ* − ε/2`에서 1e-8 안에 있다. 그래서 모든 상자가 그 경계 위에 있다.
+  - 저자 코드의 기저 사례는 배열 꼭짓점을 판정자로 `δ + epsilon_slack`에서 시험한다(기본 ε에서 9e-9).
+    그래서 이분 탐색이 상자 최솟값보다 최대 9e-9 아래에 멈춘다.
+  - candidate7은 극대 집합을 정확히 δ에서 열거했고, 0.2–8e-9 더 높게 멈췄다.
+    최종 `max`가 경계보다 1e-9만 위에 있어도 모든 상자가 살아남는다.
+  - 열거 반지름을 여유만큼 올리면, 이 쌍들에서 candidate7도 저자 코드와 같은 수의 상자를 처리한다.
 
-## 2. The change
+## 2. 바뀐 점
 
-`enumeration_slack(slack, decider_err)` in `disc_arrangement_traversal.cpp`:
+`disc_arrangement_traversal.cpp`의 `enumeration_slack(slack, decider_err)`:
 
-| `MAXREGION_SLACK` | enumeration slack s |
+| `MAXREGION_SLACK` | 열거 여유 s |
 |---|---|
-| unset or `budget` (default) | `max(0, slack − decider_err − slack/9)` when the caller passes its decider rounding bound `decider_err` (union's two stages and `MAXREGION_FIX=box`); 0 otherwise, as candidate7 |
+| 미설정 또는 `budget`(기본값) | 호출자가 판정자 반올림 상한 `decider_err`를 넘기면 `max(0, slack − decider_err − slack/9)`(union의 두 단계와 `MAXREGION_FIX=box`). 그렇지 않으면 candidate7처럼 0 |
 | `0` | 0 — candidate7 |
 | `caller` | `slack` |
-| a number v | `min(v, slack)` — candidate7 did not clamp, see 3.3 |
+| 수 v | `min(v, slack)` — candidate7은 상한 고정(clamp)을 하지 않았다. 3.3 참조 |
 
-`decider_err` is `N6Alg::deciderRoundingBound`: candidate7's 2u(max\|p\| + R) + 6uR (the decider's
-rounding of q + t and of its distance test) plus, since r6, 2u(max\|B\| + R) for the rounding of the
-centres c = fl(p − q) the enumeration works with (3.5). It is about 1e-13 on Characters and 3.1e-9 on
-Sigspatial (max\|p\| ≈ 1.4e7; the centre term is below 1e-11 on both), so s ≈ 8.0e-9 and 4.9e-9.
-The margin slack/9 (= N6Alg's `epsilon_sub` at the default ε) is left for rounding the exact witness,
-so that `enumerate_box` rarely needs its fallback.
+`decider_err`는 `N6Alg::deciderRoundingBound`다. candidate7의 2u(max\|p\| + R) + 6uR(판정자가 q + t와
+거리 시험에서 하는 반올림)에, r6부터 2u(max\|B\| + R)를 더한 값이다. 더한 항은 열거가 쓰는 중심
+c = fl(p − q)의 반올림 몫이다(3.5). 이 값은 Characters에서 약 1e-13, Sigspatial에서 3.1e-9다
+(max\|p\| ≈ 1.4e7. 중심 항은 둘 다 1e-11 미만). 따라서 s ≈ 8.0e-9, 4.9e-9다.
+여분 slack/9(= 기본 ε에서 N6Alg의 `epsilon_sub`)는 정확한 증인점을 반올림하는 데 남겨 둔다.
+그래야 `enumerate_box`가 대체 경로(fallback)를 쓸 일이 드물다.
 
-## 3. Correctness
+## 3. 정확성
 
-Notation: the decider of the base case accepts a translation w when its floating-point evaluation of
-DFD(π, σ + w) is at most δ + η, with η = `epsilon_slack` (9e-9). That evaluation differs from the
-distances |w − c_k| to the rounded centres c_k = fl(p_i − q_j), which the enumeration certifies, by at
-most e = `decider_err` (the decider's own rounding and the centres' rounding, 3.5); assume e ≤ η, as
-the authors' code needs for its arrangement vertices. The driver classifies the discs of radius δ against the box B into cut (C),
-containing (A) and far (F) exactly as in candidate7. Let s ∈ [0, η] be the enumeration slack and
-r = δ + s.
+기호: 기저 사례의 판정자는 DFD(π, σ + w)의 부동소수점 계산값이 δ + η 이하이면 평행이동 w를 받아들인다.
+여기서 η = `epsilon_slack`(9e-9)이다. 열거가 인증하는 것은 반올림된 중심 c_k = fl(p_i − q_j)까지의
+거리 |w − c_k|다. 판정자의 계산값은 이 거리와 최대 e = `decider_err`만큼 다르다(판정자 자체의 반올림과
+중심의 반올림, 3.5). e ≤ η라고 가정한다. 저자 코드도 배열 꼭짓점에 이 가정이 필요하다.
+드라이버는 반지름 δ인 원판을 상자 B에 대해 잘리는(C), 포함하는(A), 먼(F) 원판으로 나눈다.
+나누는 방식은 candidate7과 정확히 같다. 열거 여유를 s ∈ [0, η]라 하고 r = δ + s라 한다.
 
-### 3.1 YES answers
+### 3.1 YES 답
 
-Unchanged. Every YES, from either stage, is the decider's own verdict `lessThanFixedTranslation(δ + η)`
-at a concrete translation. The enumeration radius only chooses which translations are tested. So
-candidate8 returns YES only where candidate7 and the authors' code may: the decider accepted the
-translation at δ + η. For δ ≥ δ* that is correct. Below δ* it can happen only inside the band the
-decider's own slack allows, (δ* − η − e, δ*). The authors' arrangement path and candidate7 share that
-band.
+바뀌지 않았다. 어느 단계에서 나온 YES든, 구체적인 평행이동 하나에서 판정자가 직접 내린 판정
+`lessThanFixedTranslation(δ + η)`이다. 열거 반지름은 어떤 평행이동을 시험할지만 고른다.
+따라서 candidate8은 candidate7과 저자 코드가 YES를 낼 수 있는 곳에서만 YES를 낸다.
+곧 판정자가 그 평행이동을 δ + η에서 받아들인 경우다. δ ≥ δ*이면 이는 옳다.
+δ*보다 아래에서는 판정자 자체의 여유가 허용하는 구간 (δ* − η − e, δ*) 안에서만 일어날 수 있다.
+저자 코드의 배열 경로와 candidate7도 같은 구간을 가진다.
 
-### 3.2 NO answers: per-box completeness
+### 3.2 NO 답: 상자별 완전성
 
-candidate7's proof (README of candidate6, §1.1; `paper_bench/results/C7_report.md`) goes through with
-r in place of δ:
+candidate7의 증명(candidate6의 README, §1.1; `paper_bench/results/C7_report.md`)은 δ 자리에 r을 넣어도
+그대로 성립한다.
 
-1. Let p ∈ B with DFD(p) ≤ δ and T(p) = {k ∈ C : |p − c_k| ≤ δ}. Since δ ≤ r, T(p) together with
-   B has the common point p at radius r. By Helly on the family X ∪ {B} (predicates Q1, Q2, P3 at
-   radius r), `enumerate_box` emits a maximal X ⊇ T(p).
-2. The exact minimax point of X over B has max distance at most r to the centres of X.
-   `enumerate_box` keeps a witness w ∈ B only if it certifies max\|w − c_k\| ≤ r + t, with
-   t = (η − s) − e. With s ≤ η this bound is r + t = δ + η − e, whatever s is. Any other region keeps
-   its witness and also sends its discs to the box-arrangement fallback on the original radius δ.
-3. If w was kept, every pair of X is within δ + η − e of w and every pair of A within δ, both
-   measured to the rounded centres, because w ∈ B. The decider's evaluation is therefore at most
-   δ + η (A: δ + e ≤ δ + η). The pairs that p uses lie in T(p) ∪ A,
-   since the discs of F miss B. So the decider accepts w.
-4. If the region went to the fallback, the box arrangement on radius δ is the authors' base case, and
-   it is complete per box.
+1. p ∈ B가 DFD(p) ≤ δ를 만족한다 하고, T(p) = {k ∈ C : |p − c_k| ≤ δ}라 하자. δ ≤ r이므로
+   반지름 r에서 T(p)와 B는 공통점 p를 가진다. 집합족 X ∪ {B}에 Helly 정리를 적용하면(반지름 r의
+   술어 Q1, Q2, P3), `enumerate_box`는 극대 집합 X ⊇ T(p)를 내놓는다.
+2. B 위에서 X의 정확한 minimax 점은 X의 중심들까지의 최대 거리가 r 이하다.
+   `enumerate_box`는 증인점 w ∈ B를 max\|w − c_k\| ≤ r + t로 인증할 때만 남긴다. 여기서
+   t = (η − s) − e다. s ≤ η이면 이 상한은 s와 관계없이 r + t = δ + η − e다. 그 밖의 영역은
+   증인점을 남기면서, 그 원판들을 원래 반지름 δ의 상자 배열 대체 경로로도 보낸다.
+3. w가 남았다면, w ∈ B이므로 X의 모든 쌍은 w에서 δ + η − e 안에, A의 모든 쌍은 δ 안에 있다.
+   둘 다 반올림된 중심까지 잰 거리다. 따라서 판정자의 계산값은 δ + η 이하다(A: δ + e ≤ δ + η).
+   F의 원판은 B와 만나지 않으므로, p가 쓰는 쌍은 T(p) ∪ A 안에 있다. 그러므로 판정자는 w를 받아들인다.
+4. 영역이 대체 경로로 갔다면, 반지름 δ의 상자 배열은 저자 코드의 기저 사례이고, 이는 상자별로 완전하다.
 
-So the box family is complete per box for every s ∈ [0, η]. The choice of s changes which
-translations are tested and how often the fallback runs, not the guarantee. union's first stage
-(candidate5's uncertified witnesses) also runs at r. It only ends a base case early with a YES the
-decider confirmed; its NO is never used.
+따라서 box family는 모든 s ∈ [0, η]에서 상자별로 완전하다. s의 선택은 어떤 평행이동을 시험하는지와
+대체 경로가 얼마나 자주 도는지를 바꿀 뿐, 보장은 바꾸지 않는다. union의 첫 단계(candidate5의 인증되지
+않은 증인점)도 r에서 돈다. 이 단계는 판정자가 확인한 YES로 기저 사례를 일찍 끝내기만 한다.
+이 단계의 NO는 쓰이지 않는다.
 
-### 3.3 The clamp
+### 3.3 상한 고정(clamp)
 
-For s > η, step 2 breaks: `tol = max(0, η − s) − e` stops shrinking at −e, and a witness up to
-r − e = δ + s − e > δ + η − e is accepted without the fallback, although the decider may reject it.
-candidate7 allowed such a value through `MAXREGION_SLACK=<v>`. candidate8 clamps every setting to η.
+s > η이면 2번 단계가 깨진다. `tol = max(0, η − s) − e`는 −e에서 더 줄지 않는다. 그래서
+r − e = δ + s − e > δ + η − e까지의 증인점이 대체 경로 없이 받아들여진다. 판정자가 그 증인점을 거부할 수
+있는데도 그렇다. candidate7은 `MAXREGION_SLACK=<v>`로 이런 값을 허용했다. candidate8은 모든 설정을 η로
+상한 고정한다.
 
-### 3.4 LMF values
+### 3.4 LMF 값
 
-The value is the lower end of a bisection whose test is the base case above. Every YES still comes
-from a translation the decider accepted at split + η. Completeness gives YES at every split above the
-box minimum. Hence the value stays within [δ* − η − e − ε/2, δ* + ε/2]. That is inside the ε = 1e-7
-contract while e ≤ η, i.e. for curve and translation coordinates below about 4e7, the same bound as
-the authors' code. candidate8's values are below candidate7's, but not by at most s as an earlier
-version of this README said: the bisection then ends on a different grid point. r6 measured up to
-1.23e-8 below candidate7 and up to 1.26e-8 below the authors' code (Characters), all inside 1e-7.
+값은 위의 기저 사례를 시험으로 쓰는 이분 탐색의 아래쪽 끝이다. 모든 YES는 여전히 판정자가 split + η에서
+받아들인 평행이동에서 나온다. 완전성 덕분에 상자 최솟값보다 위의 모든 split에서 YES가 나온다.
+따라서 값은 [δ* − η − e − ε/2, δ* + ε/2] 안에 머문다. e ≤ η인 동안, 곧 곡선과 평행이동 좌표가 약 4e7
+미만이면, 이는 ε = 1e-7 계약 안이다. 저자 코드와 같은 한계다. candidate8의 값은 candidate7의 값보다 작다.
+하지만 이 README의 이전 판이 말한 것처럼 차이가 s 이하인 것은 아니다. 그 경우 이분 탐색이 다른 격자점에서
+끝나기 때문이다. r6에서 잰 차이는 candidate7보다 최대 1.23e-8, 저자 코드보다 최대 1.26e-8 아래였다
+(Characters). 모두 1e-7 안이다.
 
-### 3.5 The centres' rounding (found in r6)
+### 3.5 중심의 반올림 (r6에서 발견)
 
-The first version of candidate8 used candidate7's `decider_err`, which bounds the rounding of q + t
-in the decider but not that of the centres c = fl(p − q). That rounding is u·\|c\| per coordinate.
-candidate7 left it the whole η − e ≈ 9e-9; the budget leaves only about slack/9 ≈ 1e-9. With curve 2
-at ~1e8 and curve 1 near the origin (r4's `far_t_1e8`, \|c\| ≈ 1.04e8, half an ulp ≈ 7.5e-9) a
-certified witness then lay outside the decider's band and the base case answered NO for boxes that
-hold the optimum: 2 of 800 LMF values were 5.1e-3 and 1.9e-2 too high (candidate7: 0; even
-`MAXREGION_SLACK=1e-9` failed on one). The fix adds 2u(max\|B\| + R) to `deciderRoundingBound`:
-wherever a disc matters at a box point w, \|c\| ≤ \|w\| + R ≤ max\|B\| + R. The budget then
-shrinks to 0 at such coordinates (candidate7's radius) and the far families have no wrong value or
-answer. On the paper's data the term is below 1e-11: values, answers and black-box calls are identical to
-the first version on all 21,000 Characters pairs, all 69,000 decider queries and 998 of the 1,000
-Sigspatial pairs; the other two (δ* ≈ 3.1e4 and 1.7e4) end 3.6e-9 and 3.3e-9 higher with 4 and 5 more
-calls, a bisection step that lands within the changed s (r6).
+candidate8의 첫 판은 candidate7의 `decider_err`를 썼다. 이 값은 판정자 안의 q + t 반올림은 상한으로 잡지만,
+중심 c = fl(p − q)의 반올림은 잡지 않는다. 그 반올림은 좌표마다 u·\|c\|다.
+candidate7에서는 여기에 η − e ≈ 9e-9 전체가 남아 있었다. 예산은 약 slack/9 ≈ 1e-9만 남긴다.
+곡선 2가 ~1e8에, 곡선 1이 원점 근처에 있으면(r4의 `far_t_1e8`, \|c\| ≈ 1.04e8, ulp의 절반 ≈ 7.5e-9)
+인증된 증인점이 판정자의 구간 밖에 놓였다. 그래서 기저 사례가 최적점을 담은 상자에 NO를 답했다.
+LMF 값 800개 중 2개가 5.1e-3, 1.9e-2만큼 너무 높았다(candidate7: 0개. `MAXREGION_SLACK=1e-9`조차
+하나에서 실패했다). 수정은 `deciderRoundingBound`에 2u(max\|B\| + R)를 더한다. 원판이 상자 점 w에서
+의미가 있는 곳이면 어디서나 \|c\| ≤ \|w\| + R ≤ max\|B\| + R이기 때문이다. 그러면 이런 좌표에서는
+예산이 0으로 줄어들고(candidate7의 반지름), far 가족에서 틀린 값이나 답이 없다.
+논문 데이터에서는 이 항이 1e-11 미만이다. 값, 답, 블랙박스 호출은 Characters 21,000쌍 전부,
+판정자 질의 69,000개 전부, Sigspatial 1,000쌍 중 998쌍에서 첫 판과 같다.
+나머지 두 쌍(δ* ≈ 3.1e4, 1.7e4)은 호출이 4번, 5번 더 많고 3.6e-9, 3.3e-9 더 높게 끝난다.
+바뀐 s 안에 떨어지는 이분 탐색 한 단계 차이다(r6).
 
-## 4. Evidence
+## 4. 근거
 
-[`paper_bench/r6_candidate8/`](../paper_bench/r6_candidate8/README.md) (2026-10-29, r5 protocol, two runs):
+[`paper_bench/r6_candidate8/`](../paper_bench/r6_candidate8/README.md) (2026-10-29, r5와 같은 절차, 두 번 측정):
 
-- LMF, candidate7 ÷ candidate8: Characters 21,000 pairs 1.247× / 1.241× total, per-instance geomean
-  1.40× (192 / 202 of 210 chunks faster, sign test p ≤ 6e-38); Sigspatial 1,000 pairs 1.25× total, geomean
-  1.23× (p ≤ 3e-21). Against the authors' code: Characters 4.60× total, 5.16× geomean (candidate7 3.69×,
-  3.68×); Sigspatial 35.3×, 3.50× (28.2×, 2.84×). Pairs with more black-box calls than the authors' code:
-  199 → 0 and 15 → 1. Most of the gain is fewer boxes (disc selection 171 → 105 s, Lipschitz calls 341 →
-  297 s on Characters), not the base case alone.
-- Decider 4^l: the same black-box calls as candidate7 (s changes no maximal set when the query is ≥ 1e-7
-  from a critical radius); per-file time differences are not consistent between the runs and vanish on
-  re-measurement.
-- Values: within 1e-7 everywhere; median 5.1e-9 (Characters) and 1.0e-9 (Sigspatial) below the authors'
-  code, where candidate7 sat 2.4e-9 and 2.2e-9 above.
-- Correctness after the 3.5 fix: r4's exact-oracle families (17,553 LMF instances, 241,434 decider
-  queries) and 44,000 real-data queries at v ± 5e-8 without a wrong value or answer; the c7_verify kit
-  (QUICK) passes. Before the fix: 2 wrong values on far_t_1e8.
+- LMF, candidate7 ÷ candidate8: Characters 21,000쌍에서 총 시간 1.247× / 1.241×, 인스턴스별 기하평균
+  1.40×(210개 묶음 중 192 / 202개가 빠름, 부호 검정 p ≤ 6e-38). Sigspatial 1,000쌍에서 총 시간 1.25×,
+  기하평균 1.23×(p ≤ 3e-21). 저자 코드 대비: Characters 총 4.60×, 기하평균 5.16×(candidate7은 3.69×,
+  3.68×). Sigspatial 35.3×, 3.50×(28.2×, 2.84×). 저자 코드보다 블랙박스 호출이 많은 쌍:
+  199 → 0, 15 → 1. 이득의 대부분은 상자가 줄어든 데서 온다(Characters에서 원판 선택 171 → 105 s,
+  Lipschitz 호출 341 → 297 s). 기저 사례만의 효과가 아니다.
+- 판정자 4^l: 블랙박스 호출이 candidate7과 같다(질의가 임계 반지름에서 ≥ 1e-7 떨어져 있으면 s는 어떤
+  극대 집합도 바꾸지 않는다). 파일별 시간 차이는 두 측정 사이에 일관되지 않고, 다시 재면 사라진다.
+- 값: 모든 곳에서 1e-7 안이다. 중앙값은 저자 코드보다 5.1e-9(Characters), 1.0e-9(Sigspatial) 아래다.
+  candidate7은 2.4e-9, 2.2e-9 위에 있었다.
+- 3.5 수정 후의 정확성: r4의 정확 오라클 가족(LMF 인스턴스 17,553개, 판정자 질의 241,434개)과
+  v ± 5e-8의 실제 데이터 질의 44,000개에서 틀린 값이나 답이 없다. c7_verify 키트(QUICK)도 통과한다.
+  수정 전: far_t_1e8에서 틀린 값 2개.
