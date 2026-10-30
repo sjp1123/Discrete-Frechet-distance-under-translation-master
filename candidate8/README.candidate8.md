@@ -121,5 +121,19 @@ calls, a bisection step that lands within the changed s (r6).
 
 ## 4. Evidence
 
-`paper_bench/r6_candidate8/` (verification kit on candidate8, real-data queries at ±5e-8 of the
-near-threshold values, and the r5 protocol re-run with the authors' code, candidate7 and candidate8).
+[`paper_bench/r6_candidate8/`](../paper_bench/r6_candidate8/README.md) (2026-10-29, r5 protocol, two runs):
+
+- LMF, candidate7 ÷ candidate8: Characters 21,000 pairs 1.247× / 1.241× total, per-instance geomean
+  1.40× (192 / 202 of 210 chunks faster, sign test p ≤ 6e-38); Sigspatial 1,000 pairs 1.25× total, geomean
+  1.23× (p ≤ 3e-21). Against the authors' code: Characters 4.60× total, 5.16× geomean (candidate7 3.69×,
+  3.68×); Sigspatial 35.3×, 3.50× (28.2×, 2.84×). Pairs with more black-box calls than the authors' code:
+  199 → 0 and 15 → 1. Most of the gain is fewer boxes (disc selection 171 → 105 s, Lipschitz calls 341 →
+  297 s on Characters), not the base case alone.
+- Decider 4^l: the same black-box calls as candidate7 (s changes no maximal set when the query is ≥ 1e-7
+  from a critical radius); per-file time differences are not consistent between the runs and vanish on
+  re-measurement.
+- Values: within 1e-7 everywhere; median 5.1e-9 (Characters) and 1.0e-9 (Sigspatial) below the authors'
+  code, where candidate7 sat 2.4e-9 and 2.2e-9 above.
+- Correctness after the 3.5 fix: r4's exact-oracle families (17,553 LMF instances, 241,434 decider
+  queries) and 44,000 real-data queries at v ± 5e-8 without a wrong value or answer; the c7_verify kit
+  (QUICK) passes. Before the fix: 2 wrong values on far_t_1e8.

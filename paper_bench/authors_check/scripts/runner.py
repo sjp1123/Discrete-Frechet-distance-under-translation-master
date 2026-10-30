@@ -5,7 +5,7 @@ for <timeout> seconds (per-instance timeout), the next instance is recorded as H
 non-zero exit) and the run resumes after it.
     runner.py <arm> <lmf|decider> <list> <curve_dir> <out.csv> [per-instance timeout s] [cpu]
 Binaries: GITLAB (~/b_pb_authors_gitlab/paper_bench), ORIG (~/b_pb_original/...), C7 (~/b_pb_candidate7/...),
-AUTHORS_N6 (~/b_pb_authors_n6/...).  For the r4 verification families use run_verif.sh, which takes the folder
+C8 (~/b_pb_candidate8/...), AUTHORS_N6 (~/b_pb_authors_n6/...).  For the r4 verification families use run_verif.sh, which takes the folder
 where verification/raw/oracle_instances.tar.gz was extracted.
 """
 import csv, os, subprocess, sys, tempfile, time
@@ -18,8 +18,11 @@ H = os.path.expanduser("~")
 BIN = {"original": os.environ.get("ORIG", f"{H}/b_pb_original/paper_bench"),
        "candidate7": os.environ.get("C7", f"{H}/b_pb_candidate7/paper_bench"),
        "authors_n6": os.environ.get("AUTHORS_N6", f"{H}/b_pb_authors_n6/paper_bench"),
-       "gitlab": os.environ.get("GITLAB", f"{H}/b_pb_authors_gitlab/paper_bench")}[arm]
-ENV = dict(os.environ, MAXREGION="cech", MAXREGION_EXACT="1", MAXREGION_SLACK="0")
+       "gitlab": os.environ.get("GITLAB", f"{H}/b_pb_authors_gitlab/paper_bench"),
+       "candidate8": os.environ.get("C8", f"{H}/b_pb_candidate8/paper_bench")}[arm]
+# candidate8 runs in its own default configuration (MAXREGION_SLACK=budget, r6); every other arm as before.
+ENV = dict(os.environ, MAXREGION="cech", MAXREGION_EXACT="1",
+           MAXREGION_SLACK=("budget" if arm == "candidate8" else "0"))
 lines = [l for l in open(lst) if l.strip()]
 rows, events = [], []
 start = 0
