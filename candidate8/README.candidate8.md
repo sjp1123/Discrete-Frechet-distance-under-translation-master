@@ -117,6 +117,8 @@ LMF 값 800개 중 2개가 5.1e-3, 1.9e-2만큼 너무 높았다(candidate7: 0�
 
 ## 4. 근거
 
+**저자 코드 대비 논문 수치는 r7이다.** [`paper_bench/r7_authors_vs_candidate8/`](../paper_bench/r7_authors_vs_candidate8/README.md)(2026-10-31)는 이 수정판(f51bcbd)과 저자 코드를 한 측정에서 값 계산·결정 문제 모두 다시 쟀다. 결과는 Characters 4.55×(기하평균 5.09×), Sigspatial 기하평균 3.24×, 결정 문제 4^ℓ 2.01× / 2.39× / 1.25×이고, 오답은 0이다. 아래 r6은 candidate7 대비 비교와 수정 경위다.
+
 [`paper_bench/r6_candidate8/`](../paper_bench/r6_candidate8/README.md) (2026-10-29, r5와 같은 절차, 두 번 측정):
 
 - LMF, candidate7 ÷ candidate8: Characters 21,000쌍에서 총 시간 1.247× / 1.241×, 인스턴스별 기하평균

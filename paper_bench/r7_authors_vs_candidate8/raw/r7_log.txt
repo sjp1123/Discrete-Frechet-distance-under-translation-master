@@ -1,0 +1,6 @@
+start 2026-10-31T12:00:13+09:00 2 cpus, pinned to 1, repo d5850c5
+cpu:  Intel(R) Xeon(R) Processor @ 2.10GHz
+kernel: 6.18.44-fc-v185
+packages: libgmp-dev 2:6.3.0+dfsg-2ubuntu6.1; libgmp10 2:6.3.0+dfsg-2ubuntu6.1; libgmpxx4ldbl 2:6.3.0+dfsg-2ubuntu6.1; libmpfr-dev 4.2.1-1build1.1; libmpfr6 4.2.1-1build1.1; 
+g++: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+all done 2026-10-31T14:06:32+09:00
