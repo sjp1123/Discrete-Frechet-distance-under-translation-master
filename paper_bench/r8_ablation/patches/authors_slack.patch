@@ -1,0 +1,62 @@
+--- a/src/fut_n6_algorithm.cpp
++++ b/src/fut_n6_algorithm.cpp
+@@ -1,5 +1,36 @@
+ #include "fut_n6_algorithm.h"
+ 
++#include <algorithm>
++#include <cmath>
++#include <cstdlib>
++#include <cstring>
++#include <limits>
++
++// ABLATION (r8): the authors' base case with candidate8's enumeration slack.  The arrangement of
++// lessThan(distance, ..., box) is built at radius distance + s instead of distance, with
++// candidate8's budget s = max(0, epsilon_slack - e - epsilon_slack/9) and e = candidate8's
++// N6Alg::deciderRoundingBound(curve1, distance + epsilon_slack) for this box.  Every YES is still
++// the decider's verdict at distance + epsilon_slack.  AUTHORS_SLACK=0 restores the authors' radius.
++namespace
++{
++bool ablation_slack_on()
++{
++	static bool const on = [] { char const* v = std::getenv("AUTHORS_SLACK"); return !(v && std::strcmp(v, "0") == 0); }();
++	return on;
++}
++
++double ablation_slack(Curve const& curve1, double radius, N6Alg::BoundingBox const& box, double slack)
++{
++	if (!ablation_slack_on()) { return 0.; }
++	double const u = std::numeric_limits<double>::epsilon() / 2.0;
++	auto const ep = curve1.getExtremePoints();
++	double const M = std::max(std::max(std::abs(ep.min_x), std::abs(ep.max_x)), std::max(std::abs(ep.min_y), std::abs(ep.max_y)));
++	double const B = std::max(std::max(std::abs(box.min.x), std::abs(box.max.x)), std::max(std::abs(box.min.y), std::abs(box.max.y)));
++	double const e = 2.0 * u * (M + radius) + 6.0 * u * radius + 2.0 * u * (B + radius);
++	return std::min(slack, std::max(0.0, slack - e - slack / 9.0));
++}
++} // end anonymous namespace
++
+ N6Alg::N6Alg()
+ 	: N6Alg(1e-7)
+ {
+@@ -67,18 +98,20 @@
+ 	}
+ 
+ 	// build arrangement
++	// ABLATION (r8): radius distance + s (see ablation_slack above)
++	distance_t const radius = distance + ablation_slack(curve1, distance + epsilon_slack, box, epsilon_slack);
+ 	ArrDiscs discs;
+ 	if (candidate_centers.empty()) { // no candidates provided
+ 		for (std::size_t i = 0; i < curve1.size(); ++i) {
+ 			for (std::size_t j = 0; j < curve2.size(); ++j) {
+ 				auto center = curve1[i] - curve2[j];
+-				discs.push_back({{center.x, center.y}, distance});
++				discs.push_back({{center.x, center.y}, radius});
+ 			}
+ 		}
+ 	}
+ 	else {
+ 		for (auto const& candidate_center: candidate_centers) {
+-			discs.push_back({{candidate_center.x, candidate_center.y}, distance});
++			discs.push_back({{candidate_center.x, candidate_center.y}, radius});
+ 		}
+ 	}
+ 
