@@ -1,0 +1,94 @@
+--- a/src/fut_n6_algorithm.cpp
++++ b/src/fut_n6_algorithm.cpp
+@@ -1,5 +1,33 @@
+ #include "fut_n6_algorithm.h"
+ 
++#include <cstdio>
++#include <cstdlib>
++#include <string>
++#include <unistd.h>
++
++// COUNT (r8): with COUNT_LOG=<dir>, every base-case decision of the union mode appends one line
++//   m V K1 K K0 ovf ovf0 calls_c8 calls_A yes
++// to <dir>/<pid>.txt:  m = cut discs, V = vertices of the authors' arrangement for the same discs,
++// radius and box (what the authors' base case tests), K1 = candidate5 witnesses (union stage 1),
++// K = box family at the enumeration radius in use (candidate8: distance + s), K0 = box family at
++// radius distance (s = 0), ovf / ovf0 = the box family fell back to box-arrangement vertices,
++// calls_c8 = decider calls this decision made, calls_A = decider calls the authors' base case makes
++// on this decision (vertices in CGAL order until the first YES; 1 for an empty arrangement),
++// yes = the answer.  Counting only: the answer and the search are unchanged.
++namespace
++{
++std::FILE* count_file()
++{
++	static std::FILE* f = [] () -> std::FILE* {
++		char const* dir = std::getenv("COUNT_LOG");
++		if (!dir || !*dir) { return nullptr; }
++		std::string path = std::string(dir) + "/" + std::to_string(::getpid()) + ".txt";
++		return std::fopen(path.c_str(), "a");
++	}();
++	return f;
++}
++} // end anonymous namespace
++
+ #include <algorithm>
+ #include <cmath>
+ #include <limits>
+@@ -149,9 +177,11 @@
+ 
+ 	int const fix = (has_box && !candidate_centers.empty()) ? maxregion_fix_mode() : 0;
+ 
++	std::size_t ncalls = 0;   // COUNT (r8)
+ 	auto test = [&](ArrangementTraversal& tr, std::vector<Point>* seen) {
+ 		while (tr.hasNext()) {
+ 			auto t = tr.getNext();
++			++ncalls;
+ 			curve2.translate({t.x, t.y});
+ 			auto less = frechet.lessThanFixedTranslation(distance+epsilon_slack, curve1, curve2);
+ 			curve2.resetTranslation();
+@@ -179,19 +209,44 @@
+ 		// distance + epsilon_slack; the box family stays complete (disc_arrangement_traversal.cpp,
+ 		// enumeration_slack).
+ 		double const derr = deciderRoundingBound(curve1, distance + epsilon_slack);
++		// COUNT (r8): see count_file() at the top
++		auto record = [&](bool yes, std::size_t K1, std::size_t K, bool ovf) {
++			std::FILE* f = count_file();
++			if (!f) { return; }
++			std::size_t const calls_c8 = ncalls;
++			ArrangementTraversal t0(discs, box_, epsilon_slack);          // box family at radius distance
++			ArrangementTraversal ta(discs, box_);                         // the authors' base case
++			std::size_t const V = ta.getSize();
++			std::size_t calls_A = 0;
++			if (!ta.hasNext()) { calls_A = 1; }
++			while (ta.hasNext()) {
++				auto t = ta.getNext();
++				++calls_A;
++				curve2.translate({t.x, t.y});
++				bool const less = frechet.lessThanFixedTranslation(distance+epsilon_slack, curve1, curve2);
++				curve2.resetTranslation();
++				if (less) { break; }
++			}
++			std::fprintf(f, "%zu %zu %zu %zu %zu %d %d %zu %zu %d\n", discs.size(), V, K1, K, t0.getSize(),
++			             ovf ? 1 : 0, t0.hadOverflow() ? 1 : 0, calls_c8, calls_A, yes ? 1 : 0);
++		};
+ 		MEASUREMENT::start(EXP::FUT_N6_ARR);
+ 		ArrangementTraversal t5(discs, true, epsilon_slack, derr);
+ 		MEASUREMENT::stop(EXP::FUT_N6_ARR);
+ 		MEASUREMENT::start(EXP::FUT_N6_FRECHET);
+ 		bool r = test(t5, nullptr);
+ 		MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
+-		if (r) return true;
++		if (r) {
++			if (count_file()) { ArrangementTraversal tk(discs, box_, epsilon_slack, derr); record(true, t5.getSize(), tk.getSize(), tk.hadOverflow()); }
++			return true;
++		}
+ 		MEASUREMENT::start(EXP::FUT_N6_ARR);
+ 		ArrangementTraversal tr(discs, box_, epsilon_slack, derr);
+ 		MEASUREMENT::stop(EXP::FUT_N6_ARR);
+ 		MEASUREMENT::start(EXP::FUT_N6_FRECHET);
+ 		r = test(tr, nullptr);
+ 		MEASUREMENT::stop(EXP::FUT_N6_FRECHET);
++		record(r, t5.getSize(), tr.getSize(), tr.hadOverflow());
+ 		return r;
+ 	}
+ 	if (fix == 4) {                      // box family: sets meeting the box, witnesses in the box

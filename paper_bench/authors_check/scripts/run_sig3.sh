@@ -9,8 +9,8 @@ W=${W:-$HOME/sig3}; CPU=${CPU:-0}
 mkdir -p $W/pairs; for a in "${ARM_LIST[@]}"; do mkdir -p $W/$a; done
 echo "start $(date -Is) cpu $CPU arms ${ARM_LIST[*]}" >> $W/log.txt
 run() { local arm=$1 id=$2
-  if [ $arm = gitlab ]; then
-    ( ulimit -v 5000000; timeout 1800 taskset -c $CPU $(arm_bin $arm) lmf $W/pairs/$id.txt $D $W/$arm/$id.csv > /dev/null 2>> $W/stderr.log )
+  if [ $arm = gitlab ] || [ $arm = gitlab_slack ]; then
+    ( ulimit -v 5000000; env $(arm_env $arm) timeout 1800 taskset -c $CPU $(arm_bin $arm) lmf $W/pairs/$id.txt $D $W/$arm/$id.csv > /dev/null 2>> $W/stderr.log )
   else
     env $(arm_env $arm) timeout 1800 taskset -c $CPU $(arm_bin $arm) lmf $W/pairs/$id.txt $D $W/$arm/$id.csv > /dev/null 2>> $W/stderr.log
   fi
