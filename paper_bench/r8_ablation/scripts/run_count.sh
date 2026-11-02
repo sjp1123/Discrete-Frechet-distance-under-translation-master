@@ -3,11 +3,12 @@
 # Characters 21,000 pairs (CPU 0) and the Sigspatial 1,000 pairs (CPU 1) in parallel.  Every base-case
 # decision appends "m V K1 K K0 ovf ovf0 calls_c8 calls_A yes" to $W/<bench>/<job>/<pid>.txt
 # (meaning: fut_n6_algorithm.cpp of the patch).  Values are candidate8's (checked against r7 in analysis).
+# SLACK=0 runs the same build at enumeration radius delta (candidate7's search):  SLACK=0 W=~/r8/count_s0 bash ...
 #     bash paper_bench/r8_ablation/scripts/run_count.sh          (W=~/r8/count)
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; ROOT="$(cd "$HERE/../../.." && pwd)"
 CNT=${CNT:-$HOME/b_pb_candidate8_count/paper_bench}; W=${W:-$HOME/r8/count}
-ENVV="MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=budget"
+ENVV="MAXREGION=cech MAXREGION_EXACT=1 MAXREGION_SLACK=${SLACK:-budget}"   # SLACK=0: candidate7's radius (boxes of candidate7)
 mkdir -p $W/chars $W/sig; echo "start $(date -Is) $CNT" >> $W/log.txt
 chars() {
   mkdir -p $W/chars/chunks; split -l 100 -d -a 3 --additional-suffix=.txt $ROOT/paper_bench/queries/characters_uci_lmf_pairs.txt $W/chars/chunks/c

@@ -56,6 +56,21 @@ r7의 4.55배에는 두 요소의 몫이 섞여 있다. r8은 두 가지를 쟀�
    - 여유를 준 두 방식은 저자 코드보다 조금 아래로 간다. 중앙값은 A+s −5.0×10⁻⁹, c8 −5.1×10⁻⁹이다(Characters).
    - c7은 +2.4×10⁻⁹ 위로 간다.
 
+## 0. 휴먼테크 논문용: 여유 없는 극대 집합(candidate7)의 계수 (2026-11-02 추가)
+
+판정자 여유는 KSEF용 추가 연구로 따로 두기로 해서, 휴먼테크 논문은 r5(저자 코드 대 candidate7)를 쓴다. 그래서 계수도 candidate7의 탐색으로 다시 셌다.
+
+- **방법**: 같은 계수 빌드를 `MAXREGION_SLACK=0`(반지름 δ, candidate7의 탐색)으로 돌렸다. 기록은 [`raw/r8_count_s0.tar.xz`](raw/r8_count_s0.tar.xz), 그림은 [`fig_counts_c7.pdf`](fig_counts_c7.pdf)에 있다.
+- **같은 일을 했다는 확인**: 값은 타이밍 측정의 candidate7과 21,000 / 21,000, 1,000 / 1,000 인스턴스에서 같다. candidate8에서 여유만 뺀 것이 논문 데이터에서 candidate7과 같다는 확인이기도 하다.
+
+| | 기저 사례 판정 | 후보 수: 저자 방식 V ÷ 극대 집합 K (합계 비, 판정별 중앙값) | 기저 사례 판정자 호출 (저자 방식 ÷ 제안) |
+|---|--:|--:|--:|
+| Characters | 1,752,528 | **38.3배** / 37.0배 | **15.9배** |
+| Sigspatial | 108,985 | **34.9배** / 33.0배 | **15.4배** |
+
+- 절단 원판 11–12개에서 저자 방식의 후보는 평균 140개, 극대 집합은 평균 3.3개다(Characters).
+- 제안 방법의 판정 횟수에는 상자 family 앞의 첫 단계 증인점(candidate5식)도 들어 있다.
+
 ## 1. 측정 조건
 
 - **기계**: 서버 컨테이너(Intel Xeon @ **2.80 GHz**, 2 vCPU), 커널 6.18.
@@ -121,11 +136,13 @@ r7의 4.55배에는 두 요소의 몫이 섞여 있다. r8은 두 가지를 쟀�
 |---|---|
 | `RESULTS.md` | 네 방식의 Table 4 형식 표, 효과별 비(총, 기하평균 [CI], 중앙값, 호출, 실행 단위 부호 검정), 값, 기저 사례 계수 표 |
 | `fig_ablation.{pdf,png}` | 저자 코드 대비 인스턴스별 기하평균 가속(95 % CI): A+s, c7, c8 |
-| `fig_counts.{pdf,png}` | 절단 원판 수 m에 따른 판정당 평균 후보 수: 저자 방식 V 대 극대 집합 K (m ≤ 12) |
+| `fig_counts.{pdf,png}` | 절단 원판 수 m에 따른 판정당 평균 후보 수: 저자 방식 V 대 극대 집합 K (m ≤ 12), candidate8의 탐색 |
+| `fig_counts_c7.{pdf,png}` | 같은 그림, candidate7의 탐색(여유 없음, 휴먼테크 논문용) |
 | `patches/authors_slack.patch` | A+s: 저자 코드에 candidate8의 여유를 준 수정 |
 | `patches/candidate8_count.patch` | 계수 빌드: candidate8 + 기저 사례 계수(`COUNT_LOG`) |
 | `raw/r8_timing.tar.xz` | 2×2 측정 원시 CSV(4방식 × Characters 210묶음 / Sigspatial 1,000쌍), 로그, 종료 코드 |
 | `raw/r8_count.tar.xz` | 계수 실행 원시 자료(판정마다 한 줄 `m V K1 K K0 ovf ovf0 calls_c8 calls_A yes`), 값 CSV |
+| `raw/r8_count_s0.tar.xz` | 같은 계수, `MAXREGION_SLACK=0`(candidate7의 탐색) |
 | `scripts/build_r8.sh` | 다섯 빌드(A, c7, c8, A+s, 계수 빌드) |
 | `scripts/run_r8.sh`, `scripts/run_count.sh` | 측정 전체와 계수 실행 |
 | `scripts/analyze_r8.py` | `raw/` → `RESULTS.md`, 그림 |

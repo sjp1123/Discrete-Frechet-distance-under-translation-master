@@ -124,19 +124,26 @@ def main():
             diff = np.array([float(d[a][k]["value"]) - float(d["gitlab"][k]["value"]) for k in keys])
             w(f"| {NAME[a]} | {np.median(diff):+.2e} | {np.abs(diff).max():.2e} | {(np.abs(diff) > 1e-7).sum()} | {(diff < 0).sum():,} / {(diff > 0).sum():,} |")
         w("")
-    counts = count_section(w, t)
+    counts = count_section(w, t, "r8_count.tar.xz", "count", "candidate8",
+                           "candidate8(계수 빌드, 반지름 δ + s)의 탐색 — 2026-11-02 새벽")
+    counts0 = None
+    if os.path.exists(os.path.join(RAW, "r8_count_s0.tar.xz")):
+        counts0 = count_section(w, t, "r8_count_s0.tar.xz", "count_s0", "candidate7",
+                                "같은 계수 빌드를 `MAXREGION_SLACK=0`(candidate7의 반지름 δ)으로 — candidate7의 탐색, 휴먼테크 논문용")
     open(os.path.join(FOLDER, "RESULTS.md"), "w").write("\n".join(L) + "\n")
-    plot(effects, counts)
-    print("RESULTS.md, fig_ablation.*, fig_counts.* written")
+    plot(effects, counts, "fig_counts")
+    if counts0 is not None:
+        plot(None, counts0, "fig_counts_c7")
+    print("RESULTS.md, fig_ablation.*, fig_counts*.* written")
 
 
-def load_counts():
+def load_counts(tar_name="r8_count.tar.xz", top="count"):
     """{bench: np.array rows [m V K1 K K0 ovf ovf0 calls_c8 calls_A yes]}, {bench: {(job,row): value}}, rc lines"""
     rows = collections.defaultdict(list); vals = collections.defaultdict(dict); rc = collections.defaultdict(list); per_job = collections.defaultdict(lambda: collections.defaultdict(list))
-    with tarfile.open(os.path.join(RAW, "r8_count.tar.xz")) as tf:
+    with tarfile.open(os.path.join(RAW, tar_name)) as tf:
         for m in tf.getmembers():
             p = m.name.split("/")
-            if not m.isfile() or p[0] != "count" or len(p) < 3:
+            if not m.isfile() or p[0] != top or len(p) < 3:
                 continue
             bench = p[1]
             if len(p) == 4 and p[3].endswith(".txt"):
@@ -151,12 +158,12 @@ def load_counts():
     return {b: np.array(v, dtype=np.int64) for b, v in rows.items()}, vals, rc, per_job
 
 
-def count_section(w, t):
-    a, vals, rc, per_job = load_counts()
-    w("## 기저 사례: 극대 집합 수 대 배열 꼭짓점 수 (계수 실행)\n")
-    w("candidate8(계수 빌드)이 실제로 들어간 기저 사례 판정마다, 같은 상자·같은 원판·같은 반지름 δ에서 저자 코드의 배열 꼭짓점 수 V와 "
-      "candidate8의 상자 family 크기 K(반지름 δ + s), K0(반지름 δ)를 셌다. 판정 횟수는 저자 방식(꼭짓점을 CGAL 순서로, 첫 YES까지)과 "
-      "candidate8(첫 단계 증인점 → 상자 family, 첫 YES까지)이다.\n")
+def count_section(w, t, tar_name, top, arm, label):
+    a, vals, rc, per_job = load_counts(tar_name, top)
+    w(f"## 기저 사례: 극대 집합 수 대 배열 꼭짓점 수 — {label} (`raw/{tar_name}`)\n")
+    w("계수 빌드가 실제로 들어간 기저 사례 판정마다, 같은 상자·같은 원판·같은 반지름 δ에서 저자 코드의 배열 꼭짓점 수 V와 "
+      "상자 family 크기 K(쓰는 열거 반지름), K0(반지름 δ)를 셌다. 판정 횟수는 저자 방식(꼭짓점을 CGAL 순서로, 첫 YES까지)과 "
+      "제안 방법(첫 단계 증인점 → 상자 family, 첫 YES까지)이다.\n")
     out = {}
     for bench, title, _ in BENCH:
         x = a.get(bench)
@@ -164,17 +171,17 @@ def count_section(w, t):
             w(f"- {title}: 자료 없음\n"); continue
         m, V, K1, K, K0, ovf, ovf0, cc, ca, yes = x.T
         # values of the counting run against candidate8 of the timing run
-        same = sum(1 for k, v in vals[bench].items() if k in t[bench]["candidate8"] and t[bench]["candidate8"][k]["value"] == v)
+        same = sum(1 for k, v in vals[bench].items() if k in t[bench][arm] and t[bench][arm][k]["value"] == v)
         w(f"### {title}\n")
-        w(f"- 기저 사례 판정 {len(x):,}개 (YES {yes.mean()*100:.1f} %). 계수 실행의 값은 타이밍 측정의 candidate8과 {same:,} / {len(vals[bench]):,} 인스턴스에서 같다. "
+        w(f"- 기저 사례 판정 {len(x):,}개 (YES {yes.mean()*100:.1f} %). 계수 실행의 값은 타이밍 측정의 {arm}와 {same:,} / {len(vals[bench]):,} 인스턴스에서 같다. "
           f"프로세스 {len(rc[bench]):,}개 중 비정상 종료 {sum('rc=0' not in l for l in rc[bench])}개.")
         r = V / np.maximum(K, 1); r0 = V / np.maximum(K0, 1)
         w(f"- 합계: ΣV = {V.sum():,}, ΣK = {K.sum():,} (V/K = {V.sum()/K.sum():.1f}), ΣK0 = {K0.sum():,} (V/K0 = {V.sum()/K0.sum():.1f}).")
         w(f"- 판정별 V/K: 중앙값 {np.median(r):.1f}, 사분위 [{np.percentile(r, 25):.1f}, {np.percentile(r, 75):.1f}], 기하평균 {math.exp(np.log(r).mean()):.1f}, "
           f"V ≤ K인 판정 {(V <= K).sum():,} ({100*(V <= K).mean():.2f} %).")
-        w(f"- 판정 호출: 저자 방식 Σ {ca.sum():,}, candidate8 Σ {cc.sum():,} → {ca.sum()/cc.sum():.1f}배. NO 판정만: {ca[yes == 0].sum()/max(1, cc[yes == 0].sum()):.1f}배, YES 판정만: {ca[yes == 1].sum()/max(1, cc[yes == 1].sum()):.1f}배.")
+        w(f"- 판정 호출: 저자 방식 Σ {ca.sum():,}, 제안 방법 Σ {cc.sum():,} → {ca.sum()/cc.sum():.1f}배. NO 판정만: {ca[yes == 0].sum()/max(1, cc[yes == 0].sum()):.1f}배, YES 판정만: {ca[yes == 1].sum()/max(1, cc[yes == 1].sum()):.1f}배.")
         w(f"- 상자 family가 배열 꼭짓점으로 대체된(overflow) 판정: {ovf.sum():,} ({100*ovf.mean():.3f} %).\n")
-        w("| 절단 원판 수 m | 판정 수 | 평균 V | 평균 K0 (s = 0) | 평균 K (s) | V/K 중앙값 | 평균 호출: 저자 방식 | 평균 호출: candidate8 |")
+        w("| 절단 원판 수 m | 판정 수 | 평균 V | 평균 K0 (반지름 δ) | 평균 K (쓰는 반지름) | V/K 중앙값 | 평균 호출: 저자 방식 | 평균 호출: 제안 방법 |")
         w("|---|--:|--:|--:|--:|--:|--:|--:|")
         bins = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 20), (21, 50), (51, 10**9)]
         for lo_, hi_ in bins:
@@ -188,7 +195,7 @@ def count_section(w, t):
     return out
 
 
-def plot(effects, counts):
+def plot(effects, counts, counts_stem):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -199,7 +206,7 @@ def plot(effects, counts):
     C_ARR, C_MAX = "#9a9a9a", "#2a78d6"
     # ablation: per-instance geomean speedup over the authors' code, with 95 % CI
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.8))
-    for ax, (bench, title, _) in zip(axes, BENCH):
+    for ax, (bench, title, _) in zip(axes if effects else [], BENCH):
         labs, vals_, los, his, cols = [], [], [], [], []
         for b, lab, col in (("gitlab_slack", "Authors'\n+ slack", C_ARR), ("candidate7", "Maximal\nsets", C_MAX), ("candidate8", "Maximal sets\n+ slack", C_MAX)):
             c = effects.get((bench, "gitlab", b))
@@ -215,8 +222,9 @@ def plot(effects, counts):
         ax.set_title(title, fontsize=8, color=INK, loc="left", pad=4); ax.set_ylim(0, max(vals_) * 1.25)
         ax.spines["top"].set_visible(False); ax.spines["right"].set_visible(False)
     fig.tight_layout(w_pad=3.0)
-    for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(FOLDER, f"fig_ablation.{ext}"), dpi=300, bbox_inches="tight")
+    if effects:
+        for ext in ("pdf", "png"):
+            fig.savefig(os.path.join(FOLDER, f"fig_ablation.{ext}"), dpi=300, bbox_inches="tight")
     plt.close(fig)
     # counts: mean V, K0, K against m
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.8))
@@ -236,7 +244,7 @@ def plot(effects, counts):
     axes[0].legend(frameon=False, fontsize=7, loc="upper left")
     fig.tight_layout(w_pad=3.0)
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(FOLDER, f"fig_counts.{ext}"), dpi=300, bbox_inches="tight")
+        fig.savefig(os.path.join(FOLDER, f"{counts_stem}.{ext}"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
