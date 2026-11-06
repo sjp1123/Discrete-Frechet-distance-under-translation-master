@@ -1,0 +1,31 @@
+--- /home/claude/Discrete-Frechet-distance-under-translation-master/authors_gitlab/src/frechet_under_translation.cpp	2026-10-30 17:26:13.121102390 +0900
++++ /root/arms/gitlab_binfix/src/frechet_under_translation.cpp	2026-11-06 16:48:14.573961962 +0900
+@@ -87,6 +87,8 @@
+ 
+ 	while (max - min >= epsilon/2.) {
+ 		auto split = (max + min)/2.;
++		// FIX (binsearch baseline, defect D): once min and max are neighbouring doubles the midpoint rounds to one of them.
++		if (!(min < split && split < max)) { break; }
+ 
+ 		if (lessThanImpl(split, curve1, curve2)) {
+ 			max = split;
+@@ -475,6 +477,8 @@
+ 				// representative, thus there is no valid translation in this box.
+ 				// Note though, that this uses our non-CGAL intersection test!
+ 				if (cut_centers.size() == 0) {
++					// FIX (binsearch baseline, defect C): advance the queue, else the same box is revisited forever.
++					search_boxes.step();
+ 					continue;
+ 				}
+ 
+@@ -706,7 +710,9 @@
+ 		}
+ 
+ 		// Search for potential discs that intersect
+-		kd_tree.search({box.center().x, box.center().y}, distance-box.getDiagonalDist()/2.,
++		// FIX (binsearch baseline, P10): the lower bound is squared in KdTree2::search, so a negative
++		// distance - d_B/2 lost its sign and discs centred near the box centre were missed.
++		kd_tree.search({box.center().x, box.center().y}, std::max(0., distance-box.getDiagonalDist()/2.),
+ 					   distance+box.getDiagonalDist()/2., cut_centers, threshold, intersection_check);
+ 		if (threshold && cut_centers.size() > arrangement_cut_limit) { return; }
+ 	}
