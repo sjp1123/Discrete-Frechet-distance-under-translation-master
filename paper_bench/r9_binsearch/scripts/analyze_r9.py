@@ -50,6 +50,36 @@ L.append("| | 이분 탐색 (저자, 결함 수정) | LMF, proposed | 비 |\n|--
 L.append(f"| Time | {sum(tb):,.0f} ms ({sum(tb)/n:.1f} ms/inst.) | {sum(tc):,.0f} ms ({sum(tc)/n:.1f} ms/inst.) | **{sum(tb)/sum(tc):.2f}×** |")
 L.append(f"| Black-Box Calls | {sum(cb):,} ({sum(cb)/n:,.1f}/inst.) | {sum(cc):,} ({sum(cc)/n:,.1f}/inst.) | {sum(cb)/sum(cc):.2f}× |\n")
 L.append("참고: [BKN20] Table 4의 Binary Search는 10,555,630 ms (502.7 ms/inst.), 875,424,988회 (41,686.9/inst.)이고 LMF(저자)는 2,938,512 ms (140.0 ms/inst.)다.\n")
+
+# stage breakdown in the format of [BKN20] Table 4 (binary search: the decision-profile timers *1, LMF: *2)
+def stage(rows, keys):
+    return {k: sum(float(r[c]) for r in rows) for k, c in keys.items()}
+SB = stage([B[k] for k in keys], dict(pre="pre1_ms", lip="bb1_ms", est="disc1_ms", arr="arr1_ms", con="n6_arr_ms", bb="n6_fre_ms"))
+SC = stage([C[k] for k in keys], dict(pre="pre2_ms", lip="bb2_ms", est="disc2_ms", arr="arr2_ms", con="n6_arr_ms", bb="n6_fre_ms"))
+names = [("pre", "– Preprocessing"), ("lip", "– Black-box calls (Lipschitz)"), ("est", "– Arrangement estimation"),
+         ("arr", "– Arrangement algorithm"), ("con", "&nbsp;&nbsp;∗ Construction / 극대 집합 열거"), ("bb", "&nbsp;&nbsp;∗ Black-box calls")]
+L.append("## 1b. 단계별 실행 시간 ([BKN20] Table 4 형식)\n")
+L.append("| Algorithm | 이분 탐색 (저자, 결함 수정) | LMF, proposed | 비 |\n|---|--:|--:|--:|")
+L.append(f"| **Time** | **{sum(tb):,.0f} ms** ({sum(tb)/n:.1f} ms/inst.) | **{sum(tc):,.0f} ms** ({sum(tc)/n:.1f} ms/inst.) | **{sum(tb)/sum(tc):.2f}×** |")
+L.append(f"| **Black-Box Calls** | **{sum(cb):,}** ({sum(cb)/n:,.1f}/inst.) | **{sum(cc):,}** ({sum(cc)/n:,.1f}/inst.) | {sum(cb)/sum(cc):.2f}× |")
+for k, lab in names:
+    L.append(f"| {lab} | {SB[k]:,.0f} ms | {SC[k]:,.0f} ms | {SB[k]/SC[k]:.2f}× |")
+for nm, S_, tot in (("이분 탐색", SB, sum(tb)), ("LMF, proposed", SC, sum(tc))):
+    un = tot - S_["pre"] - S_["lip"] - S_["est"] - S_["arr"]
+    L.append(f"- {nm}: Arrangement algorithm 비중 {100*S_['arr']/tot:.1f} %, 단계 타이머에 잡히지 않은 시간 {un:,.0f} ms ({100*un/tot:.1f} %).")
+L.append("- 이분 탐색의 단계는 결정 알고리즘의 타이머(`FUT_*1`)다. Lipschitz 행에는 이분 탐색 한 단계마다 마지막 상자 중심에서 거리를 재는 호출도 들어간다.\n")
+TEX = ["\\begin{table}[t]", "\\centering",
+       "\\caption{Value computation on the 21{,}000 \\texttt{characters\\_full} instances in the format of Table~4 of~\\cite{BKN20}: the authors' Binary Search (defects fixed) and LMF with the proposed base case, measured back-to-back on one core.}",
+       "\\begin{tabular}{llrr}", "\\toprule", "\\textbf{Algorithm} & \\multicolumn{2}{c}{\\textbf{Time}} & \\textbf{Black-Box Calls} \\\\", "\\midrule"]
+for nm, S_, tot, calls, con in (("Binary Search", SB, sum(tb), sum(cb), "Construction"), ("LMF, proposed", SC, sum(tc), sum(cc), "Maximal-set enumeration")):
+    TEX += [nm + f" & \\multicolumn{{2}}{{c}}{{{tot:,.0f} ms}} & {calls:,} \\\\".replace(",", "{,}"),
+            f"      & \\multicolumn{{2}}{{c}}{{({tot/n:.1f} ms/inst.)}} & ({calls/n:,.1f}/inst.) \\\\".replace(",", "{,}")]
+    for k, lab in (("pre", "-- Preprocessing"), ("lip", "-- Black-box calls (Lipschitz)"), ("est", "-- Arrangement estimation"), ("arr", "-- Arrangement algorithm")):
+        TEX += ["\\cmidrule(r){2-3}" if k != "arr" or True else "", f"& {lab} & {S_[k]:,.0f} ms \\\\".replace(",", "{,}")]
+    TEX += [f"& \\hphantom{{bla}} * {con} & {S_['con']:,.0f} ms \\\\".replace(",", "{,}"),
+            f"& \\hphantom{{bla}} * Black-box calls & {S_['bb']:,.0f} ms \\\\".replace(",", "{,}"), "\\midrule"]
+TEX[-1] = "\\bottomrule"; TEX += ["\\end{tabular}", "\\end{table}"]
+L.append("```latex\n" + "\n".join(TEX) + "\n```\n")
 L.append("## 2. 인스턴스별 가속 (이분 탐색 시간 ÷ 제안 LMF 시간)\n")
 L.append("| 인스턴스 | 기하평균 [95 % CI] | 중앙값 | 제안 LMF가 빠른 인스턴스 | 최소 | 최대 |\n|--:|--:|--:|--:|--:|--:|")
 L.append(f"| {n:,} | **{gm:.2f}×** [{lo:.2f}, {hi:.2f}] | {st.median(sp):.2f}× | {sum(s > 1 for s in sp):,} ({100*sum(s > 1 for s in sp)/n:.1f} %) | {min(sp):.2f}× | {max(sp):.1f}× |\n")

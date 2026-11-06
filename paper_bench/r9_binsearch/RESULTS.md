@@ -15,6 +15,60 @@
 
 참고: [BKN20] Table 4의 Binary Search는 10,555,630 ms (502.7 ms/inst.), 875,424,988회 (41,686.9/inst.)이고 LMF(저자)는 2,938,512 ms (140.0 ms/inst.)다.
 
+## 1b. 단계별 실행 시간 ([BKN20] Table 4 형식)
+
+| Algorithm | 이분 탐색 (저자, 결함 수정) | LMF, proposed | 비 |
+|---|--:|--:|--:|
+| **Time** | **10,086,796 ms** (480.3 ms/inst.) | **719,769 ms** (34.3 ms/inst.) | **14.01×** |
+| **Black-Box Calls** | **875,424,988** (41,686.9/inst.) | **68,690,225** (3,271.0/inst.) | 12.74× |
+| – Preprocessing | 85,122 ms | 84,561 ms | 1.01× |
+| – Black-box calls (Lipschitz) | 698,422 ms | 293,477 ms | 2.38× |
+| – Arrangement estimation | 847,246 ms | 172,927 ms | 4.90× |
+| – Arrangement algorithm | 8,438,726 ms | 127,671 ms | 66.10× |
+| &nbsp;&nbsp;∗ Construction / 극대 집합 열거 | 5,374,149 ms | 77,823 ms | 69.06× |
+| &nbsp;&nbsp;∗ Black-box calls | 2,545,370 ms | 48,714 ms | 52.25× |
+- 이분 탐색: Arrangement algorithm 비중 83.7 %, 단계 타이머에 잡히지 않은 시간 17,280 ms (0.2 %).
+- LMF, proposed: Arrangement algorithm 비중 17.7 %, 단계 타이머에 잡히지 않은 시간 41,132 ms (5.7 %).
+- 이분 탐색의 단계는 결정 알고리즘의 타이머(`FUT_*1`)다. Lipschitz 행에는 이분 탐색 한 단계마다 마지막 상자 중심에서 거리를 재는 호출도 들어간다.
+
+```latex
+\begin{table}[t]
+\centering
+\caption{Value computation on the 21{,}000 \texttt{characters\_full} instances in the format of Table~4 of~\cite{BKN20}: the authors' Binary Search (defects fixed) and LMF with the proposed base case, measured back-to-back on one core.}
+\begin{tabular}{llrr}
+\toprule
+\textbf{Algorithm} & \multicolumn{2}{c}{\textbf{Time}} & \textbf{Black-Box Calls} \\
+\midrule
+Binary Search & \multicolumn{2}{c}{10{,}086{,}796 ms} & 875{,}424{,}988 \\
+      & \multicolumn{2}{c}{(480.3 ms/inst.)} & (41{,}686.9/inst.) \\
+\cmidrule(r){2-3}
+& -- Preprocessing & 85{,}122 ms \\
+\cmidrule(r){2-3}
+& -- Black-box calls (Lipschitz) & 698{,}422 ms \\
+\cmidrule(r){2-3}
+& -- Arrangement estimation & 847{,}246 ms \\
+\cmidrule(r){2-3}
+& -- Arrangement algorithm & 8{,}438{,}726 ms \\
+& \hphantom{bla} * Construction & 5{,}374{,}149 ms \\
+& \hphantom{bla} * Black-box calls & 2{,}545{,}370 ms \\
+\midrule
+LMF, proposed & \multicolumn{2}{c}{719{,}769 ms} & 68{,}690{,}225 \\
+      & \multicolumn{2}{c}{(34.3 ms/inst.)} & (3{,}271.0/inst.) \\
+\cmidrule(r){2-3}
+& -- Preprocessing & 84{,}561 ms \\
+\cmidrule(r){2-3}
+& -- Black-box calls (Lipschitz) & 293{,}477 ms \\
+\cmidrule(r){2-3}
+& -- Arrangement estimation & 172{,}927 ms \\
+\cmidrule(r){2-3}
+& -- Arrangement algorithm & 127{,}671 ms \\
+& \hphantom{bla} * Maximal-set enumeration & 77{,}823 ms \\
+& \hphantom{bla} * Black-box calls & 48{,}714 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
 ## 2. 인스턴스별 가속 (이분 탐색 시간 ÷ 제안 LMF 시간)
 
 | 인스턴스 | 기하평균 [95 % CI] | 중앙값 | 제안 LMF가 빠른 인스턴스 | 최소 | 최대 |
